@@ -2,87 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* VOX Design System - Teal & Gold Theme */
+    --background: 210 20% 98%;
+    --foreground: 220 20% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 20% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 20% 10%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Deep Charcoal/Slate */
+    --primary: 200 15% 30%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Teal (Main Accent) */
+    --secondary: 180 100% 25%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Accent - Gold/Amber */
+    --accent: 45 100% 50%;
+    --accent-foreground: 220 20% 10%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 180 100% 25%;
+
+    --radius: 0.75rem;
+
+    /* Custom VOX Variables */
+    --sidebar-bg: 200 15% 30%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-accent: 45 100% 50%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(180 100% 25%) 0%, hsl(180 70% 35%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(45 100% 50%) 0%, hsl(35 100% 55%) 100%);
+    --gradient-bg: linear-gradient(180deg, hsl(210 40% 96%) 0%, hsl(0 0% 100%) 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.12);
+    --shadow-glow: 0 0 20px rgba(0, 128, 128, 0.3);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 220 20% 8%;
+    --foreground: 210 20% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 20% 12%;
+    --card-foreground: 210 20% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 20% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 180 100% 40%;
+    --primary-foreground: 220 20% 8%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 200 15% 25%;
+    --secondary-foreground: 210 20% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 45 100% 50%;
+    --accent-foreground: 220 20% 8%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 20% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 180 100% 40%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +118,174 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* VOX Card Styles */
+  .vox-card {
+    @apply bg-card rounded-2xl shadow-lg border-t-4 border-t-secondary overflow-hidden;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .vox-card-elevated {
+    @apply vox-card hover:shadow-xl transition-shadow duration-300;
+  }
+
+  /* VOX Button Styles */
+  .vox-btn-primary {
+    @apply bg-gradient-to-r from-secondary to-teal-500 text-white font-bold py-3 px-8 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200;
+  }
+
+  .vox-btn-accent {
+    @apply bg-accent text-primary font-bold py-3 px-8 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200;
+  }
+
+  .vox-btn-outline {
+    @apply bg-transparent border-2 border-primary text-primary font-semibold py-3 px-8 rounded-xl hover:bg-primary hover:text-white transition-all duration-200;
+  }
+
+  /* VOX Sidebar */
+  .vox-sidebar {
+    @apply bg-primary text-white min-h-screen;
+  }
+
+  .vox-sidebar-item {
+    @apply flex items-center gap-3 px-6 py-4 cursor-pointer text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200;
+  }
+
+  .vox-sidebar-item.active {
+    @apply bg-secondary text-white border-l-4 border-accent font-semibold;
+  }
+
+  /* VOX Stats Card */
+  .vox-stat-card {
+    @apply bg-white p-8 rounded-2xl shadow-md border border-border text-center;
+  }
+
+  .vox-stat-number {
+    @apply text-4xl font-extrabold text-secondary;
+  }
+
+  .vox-stat-label {
+    @apply text-muted-foreground text-sm uppercase tracking-wider mt-2;
+  }
+
+  /* VOX Form Elements */
+  .vox-input {
+    @apply w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-secondary focus:border-transparent transition-all duration-200;
+  }
+
+  .vox-textarea {
+    @apply w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-secondary focus:border-transparent transition-all duration-200 resize-y min-h-[120px];
+  }
+
+  /* VOX Rating Scale */
+  .vox-rating-group {
+    @apply flex justify-between gap-2 mt-4;
+  }
+
+  .vox-rating-option {
+    @apply flex-1 text-center;
+  }
+
+  .vox-rating-label {
+    @apply block p-3 border-2 border-muted rounded-xl cursor-pointer font-semibold text-sm transition-all duration-200 hover:border-secondary;
+  }
+
+  .vox-rating-input:checked + .vox-rating-label {
+    @apply border-secondary bg-secondary text-white shadow-md;
+  }
+
+  /* Progress Bar */
+  .vox-progress {
+    @apply h-3 bg-muted rounded-full overflow-hidden;
+  }
+
+  .vox-progress-bar {
+    @apply h-full bg-gradient-to-r from-accent to-secondary rounded-full transition-all duration-500;
+  }
+
+  /* Question Item */
+  .vox-question {
+    @apply bg-white p-6 rounded-xl border border-border mb-6 transition-all duration-200 hover:shadow-md;
+  }
+
+  /* Target Selection */
+  .vox-target-card {
+    @apply bg-muted p-6 rounded-xl border border-border flex items-center justify-between mb-4 transition-all duration-200;
+  }
+
+  /* Loader */
+  .vox-loader {
+    @apply w-12 h-12 border-4 border-muted border-t-secondary rounded-full animate-spin;
+  }
+
+  /* Chart Container */
+  .vox-chart-container {
+    @apply bg-white p-6 rounded-2xl border border-border shadow-md mb-6;
+  }
+
+  /* Table Styles */
+  .vox-table {
+    @apply w-full border-collapse rounded-xl overflow-hidden;
+  }
+
+  .vox-table th {
+    @apply bg-primary text-white font-semibold p-4 text-left;
+  }
+
+  .vox-table td {
+    @apply p-4 border-b border-border;
+  }
+
+  .vox-table tr:hover {
+    @apply bg-muted/50;
+  }
+}
+
+@layer utilities {
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 128, 128, 0.4); }
+    50% { box-shadow: 0 0 20px 10px rgba(0, 128, 128, 0); }
+  }
+
+  @keyframes checkmark {
+    0% { stroke-dashoffset: 166; }
+    100% { stroke-dashoffset: 0; }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .animate-slide-in-left {
+    animation: slideInLeft 0.4s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.4s ease-out;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s infinite;
   }
 }
