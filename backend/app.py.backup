@@ -1,0 +1,388 @@
+# from flask import Flask, jsonify
+# from flask_cors import CORS
+# import os
+# from dotenv import load_dotenv
+# import gspread
+# from google.oauth2.service_account import Credentials
+# import json
+
+# load_dotenv()
+
+# app = Flask(__name__)
+# CORS(app, origins=["http://localhost:5173", "http://localhost:3000"])
+
+# def get_google_sheets_client():
+#     """Initialize Google Sheets client"""
+#     creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+    
+#     if creds_json:
+#         creds_dict = json.loads(creds_json)
+#         scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+#         creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+#     elif os.path.exists('credentials.json'):
+#         scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+#         creds = Credentials.from_service_account_file('credentials.json', scopes=scopes)
+#     else:
+#         raise Exception("No Google credentials found")
+    
+#     return gspread.authorize(creds)
+
+# def sheet_to_dict(sheet):
+#     """Convert sheet data to list of dictionaries"""
+#     data = sheet.get_all_values()
+    
+#     if not data or len(data) < 2:
+#         return []
+    
+#     headers = data[0]
+#     rows = data[1:]
+    
+#     result = []
+#     for row in rows:
+#         row_dict = {}
+#         for i, header in enumerate(headers):
+#             row_dict[header] = row[i] if i < len(row) else ''
+#         result.append(row_dict)
+    
+#     return result
+
+# @app.route('/api/mapping-data', methods=['GET'])
+# def get_mapping_data():
+#     """Get management names and emails from Mapping sheet"""
+#     try:
+#         sheet_id = os.getenv('GOOGLE_SHEET_ID')
+#         sheet_name = os.getenv('MAPPING_SHEET', 'Mapping')
+        
+#         client = get_google_sheets_client()
+#         sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+#         data = sheet_to_dict(sheet)
+        
+#         return jsonify({
+#             'success': True,
+#             'data': data,
+#             'type': 'mapping'
+#         })
+        
+#     except Exception as e:
+#         return jsonify({
+#             'success': False,
+#             'error': str(e),
+#             'type': 'mapping'
+#         }), 500
+
+# # @app.route('/api/responses', methods=['GET'])
+# # def get_responses():
+# #     """Get all feedback responses for admin panel"""
+# #     try:
+# #         sheet_id = os.getenv('GOOGLE_SHEET_ID')
+# #         sheet_name = os.getenv('RESPONSE_SHEET', 'Response')
+        
+# #         client = get_google_sheets_client()
+# #         sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+# #         data = sheet_to_dict(sheet)
+        
+# #         return jsonify({
+# #             'success': True,
+# #             'data': data,
+# #             'total': len(data),
+# #             'type': 'responses'
+# #         })
+        
+# #     except Exception as e:
+# #         return jsonify({
+# #             'success': False,
+# #             'error': str(e),
+# #             'type': 'responses'
+# #         }), 500
+
+
+# @app.route('/api/responses', methods=['GET'])
+# def get_responses():
+#     try:
+#         sheet_id = os.getenv('GOOGLE_SHEET_ID_RESPONSES')  # Changed
+#         sheet_name = os.getenv('RESPONSES_SHEET_NAME', 'Response')
+        
+#         client = get_google_sheets_client()
+#         sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+#         data = sheet_to_dict(sheet)
+        
+#         return jsonify({
+#             'success': True,
+#             'data': data,
+#             'total': len(data)
+#         })
+#     except Exception as e:
+#         return jsonify({
+#             'success': False,
+#             'error': str(e)
+#         }), 500
+
+
+
+# @app.route('/api/questions', methods=['GET'])
+# def get_questions():
+#     """Get survey questions for feedback form"""
+#     try:
+#         sheet_id = os.getenv('GOOGLE_SHEET_ID')
+#         sheet_name = os.getenv('QUESTIONS_SHEET', 'Survey Questions')
+        
+#         client = get_google_sheets_client()
+#         sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+#         data = sheet_to_dict(sheet)
+        
+#         return jsonify({
+#             'success': True,
+#             'data': data,
+#             'type': 'questions'
+#         })
+        
+#     except Exception as e:
+#         return jsonify({
+#             'success': False,
+#             'error': str(e),
+#             'type': 'questions'
+#         }), 500
+
+# @app.route('/api/submit-feedback', methods=['POST'])
+# def submit_feedback():
+#     """Submit new feedback to Response sheet"""
+#     try:
+#         import datetime
+#         data = request.json
+        
+#         sheet_id = os.getenv('GOOGLE_SHEET_ID')
+#         sheet_name = os.getenv('RESPONSE_SHEET', 'Response')
+        
+#         client = get_google_sheets_client()
+#         sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+        
+#         # Get headers
+#         headers = sheet.row_values(1)
+        
+#         # Prepare row data in correct order
+#         row_data = []
+#         for header in headers:
+#             if header == 'Timestamp':
+#                 row_data.append(datetime.datetime.now().isoformat())
+#             elif header in data:
+#                 row_data.append(data[header])
+#             else:
+#                 row_data.append('')
+        
+#         # Append new row
+#         sheet.append_row(row_data)
+        
+#         return jsonify({
+#             'success': True,
+#             'message': 'Feedback submitted successfully'
+#         })
+        
+#     except Exception as e:
+#         return jsonify({
+#             'success': False,
+#             'error': str(e)
+#         }), 500
+
+# @app.route('/api/health', methods=['GET'])
+# def health_check():
+#     return jsonify({
+#         'status': 'healthy',
+#         'sheets': {
+#             'mapping': os.getenv('MAPPING_SHEET', 'Mapping'),
+#             'responses': os.getenv('RESPONSE_SHEET', 'Response'),
+#             'questions': os.getenv('QUESTIONS_SHEET', 'Survey Questions')
+#         }
+#     })
+
+# if __name__ == '__main__':
+#     port = int(os.getenv('PORT', 5000))
+#     app.run(debug=True, host='0.0.0.0', port=port)
+
+
+
+
+
+
+
+from flask import Flask, jsonify, request  # Added 'request' import
+from flask_cors import CORS
+import os
+from dotenv import load_dotenv
+import gspread
+from google.oauth2.service_account import Credentials
+import json
+import datetime  # Added datetime import
+
+load_dotenv()
+
+app = Flask(__name__)
+CORS(app, origins=["http://localhost:5173", "http://localhost:3000"])
+
+def get_google_sheets_client():
+    """Initialize Google Sheets client"""
+    creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+    
+    if creds_json:
+        creds_dict = json.loads(creds_json)
+        scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+    elif os.path.exists('credentials.json'):
+        scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+        creds = Credentials.from_service_account_file('credentials.json', scopes=scopes)
+    else:
+        raise Exception("No Google credentials found")
+    
+    return gspread.authorize(creds)
+
+def sheet_to_dict(sheet):
+    """Convert sheet data to list of dictionaries"""
+    data = sheet.get_all_values()
+    
+    if not data or len(data) < 2:
+        return []
+    
+    headers = data[0]
+    rows = data[1:]
+    
+    result = []
+    for row in rows:
+        row_dict = {}
+        for i, header in enumerate(headers):
+            row_dict[header] = row[i] if i < len(row) else ''
+        result.append(row_dict)
+    
+    return result
+
+@app.route('/api/mapping-data', methods=['GET'])
+def get_mapping_data():
+    """Get management names and emails from Mapping sheet"""
+    try:
+        sheet_id = os.getenv('GOOGLE_SHEET_ID_MAPPING')  # FIXED: Changed from GOOGLE_SHEET_ID
+        sheet_name = os.getenv('MAPPING_SHEET_NAME', 'Sheet1')  # FIXED: Changed from MAPPING_SHEET
+        
+        client = get_google_sheets_client()
+        sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+        data = sheet_to_dict(sheet)
+        
+        return jsonify({
+            'success': True,
+            'data': data,
+            'type': 'mapping'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'type': 'mapping'
+        }), 500
+
+@app.route('/api/responses', methods=['GET'])
+def get_responses():
+    """Get all feedback responses for admin panel"""
+    try:
+        sheet_id = os.getenv('GOOGLE_SHEET_ID_RESPONSES')
+        sheet_name = os.getenv('RESPONSES_SHEET_NAME', 'Sheet1')
+        
+        client = get_google_sheets_client()
+        sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+        data = sheet_to_dict(sheet)
+        
+        return jsonify({
+            'success': True,
+            'data': data,
+            'total': len(data),
+            'type': 'responses'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'type': 'responses'
+        }), 500
+
+@app.route('/api/questions', methods=['GET'])
+def get_questions():
+    """Get survey questions for feedback form"""
+    try:
+        sheet_id = os.getenv('GOOGLE_SHEET_ID_QUESTIONS')  # FIXED: Changed from GOOGLE_SHEET_ID
+        sheet_name = os.getenv('QUESTIONS_SHEET_NAME', 'Sheet1')  # FIXED: Changed from QUESTIONS_SHEET
+        
+        client = get_google_sheets_client()
+        sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+        data = sheet_to_dict(sheet)
+        
+        return jsonify({
+            'success': True,
+            'data': data,
+            'type': 'questions'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'type': 'questions'
+        }), 500
+
+@app.route('/api/submit-feedback', methods=['POST'])
+def submit_feedback():
+    """Submit new feedback to Response sheet"""
+    try:
+        data = request.json
+        
+        sheet_id = os.getenv('GOOGLE_SHEET_ID_RESPONSES')  # FIXED: Changed from GOOGLE_SHEET_ID
+        sheet_name = os.getenv('RESPONSES_SHEET_NAME', 'Sheet1')  # FIXED: Changed from RESPONSE_SHEET
+        
+        client = get_google_sheets_client()
+        sheet = client.open_by_key(sheet_id).worksheet(sheet_name)
+        
+        # Get headers
+        headers = sheet.row_values(1)
+        
+        # Prepare row data in correct order
+        row_data = []
+        for header in headers:
+            if header.lower() == 'timestamp' or header.lower() == 'date':
+                row_data.append(datetime.datetime.now().isoformat())
+            elif header in data:
+                row_data.append(str(data[header]))
+            else:
+                row_data.append('')
+        
+        # Append new row
+        sheet.append_row(row_data)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Feedback submitted successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'service': 'Feedback Hub Backend',
+        'sheets': {
+            'mapping': os.getenv('GOOGLE_SHEET_ID_MAPPING', 'Not set'),
+            'questions': os.getenv('GOOGLE_SHEET_ID_QUESTIONS', 'Not set'),
+            'responses': os.getenv('GOOGLE_SHEET_ID_RESPONSES', 'Not set')
+        },
+        'port': os.getenv('PORT', 5000)
+    })
+
+if __name__ == '__main__':
+    port = int(os.getenv('PORT', 5000))
+    print(f"🚀 Starting Feedback Hub Backend on http://localhost:{port}")
+    print(f"📡 Health check: http://localhost:{port}/api/health")
+    print(f"📊 Responses: http://localhost:{port}/api/responses")
+    print(f"❓ Questions: http://localhost:{port}/api/questions")
+    print(f"👥 Mapping: http://localhost:{port}/api/mapping-data")
+    app.run(debug=True, host='0.0.0.0', port=port)
