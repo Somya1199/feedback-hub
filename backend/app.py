@@ -1463,6 +1463,49 @@ def get_responses():
         print(f"Error in get_responses: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# @app.route('/api/submit-feedback', methods=['POST'])
+# def submit_feedback():
+#     """Submit feedback to Google Sheets."""
+#     try:
+#         data = request.json
+#         if not data:
+#             return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+#         print(f"📝 Received feedback submission with {len(data)} fields")
+        
+#         client = get_google_sheets_client()
+#         if not client:
+#             return jsonify({'success': False, 'error': 'Google Sheets not connected'}), 500
+        
+#         sheet_id = os.getenv('GOOGLE_SHEET_ID_RESPONSES')
+#         if not sheet_id:
+#             return jsonify({'success': False, 'error': 'RESPONSES_SHEET_ID not set'}), 500
+        
+#         spreadsheet = client.open_by_key(sheet_id)
+#         worksheet = spreadsheet.worksheet('Sheet1')
+        
+#         # Get headers
+#         headers = worksheet.row_values(1)
+        
+#         # Prepare row data matching headers
+#         row_data = []
+#         for header in headers:
+#             value = str(data.get(header, '')).strip()
+#             row_data.append(value)
+        
+#         # Append the new row
+#         worksheet.append_row(row_data)
+        
+#         return jsonify({
+#             'success': True,
+#             'message': 'Feedback submitted successfully'
+#         })
+        
+#     except Exception as e:
+#         print(f"❌ Error in submit_feedback: {str(e)}")
+#         return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/submit-feedback', methods=['POST'])
 def submit_feedback():
     """Submit feedback to Google Sheets."""
@@ -1479,7 +1522,7 @@ def submit_feedback():
         
         sheet_id = os.getenv('GOOGLE_SHEET_ID_RESPONSES')
         if not sheet_id:
-            return jsonify({'success': False, 'error': 'RESPONSES_SHEET_ID not set'}), 500
+            return jsonify({'success': False, 'error': 'GOOGLE_SHEET_ID_RESPONSES not set'}), 500
         
         spreadsheet = client.open_by_key(sheet_id)
         worksheet = spreadsheet.worksheet('Sheet1')
@@ -1490,8 +1533,21 @@ def submit_feedback():
         # Prepare row data matching headers
         row_data = []
         for header in headers:
-            value = str(data.get(header, '')).strip()
-            row_data.append(value)
+            value = data.get(header, '')
+            
+            # Convert rating numbers to text labels
+            if isinstance(value, (int, float)) and header not in ['Timestamp', 'Encrypted Submitter ID', 'Role Reviewed', 'Process', 'Management Email ID', 'Additional Comments']:
+                # This is likely a rating question
+                rating_map = {
+                    1: 'Strongly Disagree',
+                    2: 'Disagree',
+                    3: 'Neutral',
+                    4: 'Agree',
+                    5: 'Strongly Agree'
+                }
+                value = rating_map.get(int(value), str(value))
+            
+            row_data.append(str(value).strip())
         
         # Append the new row
         worksheet.append_row(row_data)
@@ -1504,6 +1560,79 @@ def submit_feedback():
     except Exception as e:
         print(f"❌ Error in submit_feedback: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+    # In your app.py
+@app.route('/api/detect-email', methods=['GET'])
+def detect_email():
+    """Try to detect user email from SSO headers."""
+    try:
+        # Common SSO headers (set by corporate proxies/SSO systems)
+        sso_headers = [
+            'X-Forwarded-User',
+            'X-REMOTE-USER', 
+            'REMOTE_USER',
+            'X-Auth-Email',
+            'X-User-Email',
+            'X-Goog-Authenticated-User-Email',
+            'OIDC_CLAIM_email'
+        ]
+        
+        detected_email = None
+        
+        for header in sso_headers:
+            value = request.headers.get(header)
+            if value:
+                print(f"Found header {header}: {value}")
+                # Clean up the value (sometimes headers have prefixes)
+                if 'gserviceaccount.com' not in value:  # Skip service accounts
+                    detected_email = value.replace('accounts.google.com:', '')
+                    detected_email = detected_email.split('@')[0] + '@company.com'  # Add domain
+                    break
+        
+        if detected_email:
+            print(f"✅ Detected email: {detected_email}")
+            return jsonify({
+                'success': True,
+                'email': detected_email,
+                'source': 'sso_headers'
+            })
+        else:
+            print("❌ No email detected in headers")
+            return jsonify({
+                'success': False,
+                'error': 'No email detected'
+            })
+            
+    except Exception as e:
+        print(f"Error detecting email: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/decode-token', methods=['GET'])
+def decode_token():
+    """Decode email from secure token."""
+    try:
+        token = request.args.get('token')
+        if not token:
+            return jsonify({'success': False, 'error': 'No token provided'}), 400
+        
+        # Simple base64 decode (in production, use proper JWT validation)
+        import base64
+        try:
+            decoded = base64.b64decode(token).decode('utf-8')
+            if '@' in decoded:
+                return jsonify({
+                    'success': True,
+                    'email': decoded,
+                    'source': 'token'
+                })
+        except:
+            pass
+            
+        return jsonify({'success': False, 'error': 'Invalid token'}), 400
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     print("📡 Available endpoints:")

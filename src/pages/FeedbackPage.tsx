@@ -51,39 +51,120 @@ const FeedbackPage = () => {
   useEffect(() => {
     loadFeedbackData();
   }, []);
-
+// useEffect(() => {
+//     const loadUserAndData = async () => {
+//       try {
+//         // Auto-detect user email
+//         const userEmail = await detectUserEmail();
+        
+//         if (!userEmail || !userEmail.includes('@')) {
+//           setError('Unable to identify your email. Please contact IT support.');
+//           toast({
+//             title: 'Identification Failed',
+//             description: 'Could not automatically detect your email address.',
+//             variant: 'destructive',
+//           });
+//           return;
+//         }
+        
+//         console.log('Auto-detected email:', userEmail);
+        
+//         // Store in state (but don't show in UI)
+//         setCurrentUserEmail(userEmail);
+        
+//         // Load data with detected email
+//         loadFeedbackData(userEmail);
+//       } catch (error) {
+//         console.error('Email detection failed:', error);
+//         setError('Unable to identify user. Please try again or contact support.');
+//       }
+//     };
+    
+//     loadUserAndData();
+//   }, []);
   // Helper function to categorize questions
-  const getCategoryForQuestion = (questionText: string): string => {
-    const text = questionText.toLowerCase();
+  // const getCategoryForQuestion = (questionText: string): string => {
+  //   const text = questionText.toLowerCase();
     
-    if (text.includes('support') || text.includes('approachability') || text.includes('guidance') || 
-        text.includes('well-being') || text.includes('challenges') || text.includes('work-life')) {
-      return 'Support & Approachability';
-    } else if (text.includes('workload') || text.includes('task') || text.includes('capacity') || 
-               text.includes('deadline') || text.includes('expectation')) {
-      return 'Workload & Task Management';
-    } else if (text.includes('leadership') || text.includes('direction') || text.includes('confidence') || 
-               text.includes('motivation') || text.includes('inspiration')) {
-      return 'Leadership & Direction';
-    } else if (text.includes('feedback') || text.includes('performance') || text.includes('recognition') || 
-               text.includes('improvement') || text.includes('goal')) {
-      return 'Feedback & Performance';
-    } else if (text.includes('fair') || text.includes('respect') || text.includes('inclusion') || 
-               text.includes('favoritism') || text.includes('contribution')) {
-      return 'Fairness & Respect';
-    } else if (text.includes('team') || text.includes('culture') || text.includes('environment') || 
-               text.includes('collaboration') || text.includes('trust')) {
-      return 'Team Culture';
-    } else if (text.includes('problem') || text.includes('decision') || text.includes('issue') || 
-               text.includes('roadblock') || text.includes('analytical')) {
-      return 'Problem Solving';
-    } else if (text.includes('accountability') || text.includes('responsibility') || 
-               text.includes('commitment') || text.includes('ownership')) {
-      return 'Accountability';
-    }
+  //   if (text.includes('support') || text.includes('approachability') || text.includes('guidance') || 
+  //       text.includes('well-being') || text.includes('challenges') || text.includes('work-life')) {
+  //     return 'Support & Approachability';
+  //   } else if (text.includes('workload') || text.includes('task') || text.includes('capacity') || 
+  //              text.includes('deadline') || text.includes('expectation')) {
+  //     return 'Workload & Task Management';
+  //   } else if (text.includes('leadership') || text.includes('direction') || text.includes('confidence') || 
+  //              text.includes('motivation') || text.includes('inspiration')) {
+  //     return 'Leadership & Direction';
+  //   } else if (text.includes('feedback') || text.includes('performance') || text.includes('recognition') || 
+  //              text.includes('improvement') || text.includes('goal')) {
+  //     return 'Feedback & Performance';
+  //   } else if (text.includes('fair') || text.includes('respect') || text.includes('inclusion') || 
+  //              text.includes('favoritism') || text.includes('contribution')) {
+  //     return 'Fairness & Respect';
+  //   } else if (text.includes('team') || text.includes('culture') || text.includes('environment') || 
+  //              text.includes('collaboration') || text.includes('trust')) {
+  //     return 'Team Culture';
+  //   } else if (text.includes('problem') || text.includes('decision') || text.includes('issue') || 
+  //              text.includes('roadblock') || text.includes('analytical')) {
+  //     return 'Problem Solving';
+  //   } else if (text.includes('accountability') || text.includes('responsibility') || 
+  //              text.includes('commitment') || text.includes('ownership')) {
+  //     return 'Accountability';
+  //   }
     
-    return 'General';
-  };
+  //   return 'General';
+  // };
+
+  // Helper function to categorize questions (fallback)
+// const getCategoryForQuestion = (questionText: string): string => {
+//   const text = questionText.toLowerCase();
+  
+//   // Your sheet already has categories, but this is a fallback
+//   if (text.includes('support') || text.includes('availability') || text.includes('well-being')) {
+//     return 'Support & Approachability';
+//   } else if (text.includes('workload') || text.includes('distribution') || text.includes('fair')) {
+//     return 'Workload & Task Management';
+//   } else if (text.includes('leadership') || text.includes('direction') || text.includes('vision')) {
+//     return 'Leadership & Direction';
+//   } else if (text.includes('feedback') || text.includes('performance') || text.includes('improvement')) {
+//     return 'Feedback & Performance';
+//   } else if (text.includes('fair') || text.includes('respect') || text.includes('inclusion')) {
+//     return 'Fairness & Respect';
+//   } else if (text.includes('team') || text.includes('collaboration') || text.includes('culture')) {
+//     return 'Team Culture';
+//   }
+  
+//   return 'General';
+// };
+
+
+// Helper function to categorize questions (fallback if topic detection fails)
+const getCategoryForQuestion = (questionText: string): string => {
+  const text = questionText.toLowerCase();
+  
+  if (text.includes('support') || text.includes('guidance') || text.includes('well-being') || text.includes('work-life')) {
+    return 'Support & Approachability';
+  } else if (text.includes('workload') || text.includes('task') || text.includes('deadline') || text.includes('capacity')) {
+    return 'Workload & Task Management';
+  } else if (text.includes('leadership') || text.includes('direction') || text.includes('decision') || text.includes('motivation')) {
+    return 'Leadership & Direction';
+  } else if (text.includes('feedback') || text.includes('performance') || text.includes('recognition') || text.includes('goal')) {
+    return 'Feedback & Performance Management';
+  } else if (text.includes('fair') || text.includes('respect') || text.includes('favoritism') || text.includes('inclusion')) {
+    return 'Fairness & Respect';
+  } else if (text.includes('team') || text.includes('culture') || text.includes('collaboration') || text.includes('trust')) {
+    return 'Team Culture & Environment';
+  } else if (text.includes('problem') || text.includes('roadblock') || text.includes('issue') || text.includes('analytical')) {
+    return 'Problem-Solving & Decision Support';
+  } else if (text.includes('accountability') || text.includes('responsibility') || text.includes('commitment') || text.includes('ownership')) {
+    return 'Accountability';
+  } else if (text.includes('overall') || text.includes('experience') || text.includes('satisfaction')) {
+    return 'Overall Experience';
+  }
+  
+  return 'General';
+};
+
 
 // const transformQuestionsData = (data: any[]): Question[] => {
 //   if (!data || data.length === 0) {
@@ -210,180 +291,458 @@ const FeedbackPage = () => {
 //   return questionsList;
 // };
 
+// const transformQuestionsData = (data: any[]): Question[] => {
+//   if (!data || data.length === 0) {
+//     console.log('No data received from Google Sheets');
+//     return [];
+//   }
+  
+//   console.log('Raw questions data structure:', {
+//     totalRows: data.length,
+//     headers: Object.keys(data[0] || {}),
+//     firstRow: data[0]
+//   });
+  
+//   const questionsList: Question[] = [];
+  
+//   // Look for question columns - they likely contain actual questions
+//   // Based on typical survey structure, questions are in specific columns
+//   const possibleQuestionColumns = [
+//     'Topic: Support & Approachability',
+//     'Topic: Workload & Task Management',
+//     'Topic: Leadership & Direction',
+//     'Topic: Feedback & Performance',
+//     'Topic: Fairness & Respect',
+//     'Topic: Team Culture',
+//     'Topic: Problem Solving',
+//     'Topic: Accountability'
+//   ];
+  
+//   // First, find which columns exist in our data
+//   const headers = Object.keys(data[0] || {});
+//   console.log('Available columns:', headers);
+  
+//   // Filter to find question columns
+//   const questionColumns = headers.filter(header => 
+//     possibleQuestionColumns.some(possible => 
+//       header.toLowerCase().includes('topic:') || 
+//       header.toLowerCase().includes('question')
+//     )
+//   );
+  
+//   console.log('Question columns found:', questionColumns);
+  
+//   if (questionColumns.length === 0) {
+//     // Try a different approach - look for columns with long text
+//     for (const header of headers) {
+//       // Check the first few rows to see if this column contains questions
+//       let hasQuestions = false;
+//       for (let i = 0; i < Math.min(5, data.length); i++) {
+//         const value = data[i]?.[header];
+//         if (value && typeof value === 'string' && value.length > 20) {
+//           hasQuestions = true;
+//           break;
+//         }
+//       }
+      
+//       if (hasQuestions) {
+//         questionColumns.push(header);
+//       }
+//     }
+//   }
+  
+//   console.log('Final question columns:', questionColumns);
+  
+//   // Extract questions from the first row (assuming questions are in first row)
+//   if (data.length > 0) {
+//     const firstRow = data[0];
+    
+//     for (const column of questionColumns) {
+//       const questionText = firstRow[column];
+      
+//       if (questionText && typeof questionText === 'string' && questionText.trim().length > 10) {
+//         const trimmedText = questionText.trim();
+        
+//         // Skip headers and rating labels
+//         if (
+//           trimmedText.toLowerCase().includes('strongly') ||
+//           trimmedText.toLowerCase().includes('disagree') ||
+//           trimmedText.toLowerCase().includes('neutral') ||
+//           trimmedText.toLowerCase().includes('agree') ||
+//           trimmedText.length < 10
+//         ) {
+//           continue;
+//         }
+        
+//         console.log(`Found question in column "${column}": ${trimmedText.substring(0, 50)}...`);
+        
+//         questionsList.push({
+//           question_id: `q${questionsList.length + 1}`,
+//           question_text: trimmedText,
+//           question_type: 'rating',
+//           options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//           category: getCategoryForQuestion(trimmedText),
+//           required: true
+//         });
+//       }
+//     }
+//   }
+  
+//   // If still no questions, try to extract from all rows
+//   if (questionsList.length === 0) {
+//     console.log('Trying alternative extraction from all rows...');
+    
+//     for (let i = 0; i < data.length; i++) {
+//       const row = data[i];
+//       if (!row) continue;
+      
+//       // Check all string values in this row
+//       for (const [key, value] of Object.entries(row)) {
+//         if (typeof value === 'string' && value.trim().length > 20) {
+//           const trimmed = value.trim();
+          
+//           // Skip if it's likely not a question
+//           if (
+//             trimmed.toLowerCase().includes('strongly') ||
+//             trimmed.toLowerCase().includes('about you') ||
+//             trimmed.toLowerCase().includes('your role') ||
+//             trimmed.toLowerCase().includes('overall rating') ||
+//             trimmed.toLowerCase().includes('gender') ||
+//             trimmed.toLowerCase().includes('tenure') ||
+//             trimmed.toLowerCase().includes('designation') ||
+//             trimmed.toLowerCase().includes('level') ||
+//             trimmed.toLowerCase().includes('age')
+//           ) {
+//             continue;
+//           }
+          
+//           // Check if this looks like a question
+//           if (trimmed.endsWith('?') || trimmed.includes('?')) {
+//             console.log(`Found question in row ${i}, column "${key}": ${trimmed.substring(0, 50)}...`);
+            
+//             if (!questionsList.some(q => q.question_text === trimmed)) {
+//               questionsList.push({
+//                 question_id: `q${questionsList.length + 1}`,
+//                 question_text: trimmed,
+//                 question_type: 'rating',
+//                 options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//                 category: getCategoryForQuestion(trimmed),
+//                 required: true
+//               });
+//             }
+//           }
+//         }
+//       }
+//     }
+//   }
+  
+//   console.log(`Extracted ${questionsList.length} questions`);
+  
+//   // If we have no questions, create some defaults for testing
+//   if (questionsList.length === 0) {
+//     console.log('Creating default questions for testing');
+//     questionsList.push(
+//       {
+//         question_id: 'q1',
+//         question_text: 'My manager provides clear direction and expectations.',
+//         question_type: 'rating',
+//         options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//         category: 'Leadership & Direction',
+//         required: true
+//       },
+//       {
+//         question_id: 'q2',
+//         question_text: 'I feel comfortable approaching my manager with concerns.',
+//         question_type: 'rating',
+//         options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//         category: 'Support & Approachability',
+//         required: true
+//       }
+//     );
+//   }
+  
+//   return questionsList;
+// };
+
+// const transformQuestionsData = (data: any[]): Question[] => {
+//   if (!data || data.length === 0) {
+//     console.log('No data received from Google Sheets');
+//     return [];
+//   }
+  
+//   console.log('Processing questions from Google Sheets...');
+//   console.log('Total rows:', data.length);
+  
+//   const questionsList: Question[] = [];
+//   let currentCategory = 'General'; // Default category
+  
+//   // Debug: Show first few rows
+//   console.log('\nFirst 10 rows of raw data:');
+//   data.slice(0, 10).forEach((row, index) => {
+//     console.log(`Row ${index}:`, row);
+//   });
+  
+//   // The data is an array of objects, each representing a row
+//   // Each object has keys like: 'Topic: Support & Approachability', 'Unnamed: 1', etc.
+//   // The first column contains either topics or questions
+  
+//   // Find the key for the first column (it varies based on Google Sheets export)
+//   const firstColumnKey = Object.keys(data[0] || {})[0] || '';
+//   console.log('First column key:', firstColumnKey);
+  
+//   data.forEach((row, rowIndex) => {
+//     // Get the value from the first column
+//     const firstCellValue = row[firstColumnKey] || '';
+    
+//     if (typeof firstCellValue !== 'string') return;
+    
+//     const text = firstCellValue.trim();
+    
+//     // Skip empty rows
+//     if (!text) return;
+    
+//     console.log(`Row ${rowIndex}: "${text.substring(0, 50)}..."`);
+    
+//     // Check if this is a topic header
+//     if (text.toLowerCase().startsWith('topic:')) {
+//       currentCategory = text.replace('Topic:', '').trim();
+//       console.log(`  → Category set to: ${currentCategory}`);
+//       return;
+//     }
+    
+//     // Skip rating option rows (they start with "Strongly disagree" or similar)
+//     if (text.toLowerCase() === 'strongly disagree' || 
+//         text.toLowerCase() === 'disagree' ||
+//         text.toLowerCase() === 'neutral' ||
+//         text.toLowerCase() === 'agree' ||
+//         text.toLowerCase() === 'strongly agree') {
+//       console.log('  → Skipping rating option');
+//       return;
+//     }
+    
+//     // Skip other headers/demographics
+//     if (text.toLowerCase().includes('about you') ||
+//         text.toLowerCase().includes('your role') ||
+//         text.toLowerCase().includes('overall rating') ||
+//         text.toLowerCase().includes('gender') ||
+//         text.toLowerCase().includes('tenure') ||
+//         text.toLowerCase().includes('designation') ||
+//         text.toLowerCase().includes('level') ||
+//         text.toLowerCase().includes('age') ||
+//         text.length < 10) { // Too short to be a real question
+//       console.log('  → Skipping header/demographic');
+//       return;
+//     }
+    
+//     // If we get here, this is likely a question!
+//     // Check if it looks like a question (ends with ? or is reasonably long)
+//     if (text.length >= 15 && (text.endsWith('?') || text.includes('?') || 
+//         text.toLowerCase().includes('how') || 
+//         text.toLowerCase().includes('what') ||
+//         text.toLowerCase().includes('why'))) {
+      
+//       console.log(`  ✓ Found question: "${text.substring(0, 60)}..."`);
+      
+//       questionsList.push({
+//         question_id: `q${questionsList.length + 1}`,
+//         question_text: text,
+//         question_type: 'rating',
+//         options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//         category: currentCategory,
+//         required: true
+//       });
+//     } else {
+//       console.log(`  → Not a question: "${text.substring(0, 30)}..."`);
+//     }
+//   });
+  
+//   console.log(`\n✅ Successfully extracted ${questionsList.length} questions`);
+  
+//   // Debug: Show all questions found
+//   if (questionsList.length > 0) {
+//     console.log('\n📋 Questions found:');
+//     questionsList.forEach((q, i) => {
+//       console.log(`${i + 1}. [${q.category}] ${q.question_text.substring(0, 70)}...`);
+//     });
+//   } else {
+//     console.log('\n⚠️ No questions found! Trying alternative extraction method...');
+    
+//     // Alternative: Extract based on pattern matching
+//     data.forEach((row, rowIndex) => {
+//       const firstCellValue = row[firstColumnKey] || '';
+//       if (typeof firstCellValue !== 'string') return;
+      
+//       const text = firstCellValue.trim();
+      
+//       // Simple pattern: if it's a decent length and not a header, treat as question
+//       if (text.length > 20 && 
+//           !text.toLowerCase().startsWith('topic:') &&
+//           !text.toLowerCase().includes('about you') &&
+//           !text.toLowerCase().includes('your role') &&
+//           text !== 'Strongly disagree' &&
+//           text !== 'disagree' &&
+//           text !== 'neutral' &&
+//           text !== 'agree' &&
+//           text !== 'Strongly agree') {
+        
+//         console.log(`Alternative: Found question at row ${rowIndex}: ${text.substring(0, 50)}...`);
+        
+//         questionsList.push({
+//           question_id: `q${questionsList.length + 1}`,
+//           question_text: text,
+//           question_type: 'rating',
+//           options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//           category: getCategoryForQuestion(text), // Use the helper function
+//           required: true
+//         });
+//       }
+//     });
+    
+//     console.log(`Alternative method found ${questionsList.length} questions`);
+//   }
+  
+//   // If still no questions, create defaults for testing
+//   if (questionsList.length === 0) {
+//     console.log('Creating default questions for testing');
+//     questionsList.push(
+//       {
+//         question_id: 'q1',
+//         question_text: 'Availability of support when needed',
+//         question_type: 'rating',
+//         options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//         category: 'Support & Approachability',
+//         required: true
+//       },
+//       {
+//         question_id: 'q2',
+//         question_text: 'Demonstration of concern for well-being',
+//         question_type: 'rating',
+//         options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//         category: 'Support & Approachability',
+//         required: true
+//       },
+//       {
+//         question_id: 'q3',
+//         question_text: 'Fair distribution of workload',
+//         question_type: 'rating',
+//         options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//         category: 'Workload & Task Management',
+//         required: true
+//       }
+//     );
+//   }
+  
+//   return questionsList;
+// };
 const transformQuestionsData = (data: any[]): Question[] => {
   if (!data || data.length === 0) {
     console.log('No data received from Google Sheets');
     return [];
   }
   
-  console.log('Raw questions data structure:', {
-    totalRows: data.length,
-    headers: Object.keys(data[0] || {}),
-    firstRow: data[0]
+  console.log('📊 Processing questions from Google Sheets...');
+  console.log('Total rows received:', data.length);
+  
+  // Debug: Show first 15 rows
+  console.log('\nFirst 15 rows from API:');
+  data.slice(0, 15).forEach((row, i) => {
+    const value = row['Topic: Support & Approachability'] || row[Object.keys(row)[0]] || '';
+    console.log(`Row ${i}: "${value}"`);
   });
   
   const questionsList: Question[] = [];
+  let currentCategory = 'General';
+  let questionCount = 0;
   
-  // Look for question columns - they likely contain actual questions
-  // Based on typical survey structure, questions are in specific columns
-  const possibleQuestionColumns = [
-    'Topic: Support & Approachability',
-    'Topic: Workload & Task Management',
-    'Topic: Leadership & Direction',
-    'Topic: Feedback & Performance',
-    'Topic: Fairness & Respect',
-    'Topic: Team Culture',
-    'Topic: Problem Solving',
-    'Topic: Accountability'
-  ];
+  // The key for the column (might vary)
+  const columnKey = Object.keys(data[0] || {})[0] || 'Topic: Support & Approachability';
+  console.log(`Using column key: "${columnKey}"`);
   
-  // First, find which columns exist in our data
-  const headers = Object.keys(data[0] || {});
-  console.log('Available columns:', headers);
-  
-  // Filter to find question columns
-  const questionColumns = headers.filter(header => 
-    possibleQuestionColumns.some(possible => 
-      header.toLowerCase().includes('topic:') || 
-      header.toLowerCase().includes('question')
-    )
-  );
-  
-  console.log('Question columns found:', questionColumns);
-  
-  if (questionColumns.length === 0) {
-    // Try a different approach - look for columns with long text
-    for (const header of headers) {
-      // Check the first few rows to see if this column contains questions
-      let hasQuestions = false;
-      for (let i = 0; i < Math.min(5, data.length); i++) {
-        const value = data[i]?.[header];
-        if (value && typeof value === 'string' && value.length > 20) {
-          hasQuestions = true;
-          break;
-        }
-      }
-      
-      if (hasQuestions) {
-        questionColumns.push(header);
-      }
-    }
-  }
-  
-  console.log('Final question columns:', questionColumns);
-  
-  // Extract questions from the first row (assuming questions are in first row)
-  if (data.length > 0) {
-    const firstRow = data[0];
+  // Process each row
+  data.forEach((row, rowIndex) => {
+    const cellValue = row[columnKey] || '';
+    if (typeof cellValue !== 'string') return;
     
-    for (const column of questionColumns) {
-      const questionText = firstRow[column];
-      
-      if (questionText && typeof questionText === 'string' && questionText.trim().length > 10) {
-        const trimmedText = questionText.trim();
-        
-        // Skip headers and rating labels
-        if (
-          trimmedText.toLowerCase().includes('strongly') ||
-          trimmedText.toLowerCase().includes('disagree') ||
-          trimmedText.toLowerCase().includes('neutral') ||
-          trimmedText.toLowerCase().includes('agree') ||
-          trimmedText.length < 10
-        ) {
-          continue;
-        }
-        
-        console.log(`Found question in column "${column}": ${trimmedText.substring(0, 50)}...`);
-        
-        questionsList.push({
-          question_id: `q${questionsList.length + 1}`,
-          question_text: trimmedText,
-          question_type: 'rating',
-          options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
-          category: getCategoryForQuestion(trimmedText),
-          required: true
-        });
-      }
-    }
-  }
-  
-  // If still no questions, try to extract from all rows
-  if (questionsList.length === 0) {
-    console.log('Trying alternative extraction from all rows...');
+    const text = cellValue.trim();
+    if (!text) return;
     
-    for (let i = 0; i < data.length; i++) {
-      const row = data[i];
-      if (!row) continue;
-      
-      // Check all string values in this row
-      for (const [key, value] of Object.entries(row)) {
-        if (typeof value === 'string' && value.trim().length > 20) {
-          const trimmed = value.trim();
-          
-          // Skip if it's likely not a question
-          if (
-            trimmed.toLowerCase().includes('strongly') ||
-            trimmed.toLowerCase().includes('about you') ||
-            trimmed.toLowerCase().includes('your role') ||
-            trimmed.toLowerCase().includes('overall rating') ||
-            trimmed.toLowerCase().includes('gender') ||
-            trimmed.toLowerCase().includes('tenure') ||
-            trimmed.toLowerCase().includes('designation') ||
-            trimmed.toLowerCase().includes('level') ||
-            trimmed.toLowerCase().includes('age')
-          ) {
-            continue;
-          }
-          
-          // Check if this looks like a question
-          if (trimmed.endsWith('?') || trimmed.includes('?')) {
-            console.log(`Found question in row ${i}, column "${key}": ${trimmed.substring(0, 50)}...`);
-            
-            if (!questionsList.some(q => q.question_text === trimmed)) {
-              questionsList.push({
-                question_id: `q${questionsList.length + 1}`,
-                question_text: trimmed,
-                question_type: 'rating',
-                options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
-                category: getCategoryForQuestion(trimmed),
-                required: true
-              });
-            }
-          }
-        }
-      }
+    // DEBUG: Log every row
+    console.log(`[${rowIndex}] "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
+    
+    // Check if this is a topic header
+    if (text.toLowerCase().startsWith('topic:')) {
+      currentCategory = text.replace('Topic:', '').trim();
+      console.log(`  → Category set to: ${currentCategory}`);
+      return;
     }
-  }
-  
-  console.log(`Extracted ${questionsList.length} questions`);
-  
-  // If we have no questions, create some defaults for testing
-  if (questionsList.length === 0) {
-    console.log('Creating default questions for testing');
-    questionsList.push(
-      {
-        question_id: 'q1',
-        question_text: 'My manager provides clear direction and expectations.',
+    
+    // Skip rating options (they should be in separate columns, not rows)
+    // But just in case they appear in your data
+    if (text === 'Strongly disagree' || 
+        text === 'disagree' ||
+        text === 'neutral' ||
+        text === 'agree' ||
+        text === 'Strongly agree' ||
+        text.toLowerCase().includes('strongly disagree') ||
+        text.toLowerCase().includes('strongly agree')) {
+      console.log(`  → Skipping rating option: ${text}`);
+      return;
+    }
+    
+    // Skip section headers and demographics
+    if (text.toLowerCase().includes('about you') ||
+        text.toLowerCase().includes('your role') ||
+        text.toLowerCase().includes('overall rating') ||
+        text.toLowerCase().includes('gender') ||
+        text.toLowerCase().includes('tenure') ||
+        text.toLowerCase().includes('designation') ||
+        text.toLowerCase().includes('level') ||
+        text.toLowerCase().includes('age') ||
+        text.length < 5) {
+      console.log(`  → Skipping header/demographic: ${text}`);
+      return;
+    }
+    
+    // If we get here, this is likely a question!
+    // Questions should be reasonable length and not be topics
+    if (text.length >= 10 && !text.toLowerCase().startsWith('topic:')) {
+      questionCount++;
+      console.log(`  ✅ Question ${questionCount}: "${text}"`);
+      console.log(`     Category: ${currentCategory}`);
+      
+      questionsList.push({
+        question_id: `q${questionCount}`,
+        question_text: text,
         question_type: 'rating',
         options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
-        category: 'Leadership & Direction',
+        category: currentCategory,
         required: true
-      },
-      {
-        question_id: 'q2',
-        question_text: 'I feel comfortable approaching my manager with concerns.',
-        question_type: 'rating',
-        options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
-        category: 'Support & Approachability',
-        required: true
-      }
-    );
-  }
+      });
+    }
+  });
+  
+  console.log(`\n✅ Successfully extracted ${questionsList.length} questions`);
+  
+  // Show summary by category
+  const categorySummary: Record<string, number> = {};
+  questionsList.forEach(q => {
+    categorySummary[q.category] = (categorySummary[q.category] || 0) + 1;
+  });
+  
+  console.log('\n📋 Questions by category:');
+  Object.entries(categorySummary).forEach(([category, count]) => {
+    console.log(`  ${category}: ${count} questions`);
+  });
+  
+  // Show first few questions
+  console.log('\n📝 Sample questions:');
+  questionsList.slice(0, 5).forEach((q, i) => {
+    console.log(`${i + 1}. [${q.category}] ${q.question_text}`);
+  });
   
   return questionsList;
 };
-
-  // Transform mapping data from Google Sheets format
+// Transform mapping data from Google Sheets format
   const transformMappingData = (data: any[]): FeedbackTargets => {
     const targetsData: FeedbackTargets = {
       'POC': [],
@@ -577,14 +936,26 @@ const transformQuestionsData = (data: any[]): Question[] => {
   };
 
   // Group questions by category with proper typing
-  const groupedQuestions = questions.reduce((acc: Record<string, Question[]>, q: Question) => {
-    const category = q.category || 'General';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(q);
-    return acc;
-  }, {});
+  // const groupedQuestions = questions.reduce((acc: Record<string, Question[]>, q: Question) => {
+  //   const category = q.category || 'General';
+  //   if (!acc[category]) {
+  //     acc[category] = [];
+  //   }
+  //   acc[category].push(q);
+  //   return acc;
+  // }, {});
+
+  // Group questions by category with proper typing
+const groupedQuestions = questions.reduce((acc: Record<string, Question[]>, q: Question) => {
+  const category = q.category || 'General';
+  if (!acc[category]) {
+    acc[category] = [];
+  }
+  acc[category].push(q);
+  return acc;
+}, {});
+
+console.log('📊 Grouped questions:', Object.keys(groupedQuestions).map(k => `${k}: ${groupedQuestions[k].length}`));
 
   // Loading state
   if (step === 'loading') {
