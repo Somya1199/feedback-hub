@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+// import { fetchSurveyQuestions, fetchManagementMapping, submitFeedback } from '@/services/sheetsApi';
+// Change this import:
 import { fetchSurveyQuestions, fetchManagementMapping, submitFeedback } from '@/services/sheetsApi';
 
+// To ensure you're using the updated functions, verify they match the new signature
 // Type definitions
 interface Question {
   question_id: string;
@@ -82,113 +85,261 @@ const FeedbackPage = () => {
     return 'General';
   };
 
+// const transformQuestionsData = (data: any[]): Question[] => {
+//   if (!data || data.length === 0) {
+//     console.log('No data received from Google Sheets');
+//     return [];
+//   }
+  
+//   const questionsList: Question[] = [];
+  
+//   // Log the entire data structure to understand it better
+//   console.log('Full data structure for debugging:');
+//   data.forEach((row, index) => {
+//     console.log(`Row ${index}:`, row);
+//   });
+  
+//   // Find which column contains the questions
+//   // Based on your description, it should be 'Topic: Support & Approachability'
+//   // but let's find it dynamically
+//   const possibleQuestionKeys = Object.keys(data[0] || {});
+//   console.log('Available keys/columns:', possibleQuestionKeys);
+  
+//   // Try to find the question column - it should have longer text
+//   let questionKey = possibleQuestionKeys[0]; // Default to first key
+  
+//   // Look for a key that contains question-like data
+//   for (let i = 0; i < Math.min(5, data.length); i++) {
+//     const row = data[i];
+//     if (row) {
+//       for (const key of possibleQuestionKeys) {
+//         const value = row[key];
+//         if (value && typeof value === 'string' && value.length > 20) {
+//           questionKey = key;
+//           console.log(`Found likely question column: ${questionKey} with value: ${value.substring(0, 50)}...`);
+//           break;
+//         }
+//       }
+//     }
+//   }
+  
+//   console.log(`Using question column: ${questionKey}`);
+  
+//   let questionNumber = 1;
+  
+//   for (let i = 0; i < data.length; i++) {
+//     const row = data[i];
+//     if (!row) continue;
+    
+//     const cellValue = row[questionKey];
+    
+//     if (cellValue && typeof cellValue === 'string') {
+//       const trimmedValue = cellValue.trim();
+      
+//       // Check if this is a question (not a header or rating option)
+//       const isQuestion = 
+//         trimmedValue.length > 10 && // Reasonable length for a question
+//         !trimmedValue.toLowerCase().includes('topic:') &&
+//         !trimmedValue.toLowerCase().includes('about you') &&
+//         !trimmedValue.toLowerCase().includes('your role') &&
+//         !trimmedValue.toLowerCase().includes('overall rating') &&
+//         !trimmedValue.toLowerCase().includes('gender') &&
+//         !trimmedValue.toLowerCase().includes('tenure') &&
+//         !trimmedValue.toLowerCase().includes('designation') &&
+//         !trimmedValue.toLowerCase().includes('level') &&
+//         !trimmedValue.toLowerCase().includes('age') &&
+//         trimmedValue !== 'Strongly disagree' &&
+//         trimmedValue !== 'disagree' &&
+//         trimmedValue !== 'neutral' &&
+//         trimmedValue !== 'agree' &&
+//         trimmedValue !== 'Strongly agree' &&
+//         !trimmedValue.toLowerCase().includes('strongly disagree') &&
+//         !trimmedValue.toLowerCase().includes('strongly agree');
+      
+//       if (isQuestion) {
+//         console.log(`[${i}] Adding question ${questionNumber}: ${trimmedValue.substring(0, 60)}...`);
+        
+//         questionsList.push({
+//           question_id: `q${questionNumber}`,
+//           question_text: trimmedValue,
+//           question_type: 'rating',
+//           options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//           category: getCategoryForQuestion(trimmedValue),
+//           required: true
+//         });
+//         questionNumber++;
+//       } else {
+//         console.log(`[${i}] Skipping: ${trimmedValue.substring(0, 60)}...`);
+//       }
+//     }
+//   }
+  
+//   console.log(`Successfully extracted ${questionsList.length} questions`);
+  
+//   // If still no questions, try a different approach
+//   if (questionsList.length === 0) {
+//     console.log('Trying alternative extraction method...');
+    
+//     // Extract all string values that look like questions
+//     for (let i = 0; i < data.length; i++) {
+//       const row = data[i];
+//       if (row) {
+//         // Check all columns in this row
+//         Object.values(row).forEach((value) => {
+//           if (typeof value === 'string' && value.trim().length > 20) {
+//             const trimmed = value.trim();
+//             // Basic filter to exclude headers
+//             if (!trimmed.toLowerCase().includes('topic:') && 
+//                 !trimmed.toLowerCase().includes('about you')) {
+//               console.log(`Found potential question in row ${i}: ${trimmed.substring(0, 50)}...`);
+//               questionsList.push({
+//                 question_id: `q${questionsList.length + 1}`,
+//                 question_text: trimmed,
+//                 question_type: 'rating',
+//                 options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+//                 category: getCategoryForQuestion(trimmed),
+//                 required: true
+//               });
+//             }
+//           }
+//         });
+//       }
+//     }
+//   }
+  
+//   return questionsList;
+// };
+
 const transformQuestionsData = (data: any[]): Question[] => {
   if (!data || data.length === 0) {
     console.log('No data received from Google Sheets');
     return [];
   }
   
-  const questionsList: Question[] = [];
-  
-  // Log the entire data structure to understand it better
-  console.log('Full data structure for debugging:');
-  data.forEach((row, index) => {
-    console.log(`Row ${index}:`, row);
+  console.log('Raw questions data structure:', {
+    totalRows: data.length,
+    headers: Object.keys(data[0] || {}),
+    firstRow: data[0]
   });
   
-  // Find which column contains the questions
-  // Based on your description, it should be 'Topic: Support & Approachability'
-  // but let's find it dynamically
-  const possibleQuestionKeys = Object.keys(data[0] || {});
-  console.log('Available keys/columns:', possibleQuestionKeys);
+  const questionsList: Question[] = [];
   
-  // Try to find the question column - it should have longer text
-  let questionKey = possibleQuestionKeys[0]; // Default to first key
+  // Look for question columns - they likely contain actual questions
+  // Based on typical survey structure, questions are in specific columns
+  const possibleQuestionColumns = [
+    'Topic: Support & Approachability',
+    'Topic: Workload & Task Management',
+    'Topic: Leadership & Direction',
+    'Topic: Feedback & Performance',
+    'Topic: Fairness & Respect',
+    'Topic: Team Culture',
+    'Topic: Problem Solving',
+    'Topic: Accountability'
+  ];
   
-  // Look for a key that contains question-like data
-  for (let i = 0; i < Math.min(5, data.length); i++) {
-    const row = data[i];
-    if (row) {
-      for (const key of possibleQuestionKeys) {
-        const value = row[key];
+  // First, find which columns exist in our data
+  const headers = Object.keys(data[0] || {});
+  console.log('Available columns:', headers);
+  
+  // Filter to find question columns
+  const questionColumns = headers.filter(header => 
+    possibleQuestionColumns.some(possible => 
+      header.toLowerCase().includes('topic:') || 
+      header.toLowerCase().includes('question')
+    )
+  );
+  
+  console.log('Question columns found:', questionColumns);
+  
+  if (questionColumns.length === 0) {
+    // Try a different approach - look for columns with long text
+    for (const header of headers) {
+      // Check the first few rows to see if this column contains questions
+      let hasQuestions = false;
+      for (let i = 0; i < Math.min(5, data.length); i++) {
+        const value = data[i]?.[header];
         if (value && typeof value === 'string' && value.length > 20) {
-          questionKey = key;
-          console.log(`Found likely question column: ${questionKey} with value: ${value.substring(0, 50)}...`);
+          hasQuestions = true;
           break;
         }
       }
-    }
-  }
-  
-  console.log(`Using question column: ${questionKey}`);
-  
-  let questionNumber = 1;
-  
-  for (let i = 0; i < data.length; i++) {
-    const row = data[i];
-    if (!row) continue;
-    
-    const cellValue = row[questionKey];
-    
-    if (cellValue && typeof cellValue === 'string') {
-      const trimmedValue = cellValue.trim();
       
-      // Check if this is a question (not a header or rating option)
-      const isQuestion = 
-        trimmedValue.length > 10 && // Reasonable length for a question
-        !trimmedValue.toLowerCase().includes('topic:') &&
-        !trimmedValue.toLowerCase().includes('about you') &&
-        !trimmedValue.toLowerCase().includes('your role') &&
-        !trimmedValue.toLowerCase().includes('overall rating') &&
-        !trimmedValue.toLowerCase().includes('gender') &&
-        !trimmedValue.toLowerCase().includes('tenure') &&
-        !trimmedValue.toLowerCase().includes('designation') &&
-        !trimmedValue.toLowerCase().includes('level') &&
-        !trimmedValue.toLowerCase().includes('age') &&
-        trimmedValue !== 'Strongly disagree' &&
-        trimmedValue !== 'disagree' &&
-        trimmedValue !== 'neutral' &&
-        trimmedValue !== 'agree' &&
-        trimmedValue !== 'Strongly agree' &&
-        !trimmedValue.toLowerCase().includes('strongly disagree') &&
-        !trimmedValue.toLowerCase().includes('strongly agree');
-      
-      if (isQuestion) {
-        console.log(`[${i}] Adding question ${questionNumber}: ${trimmedValue.substring(0, 60)}...`);
-        
-        questionsList.push({
-          question_id: `q${questionNumber}`,
-          question_text: trimmedValue,
-          question_type: 'rating',
-          options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
-          category: getCategoryForQuestion(trimmedValue),
-          required: true
-        });
-        questionNumber++;
-      } else {
-        console.log(`[${i}] Skipping: ${trimmedValue.substring(0, 60)}...`);
+      if (hasQuestions) {
+        questionColumns.push(header);
       }
     }
   }
   
-  console.log(`Successfully extracted ${questionsList.length} questions`);
+  console.log('Final question columns:', questionColumns);
   
-  // If still no questions, try a different approach
-  if (questionsList.length === 0) {
-    console.log('Trying alternative extraction method...');
+  // Extract questions from the first row (assuming questions are in first row)
+  if (data.length > 0) {
+    const firstRow = data[0];
     
-    // Extract all string values that look like questions
+    for (const column of questionColumns) {
+      const questionText = firstRow[column];
+      
+      if (questionText && typeof questionText === 'string' && questionText.trim().length > 10) {
+        const trimmedText = questionText.trim();
+        
+        // Skip headers and rating labels
+        if (
+          trimmedText.toLowerCase().includes('strongly') ||
+          trimmedText.toLowerCase().includes('disagree') ||
+          trimmedText.toLowerCase().includes('neutral') ||
+          trimmedText.toLowerCase().includes('agree') ||
+          trimmedText.length < 10
+        ) {
+          continue;
+        }
+        
+        console.log(`Found question in column "${column}": ${trimmedText.substring(0, 50)}...`);
+        
+        questionsList.push({
+          question_id: `q${questionsList.length + 1}`,
+          question_text: trimmedText,
+          question_type: 'rating',
+          options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+          category: getCategoryForQuestion(trimmedText),
+          required: true
+        });
+      }
+    }
+  }
+  
+  // If still no questions, try to extract from all rows
+  if (questionsList.length === 0) {
+    console.log('Trying alternative extraction from all rows...');
+    
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
-      if (row) {
-        // Check all columns in this row
-        Object.values(row).forEach((value) => {
-          if (typeof value === 'string' && value.trim().length > 20) {
-            const trimmed = value.trim();
-            // Basic filter to exclude headers
-            if (!trimmed.toLowerCase().includes('topic:') && 
-                !trimmed.toLowerCase().includes('about you')) {
-              console.log(`Found potential question in row ${i}: ${trimmed.substring(0, 50)}...`);
+      if (!row) continue;
+      
+      // Check all string values in this row
+      for (const [key, value] of Object.entries(row)) {
+        if (typeof value === 'string' && value.trim().length > 20) {
+          const trimmed = value.trim();
+          
+          // Skip if it's likely not a question
+          if (
+            trimmed.toLowerCase().includes('strongly') ||
+            trimmed.toLowerCase().includes('about you') ||
+            trimmed.toLowerCase().includes('your role') ||
+            trimmed.toLowerCase().includes('overall rating') ||
+            trimmed.toLowerCase().includes('gender') ||
+            trimmed.toLowerCase().includes('tenure') ||
+            trimmed.toLowerCase().includes('designation') ||
+            trimmed.toLowerCase().includes('level') ||
+            trimmed.toLowerCase().includes('age')
+          ) {
+            continue;
+          }
+          
+          // Check if this looks like a question
+          if (trimmed.endsWith('?') || trimmed.includes('?')) {
+            console.log(`Found question in row ${i}, column "${key}": ${trimmed.substring(0, 50)}...`);
+            
+            if (!questionsList.some(q => q.question_text === trimmed)) {
               questionsList.push({
                 question_id: `q${questionsList.length + 1}`,
                 question_text: trimmed,
@@ -199,9 +350,34 @@ const transformQuestionsData = (data: any[]): Question[] => {
               });
             }
           }
-        });
+        }
       }
     }
+  }
+  
+  console.log(`Extracted ${questionsList.length} questions`);
+  
+  // If we have no questions, create some defaults for testing
+  if (questionsList.length === 0) {
+    console.log('Creating default questions for testing');
+    questionsList.push(
+      {
+        question_id: 'q1',
+        question_text: 'My manager provides clear direction and expectations.',
+        question_type: 'rating',
+        options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+        category: 'Leadership & Direction',
+        required: true
+      },
+      {
+        question_id: 'q2',
+        question_text: 'I feel comfortable approaching my manager with concerns.',
+        question_type: 'rating',
+        options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+        category: 'Support & Approachability',
+        required: true
+      }
+    );
   }
   
   return questionsList;
