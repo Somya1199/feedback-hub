@@ -743,54 +743,109 @@ const transformQuestionsData = (data: any[]): Question[] => {
   return questionsList;
 };
 // Transform mapping data from Google Sheets format
-  const transformMappingData = (data: any[]): FeedbackTargets => {
-    const targetsData: FeedbackTargets = {
-      'POC': [],
-      'Manager': [],
-      'Account Manager': []
-    };
+  // const transformMappingData = (data: any[]): FeedbackTargets => {
+  //   const targetsData: FeedbackTargets = {
+  //     'POC': [],
+  //     'Manager': [],
+  //     'Account Manager': []
+  //   };
 
-    data.forEach((item) => {
-      const email = item.Email;
-      if (email && email.includes('@')) {
-        const baseInfo = {
-          email: email,
-          name: item.Ldap || email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-          process: item.Process || 'General',
-          role: ''
-        };
+  //   data.forEach((item) => {
+  //     const email = item.Email;
+  //     if (email && email.includes('@')) {
+  //       const baseInfo = {
+  //         email: email,
+  //         name: item.Ldap || email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+  //         process: item.Process || 'General',
+  //         role: ''
+  //       };
 
-        // Add to POC if has POC column
-        if (item.POC && item.POC.includes('@')) {
-          targetsData['POC'].push({ 
-            ...baseInfo, 
-            role: 'POC',
-            name: item.POC.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase())
-          });
-        }
+  //       // Add to POC if has POC column
+  //       if (item.POC && item.POC.includes('@')) {
+  //         targetsData['POC'].push({ 
+  //           ...baseInfo, 
+  //           role: 'POC',
+  //           name: item.POC.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase())
+  //         });
+  //       }
 
-        // Add to Manager if has Manager column
-        if (item.Manager && item.Manager.includes('@')) {
-          targetsData['Manager'].push({ 
-            ...baseInfo, 
-            role: 'Manager',
-            name: item.Manager.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase())
-          });
-        }
+  //       // Add to Manager if has Manager column
+  //       if (item.Manager && item.Manager.includes('@')) {
+  //         targetsData['Manager'].push({ 
+  //           ...baseInfo, 
+  //           role: 'Manager',
+  //           name: item.Manager.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase())
+  //         });
+  //       }
 
-        // Add to Account Manager if has Account manager column
-        if (item['Account manager'] && item['Account manager'].includes('@')) {
-          targetsData['Account Manager'].push({ 
-            ...baseInfo, 
-            role: 'Account Manager',
-            name: item['Account manager'].split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase())
-          });
-        }
-      }
-    });
+  //       // Add to Account Manager if has Account manager column
+  //       if (item['Account manager'] && item['Account manager'].includes('@')) {
+  //         targetsData['Account Manager'].push({ 
+  //           ...baseInfo, 
+  //           role: 'Account Manager',
+  //           name: item['Account manager'].split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase())
+  //         });
+  //       }
+  //     }
+  //   });
 
-    return targetsData;
+  //   return targetsData;
+  // };
+  // Transform mapping data from Google Sheets format - FIXED VERSION
+const transformMappingData = (data: any[]): FeedbackTargets => {
+  const targetsData: FeedbackTargets = {
+    'POC': [],
+    'Manager': [],
+    'Account Manager': []
   };
+
+  data.forEach((item) => {
+    // For POC
+    if (item.POC && item.POC.includes('@')) {
+      targetsData['POC'].push({
+        email: item.POC, // This should be the POC's email
+        name: item.POC.split('@')[0]
+          .replace('.', ' ')
+          .replace(/\b\w/g, l => l.toUpperCase()),
+        process: item.Process || 'General',
+        role: 'POC'
+      });
+    }
+
+    // For Manager
+    if (item.Manager && item.Manager.includes('@')) {
+      targetsData['Manager'].push({
+        email: item.Manager, // This should be the Manager's email
+        name: item.Manager.split('@')[0]
+          .replace('.', ' ')
+          .replace(/\b\w/g, l => l.toUpperCase()),
+        process: item.Process || 'General',
+        role: 'Manager'
+      });
+    }
+
+    // For Account Manager
+    if (item['Account manager'] && item['Account manager'].includes('@')) {
+      targetsData['Account Manager'].push({
+        email: item['Account manager'], // This should be the Account Manager's email
+        name: item['Account manager'].split('@')[0]
+          .replace('.', ' ')
+          .replace(/\b\w/g, l => l.toUpperCase()),
+        process: item.Process || 'General',
+        role: 'Account Manager'
+      });
+    }
+  });
+
+  // Log for debugging
+  console.log('Transformed targets:', {
+    POC: targetsData['POC'].map(t => ({ name: t.name, email: t.email })),
+    Manager: targetsData['Manager'].map(t => ({ name: t.name, email: t.email })),
+    AccountManager: targetsData['Account Manager'].map(t => ({ name: t.name, email: t.email }))
+  });
+
+  return targetsData;
+};
 
   const loadFeedbackData = async () => {
     setStep('loading');
@@ -870,63 +925,191 @@ const transformQuestionsData = (data: any[]): Question[] => {
     ) && selectedTarget !== null;
   };
 
-  const handleSubmit = async () => {
-    if (!canSubmit() || !selectedTarget) {
-      toast({
-        title: 'Incomplete Form',
-        description: 'Please answer all questions before submitting.',
-        variant: 'destructive',
-      });
-      return;
-    }
+  // const handleSubmit = async () => {
+  //   if (!canSubmit() || !selectedTarget) {
+  //     toast({
+  //       title: 'Incomplete Form',
+  //       description: 'Please answer all questions before submitting.',
+  //       variant: 'destructive',
+  //     });
+  //     return;
+  //   }
 
-    setIsSubmitting(true);
-    try {
-      // Prepare feedback data matching your RESPONSE sheet columns
-      const feedbackData: Record<string, any> = {
-        'Timestamp': new Date().toISOString(),
-        'Encrypted Submitter ID': `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        'Role Reviewed': selectedRole,
-        'Process': selectedTarget?.process || '',
-        'Management Email ID': selectedTarget?.email || '',
-        'Additional Comments': comments
-      };
+  //   setIsSubmitting(true);
+  //   try {
+  //     // Prepare feedback data matching your RESPONSE sheet columns
+  //     const feedbackData: Record<string, any> = {
+  //       'Timestamp': new Date().toISOString(),
+  //       'Encrypted Submitter ID': `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+  //       'Role Reviewed': selectedRole,
+  //       'Process': selectedTarget?.process || '',
+  //       'Management Email ID': selectedTarget?.email || '',
+  //       'Additional Comments': comments
+  //     };
 
-      // Add all question answers (ratings will be converted to 1-5 scale)
-      questions.forEach((q) => {
-        const columnName = q.question_text;
-        const answerValue = answers[q.question_id];
-        // Convert Strongly Disagree(1) to Strongly Agree(5) scale
-        const ratingValue = answerValue ? parseInt(answerValue) : '';
-        feedbackData[columnName] = ratingValue;
-      });
+  //     // Add all question answers (ratings will be converted to 1-5 scale)
+  //     questions.forEach((q) => {
+  //       const columnName = q.question_text;
+  //       const answerValue = answers[q.question_id];
+  //       // Convert Strongly Disagree(1) to Strongly Agree(5) scale
+  //       const ratingValue = answerValue ? parseInt(answerValue) : '';
+  //       feedbackData[columnName] = ratingValue;
+  //     });
 
-      console.log('Submitting feedback:', feedbackData);
+  //     console.log('Submitting feedback:', feedbackData);
 
-      // Submit to Google Sheets
-      const result = await submitFeedback(feedbackData);
+  //     // Submit to Google Sheets
+  //     const result = await submitFeedback(feedbackData);
       
-      if (result.success) {
-        setStep('success');
-        toast({
-          title: 'Success!',
-          description: 'Your feedback has been submitted to Google Sheets.',
-        });
-      } else {
-        throw new Error(result.error || 'Submission failed');
-      }
-    } catch (err) {
-      console.error('Submission error:', err);
-      toast({
-        title: 'Submission Failed',
-        description: err instanceof Error ? err.message : 'Please try again later.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //     if (result.success) {
+  //       setStep('success');
+  //       toast({
+  //         title: 'Success!',
+  //         description: 'Your feedback has been submitted to Google Sheets.',
+  //       });
+  //     } else {
+  //       throw new Error(result.error || 'Submission failed');
+  //     }
+  //   } catch (err) {
+  //     console.error('Submission error:', err);
+  //     toast({
+  //       title: 'Submission Failed',
+  //       description: err instanceof Error ? err.message : 'Please try again later.',
+  //       variant: 'destructive',
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+// const handleSubmit = async () => {
+//   if (!canSubmit() || !selectedTarget) {
+//     toast({
+//       title: 'Incomplete Form',
+//       description: 'Please answer all questions before submitting.',
+//       variant: 'destructive',
+//     });
+//     return;
+//   }
 
+//   setIsSubmitting(true);
+//   try {
+//     // Prepare feedback data matching your RESPONSE sheet columns
+//     const feedbackData: Record<string, any> = {
+//       'Timestamp': new Date().toISOString(),
+//       'Encrypted Submitter ID': `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+//       'Role Reviewed': selectedRole,
+//       'Process': selectedTarget?.process || '',
+//       'Management Email ID': selectedTarget?.email || '', // This should be the POC/Manager/Account Manager email
+//       'Additional Comments': comments
+//     };
+
+//     // Add submitter email (if you want to track who submitted)
+//     if (currentUserEmail) {
+//       feedbackData['Submitter Email'] = currentUserEmail;
+//     }
+
+//     console.log('Submitting feedback with these details:', {
+//       managementEmail: selectedTarget?.email,
+//       managementName: selectedTarget?.name,
+//       role: selectedRole,
+//       submitterEmail: currentUserEmail
+//     });
+
+//     // Add all question answers
+//     questions.forEach((q) => {
+//       const columnName = q.question_text;
+//       const answerValue = answers[q.question_id];
+//       const ratingValue = answerValue ? parseInt(answerValue) : '';
+//       feedbackData[columnName] = ratingValue;
+//     });
+
+//     console.log('Full submission data:', feedbackData);
+
+//     // Submit to Google Sheets
+//     const result = await submitFeedback(feedbackData);
+    
+//     if (result.success) {
+//       setStep('success');
+//       toast({
+//         title: 'Success!',
+//         description: `Your feedback for ${selectedTarget?.name} has been submitted.`,
+//       });
+//     } else {
+//       throw new Error(result.error || 'Submission failed');
+//     }
+//   } catch (err) {
+//     console.error('Submission error:', err);
+//     toast({
+//       title: 'Submission Failed',
+//       description: err instanceof Error ? err.message : 'Please try again later.',
+//       variant: 'destructive',
+//     });
+//   } finally {
+//     setIsSubmitting(false);
+//   }
+// };
+
+const handleSubmit = async () => {
+  if (!canSubmit() || !selectedTarget) {
+    toast({
+      title: 'Incomplete Form',
+      description: 'Please answer all questions before submitting.',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  setIsSubmitting(true);
+  try {
+    // Prepare feedback data matching your RESPONSE sheet columns
+    const feedbackData: Record<string, any> = {
+      'Timestamp': new Date().toISOString(),
+      'Encrypted Submitter ID': `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      'Role Reviewed': selectedRole,
+      'Process': selectedTarget?.process || '',
+      'Management Email ID': selectedTarget?.email || '', // This is the POC/Manager/Account Manager email
+      'Additional Comments': comments
+    };
+
+    console.log('Submitting feedback with these details:', {
+      managementEmail: selectedTarget?.email,
+      managementName: selectedTarget?.name,
+      role: selectedRole
+    });
+
+    // Add all question answers
+    questions.forEach((q) => {
+      const columnName = q.question_text;
+      const answerValue = answers[q.question_id];
+      const ratingValue = answerValue ? parseInt(answerValue) : '';
+      feedbackData[columnName] = ratingValue;
+    });
+
+    console.log('Full submission data:', feedbackData);
+
+    // Submit to Google Sheets
+    const result = await submitFeedback(feedbackData);
+    
+    if (result.success) {
+      setStep('success');
+      toast({
+        title: 'Success!',
+        description: `Your feedback for ${selectedTarget?.name} has been submitted.`,
+      });
+    } else {
+      throw new Error(result.error || 'Submission failed');
+    }
+  } catch (err) {
+    console.error('Submission error:', err);
+    toast({
+      title: 'Submission Failed',
+      description: err instanceof Error ? err.message : 'Please try again later.',
+      variant: 'destructive',
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const resetAndGiveMore = () => {
     setAnswers({});
     setComments('');
