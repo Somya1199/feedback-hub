@@ -59,6 +59,14 @@ const LandingPage = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+                        <Button
+              onClick={() => navigate('/admin')}
+              variant="outline"
+              className="flex-1 border-2 border-primary text-primary hover:bg-primary hover:text-white"
+              size="lg"
+            >
+              Admin Panel
+            </Button>
             <Button
               onClick={() => navigate('/feedback')}
               className="vox-btn-primary flex-1 group"
@@ -67,14 +75,7 @@ const LandingPage = () => {
               Give Feedback
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button
-              onClick={() => navigate('/admin')}
-              variant="outline"
-              className="flex-1 border-2 border-primary text-primary hover:bg-primary hover:text-white"
-              size="lg"
-            >
-              Admin Panel
-            </Button>
+
           </div>
 
           {/* Footer Note */}
