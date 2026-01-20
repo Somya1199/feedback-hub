@@ -619,3 +619,43 @@ export const submitFeedback = async (feedbackData: Record<string, any>) => {
     return { success: false, error: 'Network error' };
   }
 };
+
+// // First, add a function to fetch employee mappings (add this to your services/sheetsApi.ts)
+// export const fetchEmployeeMappings = async () => {
+//   try {
+//     const response = await fetch('/api/employees/mappings');
+//     const data = await response.json();
+//     return data;
+//   } catch (error) {
+//     console.error('Error fetching employee mappings:', error);
+//     return { success: false, error: 'Failed to fetch employee mapping data' };
+//   }
+// };
+// Temporary debug version
+export const fetchEmployeeMappings = async () => {
+  try {
+    console.log('Fetching employee mappings from API...');
+    const response = await fetch('/api/mappings');
+    const data = await response.json();
+    
+    console.log('Mappings API response:', {
+      success: data.success,
+      error: data.error,
+      count: data.data?.length || 0,
+      sheetName: data.sheet_name,
+      totalRows: data.total_rows
+    });
+    
+    if (data.data && data.data.length > 0) {
+      console.log('First 3 mapping entries:');
+      data.data.slice(0, 3).forEach((item: any, i: number) => {
+        console.log(`${i + 1}. Email: ${item.Email}, Ldap: ${item.Ldap}, Manager: ${item.Manager}`);
+      });
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching employee mappings:', error);
+    return { success: false, error: 'Failed to fetch employee mappings', data: [] };
+  }
+};
