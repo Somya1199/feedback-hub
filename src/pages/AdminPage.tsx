@@ -1279,12 +1279,11 @@ const AdminPage = () => {
               </CardContent>
             </Card>
           </TabsContent>
-
           <TabsContent value="home" className="space-y-6">
             <div className="animate-fade-in">
               <h2 className="text-2xl font-bold text-foreground mb-4">Dashboard Overview</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
@@ -1316,7 +1315,6 @@ const AdminPage = () => {
                           <div className="text-sm text-muted-foreground mt-2">Loading employee data...</div>
                         </div>
                       ) : employeeMappings.length === 0 ? (
-                        // NO MAPPING DATA LOADED
                         <div>
                           <div className="text-3xl font-bold text-gray-400">?</div>
                           <span className="text-sm text-muted-foreground">Pending Users</span>
@@ -1347,14 +1345,13 @@ const AdminPage = () => {
                           </div>
                         </div>
                       ) : (
-                        // MAPPING DATA IS LOADED - SHOW ACTUAL CALCULATION
                         <>
                           <span className="text-3xl font-bold block text-red-600">
                             {pendingUsers}
                           </span>
                           <span className="text-sm text-muted-foreground">Pending Users</span>
 
-                          <div className="mt-3 text-xs text-gray-600">
+                          {/* <div className="mt-3 text-xs text-gray-600">
                             <div className="grid grid-cols-2 gap-3 mb-3">
                               <div className="text-left p-2 bg-blue-50 rounded-lg border border-blue-100">
                                 <div className="font-medium text-blue-700">Total Employees</div>
@@ -1384,9 +1381,200 @@ const AdminPage = () => {
                                 ></div>
                               </div>
                             </div>
-                          </div>
+                          </div> */}
                         </>
                       )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Gender Distribution Pie Chart Card */}
+                {/* Gender Distribution Pie Chart Card */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center mb-3">
+                        <Users className="w-6 h-6 text-secondary mr-2" />
+                        <span className="text-sm font-medium">Gender Distribution</span>
+                      </div>
+
+                      {(() => {
+                        // Calculate gender distribution from unique submitters
+                        const genderMap = new Map<string, number>();
+
+                        // Get unique submitter IDs and their gender
+                        const submitterMap = new Map<string, string>();
+
+                        responses.forEach(response => {
+                          const submitterId = response['Encrypted Submitter ID'] as string;
+                          const gender = (response['Gender'] as string)?.trim() || 'Unknown';
+
+                          if (submitterId && !submitterMap.has(submitterId)) {
+                            submitterMap.set(submitterId, gender);
+                          }
+                        });
+
+                        // Count genders from unique submitters
+                        submitterMap.forEach(gender => {
+                          let genderKey = gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+
+                          if (!['Male', 'Female', 'Other', 'Prefer not to say'].includes(genderKey)) {
+                            if (genderKey === 'Unknown' || !genderKey) {
+                              genderKey = 'Unknown';
+                            } else {
+                              if (genderKey.toLowerCase().includes('female')) genderKey = 'Female';
+                              else if (genderKey.toLowerCase().includes('male')) genderKey = 'Male';
+                              else genderKey = 'Other';
+                            }
+                          }
+
+                          genderMap.set(genderKey, (genderMap.get(genderKey) || 0) + 1);
+                        });
+
+                        const totalUniqueSubmitters = submitterMap.size;
+
+                        if (totalUniqueSubmitters === 0) {
+                          return (
+                            <div className="py-4">
+                              <div className="text-2xl font-bold text-gray-400">?</div>
+                              <div className="text-sm text-muted-foreground mt-1">No data</div>
+                              <div className="text-xs text-gray-500 mt-2">Unique submitters: {stats.uniqueSubmitters}</div>
+                            </div>
+                          );
+                        }
+
+                        // Convert to array and sort
+                        const genderData = Array.from(genderMap.entries())
+                          .map(([gender, count]) => ({
+                            gender,
+                            count,
+                            percentage: Math.round((count / totalUniqueSubmitters) * 100)
+                          }))
+                          .sort((a, b) => b.count - a.count);
+
+                        // Colors for pie chart segments
+                        const colors = {
+                          'Male': '#3b82f6', // Blue
+                          'Female': '#ec4899', // Pink
+                          'Other': '#8b5cf6', // Purple
+                          'Unknown': '#6b7280', // Gray
+                          'Prefer not to say': '#10b981' // Green
+                        };
+
+                        // Calculate pie chart segments
+                        let cumulativePercentage = 0;
+                        const segments = genderData.map(item => {
+                          const segment = {
+                            ...item,
+                            start: cumulativePercentage,
+                            end: cumulativePercentage + item.percentage,
+                            color: colors[item.gender as keyof typeof colors] || '#9ca3af'
+                          };
+                          cumulativePercentage += item.percentage;
+                          return segment;
+                        });
+
+                        // Create SVG pie chart - INCREASED SIZE
+                        const size = 140; // Increased from 100 to 140
+                        const radius = 55; // Increased from 40 to 55
+                        const center = size / 2;
+
+                        return (
+                          <div>
+                            <div className="relative mx-auto mb-2" style={{ width: size, height: size }}>
+                              <svg width={size} height={size} className="mb-2">
+                                {segments.map((segment, index) => {
+                                  if (segment.percentage === 0) return null;
+
+                                  // Calculate arc coordinates
+                                  const startAngle = (segment.start / 100) * 360 - 90;
+                                  const endAngle = (segment.end / 100) * 360 - 90;
+
+                                  const startRad = (startAngle * Math.PI) / 180;
+                                  const endRad = (endAngle * Math.PI) / 180;
+
+                                  const x1 = center + radius * Math.cos(startRad);
+                                  const y1 = center + radius * Math.sin(startRad);
+                                  const x2 = center + radius * Math.cos(endRad);
+                                  const y2 = center + radius * Math.sin(endRad);
+
+                                  const largeArc = segment.percentage > 50 ? 1 : 0;
+
+                                  const pathData = [
+                                    `M ${center} ${center}`,
+                                    `L ${x1} ${y1}`,
+                                    `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                                    'Z'
+                                  ].join(' ');
+
+                                  return (
+                                    <path
+                                      key={index}
+                                      d={pathData}
+                                      fill={segment.color}
+                                      stroke="white"
+                                      strokeWidth="2"
+                                    />
+                                  );
+                                })}
+
+                                {/* Center circle - proportionally larger */}
+                                <circle
+                                  cx={center}
+                                  cy={center}
+                                  r={radius * 0.5}
+                                  fill="white"
+                                />
+
+                                {/* Center text - larger font */}
+                                <text
+                                  x={center}
+                                  y={center - 8}
+                                  textAnchor="middle"
+                                  className="text-base font-bold fill-gray-700"
+                                >
+                                  {totalUniqueSubmitters}
+                                </text>
+                                <text
+                                  x={center}
+                                  y={center + 12}
+                                  textAnchor="middle"
+                                  className="text-sm fill-gray-500"
+                                >
+                                  Users
+                                </text>
+                              </svg>
+                            </div>
+
+                            {/* Legend with count and percentage */}
+                            <div className="mt-4 space-y-2">
+                              {genderData.map((item, index) => (
+                                <div key={index} className="flex items-center justify-between text-sm">
+                                  <div className="flex items-center">
+                                    <div
+                                      className="w-4 h-4 rounded-full mr-3"
+                                      style={{ backgroundColor: colors[item.gender as keyof typeof colors] || '#9ca3af' }}
+                                    />
+                                    <span className="font-medium">{item.gender}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-bold text-base">
+                                      {item.percentage}%
+                                    </div>
+                                    <div className="text-gray-500 text-xs">
+                                      ({item.count})
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* <div className="mt-3 text-sm text-muted-foreground">
+                              Based on {totalUniqueSubmitters} unique submitters
+                            </div> */}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </CardContent>
                 </Card>
@@ -1424,701 +1612,9 @@ const AdminPage = () => {
             </div>
           </TabsContent>
 
-          {/* Analytics Tab - COMPLETELY UNCHANGED from your original code */}
-          {/* <TabsContent value="analytics" className="space-y-6">
-            <div className="animate-fade-in">
-              <h2 className="text-2xl font-bold text-foreground mb-4">Analytics</h2>
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Leader Insights</CardTitle>
-                  <CardDescription>
-                    Select a leader to view detailed analytics
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex gap-3 items-center">
-                      <select
-                        className="flex-1 p-2 border rounded-md bg-white"
-                        value={selectedLeader}
-                        onChange={(e) => setSelectedLeader(e.target.value)}
-                      >
-                        <option value="all">All Leaders (Global Overview)</option>
-                        {getUniqueLeaders().map(leader => (
-                          <option key={leader.email} value={leader.email}>
-                            {leader.name} ({leader.feedbackCount} feedbacks)
-                          </option>
-                        ))}
-                      </select>
-                      <Button onClick={refreshAnalytics} variant="outline" className="whitespace-nowrap">
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Refresh
-                      </Button>
-                    </div>
-
-                    {selectedLeader !== 'all' && (
-                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex justify-between items-center mb-4">
-                          <div>
-                            <h4 className="font-semibold text-blue-800 text-lg">
-                              {emailToName(selectedLeader)}
-                            </h4>
-                            <p className="text-sm text-blue-600">{selectedLeader}</p>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setSelectedLeader('all')}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            ← View All Leaders
-                          </Button>
-                        </div>
-
-                        {(() => {
-                          const leaderData = calculateLeaderAnalyticsByPerson().find(l => l.email === selectedLeader);
-                          if (!leaderData) {
-                            return (
-                              <div className="text-center py-4 text-gray-500">
-                                No detailed data available for this leader.
-                              </div>
-                            );
-                          }
-
-                          return (
-                            <>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <div className="text-center p-4 bg-white rounded-lg border shadow-sm">
-                                  <div className="text-2xl font-bold text-blue-600">
-                                    {leaderData.feedbackCount || 0}
-                                  </div>
-                                  <div className="text-xs text-gray-600">Total Feedbacks</div>
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    {leaderData.uniqueRespondents || 0} people
-                                  </div>
-                                </div>
-                                <div className="text-center p-4 bg-white rounded-lg border shadow-sm">
-                                  <div className={`text-2xl font-bold ${(leaderData.avgScore || 0) >= 4 ? 'text-green-600' :
-                                      (leaderData.avgScore || 0) >= 3 ? 'text-yellow-600' : 'text-red-600'
-                                    }`}>
-                                    {(leaderData.avgScore || 0).toFixed(1)}
-                                  </div>
-                                  <div className="text-xs text-gray-600">Avg Rating (1-5)</div>
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    average across all questions
-                                  </div>
-                                </div>
-                                <div className="text-center p-4 bg-white rounded-lg border shadow-sm">
-                                  <div className="text-2xl font-bold text-green-600">
-                                    {leaderData.saQuestionPercent?.toFixed(1) || 0}%
-                                  </div>
-                                  <div className="text-xs text-gray-600">Strongly Agree</div>
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    {leaderData.saQuestionCount || 0} questions
-                                  </div>
-                                </div>
-                                <div className="text-center p-4 bg-white rounded-lg border shadow-sm">
-                                  <div className="text-2xl font-bold text-red-600">
-                                    {leaderData.sdQuestionPercent?.toFixed(1) || 0}%
-                                  </div>
-                                  <div className="text-xs text-gray-600">Strongly Disagree</div>
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    {leaderData.sdQuestionCount || 0} questions
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="mb-6">
-                                <h5 className="font-medium mb-3 text-blue-700">Question Response Distribution</h5>
-                                <div className="space-y-2">
-                                  {[
-                                    { key: 'saQuestion', label: 'Strongly Agree', color: 'bg-green-600' },
-                                    { key: 'aQuestion', label: 'Agree', color: 'bg-green-400' },
-                                    { key: 'nQuestion', label: 'Neutral', color: 'bg-yellow-400' },
-                                    { key: 'dQuestion', label: 'Disagree', color: 'bg-orange-400' },
-                                    { key: 'sdQuestion', label: 'Strongly Disagree', color: 'bg-red-500' },
-                                  ].map((responseType) => {
-                                    const percent = leaderData[`${responseType.key}Percent`] || 0;
-                                    const count = leaderData[`${responseType.key}Count`] || 0;
-
-                                    return (
-                                      <div key={responseType.key} className="flex items-center gap-3">
-                                        <div className="w-24 text-sm text-gray-600">{responseType.label}</div>
-                                        <div className="flex-1">
-                                          <div className="flex justify-between text-xs mb-1">
-                                            <span>{percent.toFixed(1)}%</span>
-                                            <span>{count} questions</span>
-                                          </div>
-                                          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                            <div
-                                              className={`h-2 rounded-full ${responseType.color}`}
-                                              style={{ width: `${Math.min(percent, 100)}%` }}
-                                            ></div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                                <div className="mt-2 text-xs text-gray-500 text-center">
-                                  Total: {leaderData.totalQuestionResponses || 0} question responses
-                                </div>
-                              </div>
-
-                              <div className="p-4 bg-gray-50 rounded-lg border">
-                                <h5 className="font-medium mb-2 text-gray-700">Risk Assessment</h5>
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <div className={`text-lg font-bold ${(leaderData.riskLevel || 'Low') === 'High' ? 'text-red-600' :
-                                        (leaderData.riskLevel || 'Low') === 'Medium' ? 'text-yellow-600' : 'text-green-600'
-                                      }`}>
-                                      {leaderData.riskLevel || 'Low'} Risk
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      Based on question responses: {leaderData.sdQuestionCount || 0} SD vs {leaderData.saQuestionCount || 0} SA
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-sm font-medium">Risk Score</div>
-                                    <div className="text-2xl font-bold">{leaderData.riskScore || 0}</div>
-                                  </div>
-                                </div>
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Participation Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <div className="flex justify-between mb-1">
-                      <span>Participation Progress</span>
-                      <span className="font-bold">{participationRate}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-4">
-                      <div
-                        className="bg-secondary h-4 rounded-full transition-all duration-500"
-                        style={{ width: `${participationRate}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground text-sm">
-                    <span className="font-bold">{stats.uniqueSubmitters}</span> out of
-                    <span className="font-bold"> {stats.totalEmployees}</span> employees submitted feedback.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Question Performance Analysis</CardTitle>
-                  <CardDescription>
-                    Mean scores and consistency across questions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 font-medium">Question</th>
-                          <th className="text-left py-3 font-medium">Mean Score</th>
-                          <th className="text-left py-3 font-medium">Std Dev</th>
-                          <th className="text-left py-3 font-medium">Responses</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {calculateQuestionMetrics().map((metric, idx) => (
-                          <tr key={idx} className="border-b hover:bg-muted/50">
-                            <td className="py-3 font-medium max-w-xs truncate">
-                              {metric.question}
-                            </td>
-                            <td className="py-3">
-                              <span className={`font-bold ${metric.meanScore >= 4 ? 'text-green-600' :
-                                  metric.meanScore >= 3 ? 'text-yellow-600' : 'text-red-600'
-                                }`}>
-                                {metric.meanScore.toFixed(2)}
-                              </span>
-                            </td>
-                            <td className="py-3">
-                              <span className={metric.stdDev > 1.5 ? 'text-yellow-600' : 'text-green-600'}>
-                                {metric.stdDev.toFixed(2)}
-                              </span>
-                            </td>
-                            <td className="py-3">{metric.count}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Gender Analysis</CardTitle>
-                    <CardDescription>
-                      Response distribution by submitter gender (Total: {stats.totalResponses} responses)
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {(() => {
-                        const genderData = calculateGenderAnalysisByPerson();
-                        const totalPeople = stats.totalResponses;
-
-                        return Object.entries(genderData).map(([gender, data]) => {
-                          const peopleCount = data.peopleCount || 0;
-                          const percentageOfTotal = totalPeople > 0
-                            ? (peopleCount / totalPeople) * 100
-                            : 0;
-
-                          const responsePercentages = {
-                            sa: data.avgSaPercent || 0,
-                            a: data.avgAPercent || 0,
-                            n: data.avgNPercent || 0,
-                            d: data.avgDPercent || 0,
-                            sd: data.avgSdPercent || 0,
-                          };
-
-                          const avgScore = data.avgScore || 0;
-
-                          return (
-                            <div key={gender} className="pb-4 border-b last:border-b-0 last:pb-0">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium">{gender}</span>
-                                <div className="text-right">
-                                  <div className="text-sm font-bold">{peopleCount} people</div>
-                                </div>
-                              </div>
-
-                              <div className="mb-3">
-                                <div className="flex justify-between text-xs mb-1">
-                                  <span>Share of total respondents</span>
-                                  <span className="font-medium">{percentageOfTotal.toFixed(1)}%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                  <div
-                                    className="bg-secondary h-2 rounded-full"
-                                    style={{ width: `${Math.min(percentageOfTotal, 100)}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-
-                              <div className="mb-3">
-                                <div className="flex justify-between text-xs mb-1">
-                                  <span>Average response distribution</span>
-                                  <span className={`font-medium ${avgScore >= 4 ? 'text-green-600' :
-                                      avgScore >= 3 ? 'text-yellow-600' : 'text-red-600'
-                                    }`}>
-                                    Avg: {avgScore.toFixed(1)}/5
-                                  </span>
-                                </div>
-                                <div className="w-full rounded-full h-2 overflow-hidden flex border border-gray-300">
-                                  <div
-                                    className="bg-red-500 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.sd, 100)}%` }}
-                                    title={`Average Strongly Disagree: ${responsePercentages.sd.toFixed(1)}%`}
-                                  ></div>
-                                  <div
-                                    className="bg-orange-400 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.d, 100)}%` }}
-                                    title={`Average Disagree: ${responsePercentages.d.toFixed(1)}%`}
-                                  ></div>
-                                  <div
-                                    className="bg-yellow-400 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.n, 100)}%` }}
-                                    title={`Average Neutral: ${responsePercentages.n.toFixed(1)}%`}
-                                  ></div>
-                                  <div
-                                    className="bg-green-400 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.a, 100)}%` }}
-                                    title={`Average Agree: ${responsePercentages.a.toFixed(1)}%`}
-                                  ></div>
-                                  <div
-                                    className="bg-green-600 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.sa, 100)}%` }}
-                                    title={`Average Strongly Agree: ${responsePercentages.sa.toFixed(1)}%`}
-                                  ></div>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-5 gap-1 text-xs">
-                                <div className="text-center" title="Average Strongly Disagree">
-                                  <div className="text-red-600 font-medium">
-                                    {responsePercentages.sd.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">SD</div>
-                                </div>
-                                <div className="text-center" title="Average Disagree">
-                                  <div className="text-orange-600 font-medium">
-                                    {responsePercentages.d.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">D</div>
-                                </div>
-                                <div className="text-center" title="Average Neutral">
-                                  <div className="text-yellow-600 font-medium">
-                                    {responsePercentages.n.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">N</div>
-                                </div>
-                                <div className="text-center" title="Average Agree">
-                                  <div className="text-green-600 font-medium">
-                                    {responsePercentages.a.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">A</div>
-                                </div>
-                                <div className="text-center" title="Average Strongly Agree">
-                                  <div className="text-green-700 font-medium">
-                                    {responsePercentages.sa.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">SA</div>
-                                </div>
-                              </div>
-
-                              <div className="mt-2 text-xs text-muted-foreground text-center">
-                                Avg questions per person: {data.avgQuestionsPerPerson?.toFixed(1) || 0}
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <div className="text-sm font-medium mb-1">Summary</div>
-                      <div className="text-xs text-muted-foreground">
-                        Based on {stats.totalResponses} individual respondents, not question counts.
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="text-xs font-medium mb-2">Legend:</div>
-                      <div className="flex flex-wrap gap-3 text-xs">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-red-500 rounded"></div>
-                          <span>SD: Strongly Disagree</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-orange-400 rounded"></div>
-                          <span>D: Disagree</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-yellow-400 rounded"></div>
-                          <span>N: Neutral</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-400 rounded"></div>
-                          <span>A: Agree</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-600 rounded"></div>
-                          <span>SA: Strongly Agree</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tenure Analysis</CardTitle>
-                    <CardDescription>
-                      Response distribution by submitter tenure (Total: {stats.totalResponses} responses)
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {(() => {
-                        const tenureData = calculateTenureAnalysisByPerson();
-                        const totalPeople = stats.totalResponses;
-
-                        return Object.entries(tenureData).map(([tenure, data]) => {
-                          const peopleCount = data.peopleCount || 0;
-                          const percentageOfTotal = totalPeople > 0
-                            ? (peopleCount / totalPeople) * 100
-                            : 0;
-
-                          const responsePercentages = {
-                            sa: data.avgSaPercent || 0,
-                            a: data.avgAPercent || 0,
-                            n: data.avgNPercent || 0,
-                            d: data.avgDPercent || 0,
-                            sd: data.avgSdPercent || 0,
-                          };
-
-                          const avgScore = data.avgScore || 0;
-
-                          return (
-                            <div key={tenure} className="pb-4 border-b last:border-b-0 last:pb-0">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium">{tenure}</span>
-                                <div className="text-right">
-                                  <div className="text-sm font-bold">{peopleCount} people</div>
-                                </div>
-                              </div>
-
-                              <div className="mb-3">
-                                <div className="flex justify-between text-xs mb-1">
-                                  <span>Share of total respondents</span>
-                                  <span className="font-medium">{percentageOfTotal.toFixed(1)}%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                  <div
-                                    className="bg-blue-500 h-2 rounded-full"
-                                    style={{ width: `${Math.min(percentageOfTotal, 100)}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-
-                              <div className="mb-3">
-                                <div className="flex justify-between text-xs mb-1">
-                                  <span>Average response distribution</span>
-                                  <span className={`font-medium ${avgScore >= 4 ? 'text-green-600' :
-                                      avgScore >= 3 ? 'text-yellow-600' : 'text-red-600'
-                                    }`}>
-                                    Avg: {avgScore.toFixed(1)}/5
-                                  </span>
-                                </div>
-                                <div className="w-full rounded-full h-2 overflow-hidden flex border border-gray-300">
-                                  <div
-                                    className="bg-red-500 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.sd, 100)}%` }}
-                                    title={`Average Strongly Disagree: ${responsePercentages.sd.toFixed(1)}%`}
-                                  ></div>
-                                  <div
-                                    className="bg-orange-400 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.d, 100)}%` }}
-                                    title={`Average Disagree: ${responsePercentages.d.toFixed(1)}%`}
-                                  ></div>
-                                  <div
-                                    className="bg-yellow-400 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.n, 100)}%` }}
-                                    title={`Average Neutral: ${responsePercentages.n.toFixed(1)}%`}
-                                  ></div>
-                                  <div
-                                    className="bg-green-400 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.a, 100)}%` }}
-                                    title={`Average Agree: ${responsePercentages.a.toFixed(1)}%`}
-                                  ></div>
-                                  <div
-                                    className="bg-green-600 h-full"
-                                    style={{ width: `${Math.min(responsePercentages.sa, 100)}%` }}
-                                    title={`Average Strongly Agree: ${responsePercentages.sa.toFixed(1)}%`}
-                                  ></div>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-5 gap-1 text-xs">
-                                <div className="text-center" title="Average Strongly Disagree">
-                                  <div className="text-red-600 font-medium">
-                                    {responsePercentages.sd.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">SD</div>
-                                </div>
-                                <div className="text-center" title="Average Disagree">
-                                  <div className="text-orange-600 font-medium">
-                                    {responsePercentages.d.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">D</div>
-                                </div>
-                                <div className="text-center" title="Average Neutral">
-                                  <div className="text-yellow-600 font-medium">
-                                    {responsePercentages.n.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">N</div>
-                                </div>
-                                <div className="text-center" title="Average Agree">
-                                  <div className="text-green-600 font-medium">
-                                    {responsePercentages.a.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">A</div>
-                                </div>
-                                <div className="text-center" title="Average Strongly Agree">
-                                  <div className="text-green-700 font-medium">
-                                    {responsePercentages.sa.toFixed(0)}%
-                                  </div>
-                                  <div className="text-gray-500 truncate">SA</div>
-                                </div>
-                              </div>
-
-                              <div className="mt-2 text-xs text-muted-foreground text-center">
-                                Avg questions per person: {data.avgQuestionsPerPerson?.toFixed(1) || 0}
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <div className="text-sm font-medium mb-1">Summary</div>
-                      <div className="text-xs text-muted-foreground">
-                        Based on {stats.totalResponses} individual respondents, not question counts.
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="text-xs font-medium mb-2">Legend:</div>
-                      <div className="flex flex-wrap gap-3 text-xs">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-red-500 rounded"></div>
-                          <span>SD: Strongly Disagree</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-orange-400 rounded"></div>
-                          <span>D: Disagree</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-yellow-400 rounded"></div>
-                          <span>N: Neutral</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-400 rounded"></div>
-                          <span>A: Agree</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-600 rounded"></div>
-                          <span>SA: Strongly Agree</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Comment Sentiment Analysis</CardTitle>
-                  <CardDescription>
-                    Sentiment analysis of written comments
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {calculateCommentSentiment().map((sentiment, idx) => (
-                      <div key={idx} className="text-center p-4 rounded-lg border">
-                        <div className={`text-2xl font-bold mb-2 ${sentiment.type === 'Positive' ? 'text-green-600' :
-                            sentiment.type === 'Negative' ? 'text-red-600' : 'text-yellow-600'
-                          }`}>
-                          {sentiment.percentage}%
-                        </div>
-                        <div className="text-sm font-medium">{sentiment.type}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {sentiment.count} comments
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 text-sm text-muted-foreground">
-                    Total comments analyzed: {calculateTotalComments()}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Risk Analysis Dashboard</CardTitle>
-                  <CardDescription>
-                    Predictive attrition indicators and HR risk assessment
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">Global HR Risk Score</span>
-                      <span className="text-2xl font-bold text-red-600">{calculateGlobalRiskScore()}/100</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-4">
-                      <div
-                        className={`h-4 rounded-full ${calculateGlobalRiskScore() > 70 ? 'bg-red-500' :
-                            calculateGlobalRiskScore() > 40 ? 'bg-yellow-500' : 'bg-green-500'
-                          }`}
-                        style={{ width: `${calculateGlobalRiskScore()}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>Low</span>
-                      <span>Medium</span>
-                      <span>High</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">
-                        {calculateRiskBuckets().low}
-                      </div>
-                      <div className="text-sm font-medium">Low Risk</div>
-                    </div>
-                    <div className="text-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <div className="text-2xl font-bold text-yellow-600">
-                        {calculateRiskBuckets().medium}
-                      </div>
-                      <div className="text-sm font-medium">Medium Risk</div>
-                    </div>
-                    <div className="text-center p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <div className="text-2xl font-bold text-red-600">
-                        {calculateRiskBuckets().high}
-                      </div>
-                      <div className="text-sm font-medium">High Risk</div>
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 font-medium">Leader</th>
-                          <th className="text-left py-3 font-medium">SD Count</th>
-                          <th className="text-left py-3 font-medium">SA Count</th>
-                          <th className="text-left py-3 font-medium">Risk Score</th>
-                          <th className="text-left py-3 font-medium">Action Needed</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {calculateHighRiskLeaders().map(leader => (
-                          <tr key={leader.name} className="border-b hover:bg-muted/50">
-                            <td className="py-3 font-medium">
-                              {leader.name.includes('@') ? leader.name.split('@')[0] : leader.name}
-                            </td>
-                            <td className="py-3 text-red-600 font-bold">{leader.sdCount}</td>
-                            <td className="py-3 text-green-600 font-bold">{leader.saCount}</td>
-                            <td className="py-3 font-bold">{leader.riskScore}</td>
-                            <td className="py-3">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${leader.actionNeeded === 'High' ? 'bg-red-100 text-red-800' :
-                                  leader.actionNeeded === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-green-100 text-green-800'
-                                }`}>
-                                {leader.actionNeeded}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-
-            </div>
-          </TabsContent> */}
-
           <TabsContent value="analytics" className="space-y-6">
             <div className="animate-fade-in">
               <h2 className="text-2xl font-bold text-foreground mb-4">Analytics</h2>
-
-              {/* Leader Insights Card - Selection Only */}
               <Card className="mb-6">
                 <CardHeader>
                   <CardTitle>Leader Insights</CardTitle>
@@ -3038,6 +2534,7 @@ const AdminPage = () => {
                         <Card>
                           <CardHeader>
                             <CardTitle>Risk Analysis Dashboard</CardTitle>
+                            <small><i>The Risk Score is a "concern meter" for leaders. It goes up when people strongly disagree with them (bad sign) and goes down a little when people strongly agree with them (good sign). <b>Higher score = more problems</b> with that leader's management style.</i></small>
                             <CardDescription>
                               Risk assessment for {emailToName(selectedLeader)}
                             </CardDescription>
@@ -3607,6 +3104,8 @@ const AdminPage = () => {
                   <Card>
                     <CardHeader>
                       <CardTitle>Risk Analysis Dashboard</CardTitle>
+                      <small><i>The Risk Score is a "concern meter" for leaders. It goes up when people strongly disagree with them (bad sign) and goes down a little when people strongly agree with them (good sign). <b>Higher score = more problems</b> with that leader's management style.</i></small>
+
                       <CardDescription>
                         Predictive attrition indicators and HR risk assessment
                       </CardDescription>
