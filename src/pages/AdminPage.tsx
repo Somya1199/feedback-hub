@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, BarChart3, FileText, Mail, LogOut, Users, TrendingUp, AlertTriangle, RefreshCw, Loader2, Filter } from 'lucide-react';
+import { Home, BarChart3, FileText, Mail, LogOut, Users, TrendingUp, AlertTriangle, RefreshCw, Loader2, Filter, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,7 +30,8 @@ const AdminPage = () => {
       'Q1': 0,
       'Q2': 0,
       'Q3': 0,
-      'Q4': 0
+      'Q4': 0,
+      // 'Unknown': 0  // Add Unknown here
     }
   });
 
@@ -292,21 +293,39 @@ const AdminPage = () => {
     }));
   };
 
+  // const calculateQuarterlyData = (responses: any[]) => {
+  //   const quarterlyData = {
+  //     Q1: 0,
+  //     Q2: 0,
+  //     Q3: 0,
+  //     Q4: 0,
+  //     Unknown: 0
+  //   };
+
+  //   responses.forEach(response => {
+  //     const quarter = getQuarterFromDate(response.Timestamp || response.Date || '');
+  //     if (quarterlyData.hasOwnProperty(quarter)) {
+  //       quarterlyData[quarter as keyof typeof quarterlyData]++;
+  //     } else {
+  //       quarterlyData.Unknown++;
+  //     }
+  //   });
+
+  //   return quarterlyData;
+  // };
   const calculateQuarterlyData = (responses: any[]) => {
     const quarterlyData = {
       Q1: 0,
       Q2: 0,
       Q3: 0,
       Q4: 0,
-      Unknown: 0
+      // Unknown: 0
     };
 
     responses.forEach(response => {
       const quarter = getQuarterFromDate(response.Timestamp || response.Date || '');
       if (quarterlyData.hasOwnProperty(quarter)) {
         quarterlyData[quarter as keyof typeof quarterlyData]++;
-      } else {
-        quarterlyData.Unknown++;
       }
     });
 
@@ -1283,23 +1302,18 @@ const AdminPage = () => {
             <div className="animate-fade-in">
               <h2 className="text-2xl font-bold text-foreground mb-4">Dashboard Overview</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {/* 4-card grid */}
+              {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
                       <Users className="w-8 h-8 text-secondary mx-auto mb-2" />
                       <span className="text-3xl font-bold block">{stats.uniqueSubmitters}</span>
                       <span className="text-sm text-muted-foreground">Unique Submitters</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <TrendingUp className="w-8 h-8 text-secondary mx-auto mb-2" />
-                      <span className="text-3xl font-bold block">{stats.totalResponses}</span>
-                      <span className="text-sm text-muted-foreground">Total Responses</span>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        {stats.totalResponses} total responses
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -1308,7 +1322,6 @@ const AdminPage = () => {
                   <CardContent className="pt-6">
                     <div className="text-center">
                       <AlertTriangle className="w-8 h-8 text-accent mx-auto mb-2" />
-
                       {mappingLoading ? (
                         <div className="py-4">
                           <Loader2 className="w-6 h-6 mx-auto animate-spin text-muted-foreground" />
@@ -1318,7 +1331,6 @@ const AdminPage = () => {
                         <div>
                           <div className="text-3xl font-bold text-gray-400">?</div>
                           <span className="text-sm text-muted-foreground">Pending Users</span>
-
                           <div className="mt-3 text-xs text-gray-600">
                             <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                               <div className="flex items-start">
@@ -1331,7 +1343,6 @@ const AdminPage = () => {
                                 </div>
                               </div>
                             </div>
-
                             <div className="mt-3 space-y-2">
                               <div className="flex justify-between">
                                 <span>Feedback responses loaded:</span>
@@ -1350,46 +1361,28 @@ const AdminPage = () => {
                             {pendingUsers}
                           </span>
                           <span className="text-sm text-muted-foreground">Pending Users</span>
-
-                          {/* <div className="mt-3 text-xs text-gray-600">
-                            <div className="grid grid-cols-2 gap-3 mb-3">
-                              <div className="text-left p-2 bg-blue-50 rounded-lg border border-blue-100">
-                                <div className="font-medium text-blue-700">Total Employees</div>
-                                <div className="text-xl font-bold text-blue-800">{employeeMappings.length}</div>
-                                <div className="text-xs text-blue-600">from mapping sheet</div>
-                              </div>
-                              <div className="text-right p-2 bg-green-50 rounded-lg border border-green-100">
-                                <div className="font-medium text-green-700">Submitted</div>
-                                <div className="text-xl font-bold text-green-800">{stats.uniqueSubmitters}</div>
-                                <div className="text-xs text-green-600">unique encrypted IDs</div>
-                              </div>
+                          <div className="mt-2 text-xs text-gray-600">
+                            <div className="flex justify-between">
+                              <span>Total employees:</span>
+                              <span className="font-medium">{employeeMappings.length}</span>
                             </div>
-
-                            <div className="mb-3">
-                              <div className="flex justify-between text-xs mb-1">
-                                <span className="font-medium">Participation Rate</span>
-                                <span className="font-bold">
-                                  {actualParticipationRate}%
-                                </span>
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                  className="bg-secondary h-2 rounded-full transition-all duration-500"
-                                  style={{
-                                    width: `${actualParticipationRate}%`
-                                  }}
-                                ></div>
-                              </div>
+                            <div className="flex justify-between">
+                              <span>Participation rate:</span>
+                              <span className="font-medium text-green-600">{actualParticipationRate}%</span>
                             </div>
-                          </div> */}
+                            <div className="mt-2 w-full bg-gray-200 rounded-full h-1">
+                              <div
+                                className="bg-green-500 h-1 rounded-full"
+                                style={{ width: `${actualParticipationRate}%` }}
+                              ></div>
+                            </div>
+                          </div>
                         </>
                       )}
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Gender Distribution Pie Chart Card */}
-                {/* Gender Distribution Pie Chart Card */}
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
@@ -1401,8 +1394,6 @@ const AdminPage = () => {
                       {(() => {
                         // Calculate gender distribution from unique submitters
                         const genderMap = new Map<string, number>();
-
-                        // Get unique submitter IDs and their gender
                         const submitterMap = new Map<string, string>();
 
                         responses.forEach(response => {
@@ -1474,9 +1465,9 @@ const AdminPage = () => {
                           return segment;
                         });
 
-                        // Create SVG pie chart - INCREASED SIZE
-                        const size = 140; // Increased from 100 to 140
-                        const radius = 55; // Increased from 40 to 55
+                        // Create SVG pie chart
+                        const size = 140;
+                        const radius = 55;
                         const center = size / 2;
 
                         return (
@@ -1486,7 +1477,6 @@ const AdminPage = () => {
                                 {segments.map((segment, index) => {
                                   if (segment.percentage === 0) return null;
 
-                                  // Calculate arc coordinates
                                   const startAngle = (segment.start / 100) * 360 - 90;
                                   const endAngle = (segment.end / 100) * 360 - 90;
 
@@ -1518,7 +1508,7 @@ const AdminPage = () => {
                                   );
                                 })}
 
-                                {/* Center circle - proportionally larger */}
+                          
                                 <circle
                                   cx={center}
                                   cy={center}
@@ -1526,7 +1516,6 @@ const AdminPage = () => {
                                   fill="white"
                                 />
 
-                                {/* Center text - larger font */}
                                 <text
                                   x={center}
                                   y={center - 8}
@@ -1546,7 +1535,6 @@ const AdminPage = () => {
                               </svg>
                             </div>
 
-                            {/* Legend with count and percentage */}
                             <div className="mt-4 space-y-2">
                               {genderData.map((item, index) => (
                                 <div key={index} className="flex items-center justify-between text-sm">
@@ -1568,26 +1556,1157 @@ const AdminPage = () => {
                                 </div>
                               ))}
                             </div>
-
-                            {/* <div className="mt-3 text-sm text-muted-foreground">
-                              Based on {totalUniqueSubmitters} unique submitters
-                            </div> */}
                           </div>
                         );
                       })()}
                     </div>
                   </CardContent>
                 </Card>
+              </div> */}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+  {/* Card 1: Unique Submitters - Compact */}
+  <Card className="hover:shadow-md transition-shadow">
+    <CardContent className="p-5">
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Users className="w-5 h-5 text-secondary" />
+            <span className="text-sm font-medium text-muted-foreground">Unique Submitters</span>
+          </div>
+          <span className="text-2xl font-bold block leading-tight">{stats.uniqueSubmitters}</span>
+          <div className="mt-2 text-xs text-muted-foreground">
+            {stats.totalResponses} total responses
+            <span className="ml-2 text-green-600 font-medium">
+              • {stats.totalResponses > 0 ? (stats.totalResponses / stats.uniqueSubmitters).toFixed(1) : 0} avg/submitter
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-col items-end">
+          <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
+            Participants
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+
+  {/* Card 2: Pending Users - Compact */}
+  <Card className="hover:shadow-md transition-shadow">
+    <CardContent className="p-5">
+      {mappingLoading ? (
+        <div className="flex items-center justify-center py-3">
+          <div className="text-center">
+            <Loader2 className="w-5 h-5 mx-auto animate-spin text-muted-foreground mb-2" />
+            <div className="text-xs text-muted-foreground">Loading employee data...</div>
+          </div>
+        </div>
+      ) : employeeMappings.length === 0 ? (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-500" />
+              <span className="text-sm font-medium text-muted-foreground">Pending Users</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-300">?</div>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="text-xs p-2 bg-yellow-50 border border-yellow-100 rounded">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-3 h-3 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="font-medium text-yellow-700 text-xs">Mapping needed</div>
+                  <div className="text-yellow-600 text-xs mt-0.5">
+                    Load employee mapping
+                  </div>
+                </div>
               </div>
+            </div>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Responses:</span>
+                <span className="font-medium">{responses.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Submitters:</span>
+                <span className="font-medium text-green-600">{stats.uniqueSubmitters}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-5 h-5 text-accent" />
+                <span className="text-sm font-medium text-muted-foreground">Pending Users</span>
+              </div>
+              <span className="text-2xl font-bold block leading-tight text-red-600">
+                {pendingUsers}
+              </span>
+            </div>
+            <div className="flex flex-col items-end">
+              <div className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded-full font-medium">
+                Action needed
+              </div>
+              <div className="text-xs text-gray-500 mt-1">{employeeMappings.length} total</div>
+            </div>
+          </div>
+          
+          <div className="mt-3 space-y-2">
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Participation:</span>
+                <span className="font-medium text-green-600">{actualParticipationRate}%</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
+                  style={{ width: `${actualParticipationRate}%` }}
+                />
+              </div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>0%</span>
+              <span>50%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+
+  {/* Card 3: Gender Distribution - Compact */}
+  <Card className="hover:shadow-md transition-shadow">
+    <CardContent className="p-5">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-secondary" />
+          <span className="text-sm font-medium text-muted-foreground">Gender Distribution</span>
+        </div>
+        <div className="text-xs px-2 py-1 bg-purple-50 text-purple-700 rounded-full font-medium">
+          Diversity
+        </div>
+      </div>
+
+      {(() => {
+        // Calculate gender distribution from unique submitters
+        const genderMap = new Map<string, number>();
+        const submitterMap = new Map<string, string>();
+
+        responses.forEach(response => {
+          const submitterId = response['Encrypted Submitter ID'] as string;
+          const gender = (response['Gender'] as string)?.trim() || 'Unknown';
+
+          if (submitterId && !submitterMap.has(submitterId)) {
+            submitterMap.set(submitterId, gender);
+          }
+        });
+
+        // Count genders from unique submitters
+        submitterMap.forEach(gender => {
+          let genderKey = gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+
+          if (!['Male', 'Female', 'Other', 'Prefer not to say'].includes(genderKey)) {
+            if (genderKey === 'Unknown' || !genderKey) {
+              genderKey = 'Unknown';
+            } else {
+              if (genderKey.toLowerCase().includes('female')) genderKey = 'Female';
+              else if (genderKey.toLowerCase().includes('male')) genderKey = 'Male';
+              else genderKey = 'Other';
+            }
+          }
+
+          genderMap.set(genderKey, (genderMap.get(genderKey) || 0) + 1);
+        });
+
+        const totalUniqueSubmitters = submitterMap.size;
+
+        if (totalUniqueSubmitters === 0) {
+          return (
+            <div className="py-4 text-center">
+              <div className="text-2xl font-bold text-gray-300 mb-1">?</div>
+              <div className="text-sm text-muted-foreground">No data</div>
+              <div className="text-xs text-gray-400 mt-2">Awaiting submissions</div>
+            </div>
+          );
+        }
+
+        // Convert to array and sort
+        const genderData = Array.from(genderMap.entries())
+          .map(([gender, count]) => ({
+            gender,
+            count,
+            percentage: Math.round((count / totalUniqueSubmitters) * 100)
+          }))
+          .sort((a, b) => b.count - a.count);
+
+        // Colors for pie chart segments
+        const colors = {
+          'Male': '#3b82f6', // Blue
+          'Female': '#ec4899', // Pink
+          'Other': '#8b5cf6', // Purple
+          'Unknown': '#9ca3af', // Gray
+          'Prefer not to say': '#10b981' // Green
+        };
+
+        // Compact pie chart - smaller size
+        const size = 90;
+        const radius = 35;
+        const center = size / 2;
+        let cumulativePercentage = 0;
+        const segments = genderData.map(item => {
+          const segment = {
+            ...item,
+            start: cumulativePercentage,
+            end: cumulativePercentage + item.percentage,
+            color: colors[item.gender as keyof typeof colors] || '#9ca3af'
+          };
+          cumulativePercentage += item.percentage;
+          return segment;
+        });
+
+        return (
+          <div className="flex items-center gap-4">
+            {/* Compact Pie Chart */}
+            <div className="relative flex-shrink-0">
+              <svg width={size} height={size} className="drop-shadow-sm">
+                {segments.map((segment, index) => {
+                  if (segment.percentage === 0) return null;
+
+                  const startAngle = (segment.start / 100) * 360 - 90;
+                  const endAngle = (segment.end / 100) * 360 - 90;
+
+                  const startRad = (startAngle * Math.PI) / 180;
+                  const endRad = (endAngle * Math.PI) / 180;
+
+                  const x1 = center + radius * Math.cos(startRad);
+                  const y1 = center + radius * Math.sin(startRad);
+                  const x2 = center + radius * Math.cos(endRad);
+                  const y2 = center + radius * Math.sin(endRad);
+
+                  const largeArc = segment.percentage > 50 ? 1 : 0;
+
+                  const pathData = [
+                    `M ${center} ${center}`,
+                    `L ${x1} ${y1}`,
+                    `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                    'Z'
+                  ].join(' ');
+
+                  return (
+                    <path
+                      key={index}
+                      d={pathData}
+                      fill={segment.color}
+                      stroke="white"
+                      strokeWidth="1.5"
+                    />
+                  );
+                })}
+
+                {/* Center circle */}
+                <circle
+                  cx={center}
+                  cy={center}
+                  r={radius * 0.4}
+                  fill="white"
+                />
+
+                {/* Center text */}
+               <text
+  x={center}
+  y={center - 4}
+  textAnchor="middle"
+  style={{ fontSize: '10px', fontWeight: '600', fill: '#374151' }}
+>
+  {totalUniqueSubmitters}
+</text>
+<text
+  x={center}
+  y={center + 5}
+  textAnchor="middle"
+  style={{ fontSize: '8px', fill: '#6b7280' }}
+>
+  Users
+</text>
+              </svg>
+            </div>
+
+            {/* Compact Legend */}
+            <div className="flex-1 min-w-0">
+              <div className="space-y-2">
+                {genderData.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center truncate">
+                      <div
+                        className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
+                        style={{ backgroundColor: colors[item.gender as keyof typeof colors] || '#9ca3af' }}
+                      />
+                      <span className="font-medium truncate">{item.gender}</span>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <span className="font-bold">{item.percentage}%</span>
+                      <span className="text-gray-500 ml-1">({item.count})</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Total summary */}
+              <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                <div className="flex justify-between">
+                  <span>Total diversity score:</span>
+                  <span className="font-medium text-gray-700">
+                    {genderData.length > 1 ? Math.max(...genderData.map(g => g.percentage)) - Math.min(...genderData.filter(g => g.percentage > 0).map(g => g.percentage)) : 0}% spread
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+    </CardContent>
+  </Card>
+</div>
+
+              {/* Pending Submissions Analysis - 2 cards side by side */}
+              {/* Pending Submissions Analysis - 3 cards side by side */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-foreground mb-4">Feedback Completion Status</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Card 1: Incomplete Feedback (1 or 2 managers) */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                        Incomplete Feedback
+                      </CardTitle>
+                      <CardDescription>
+                        Employees who gave feedback to 1 or 2 managers
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {(() => {
+                        if (!employeeMappings.length || !responses.length) {
+                          return (
+                            <div className="text-center py-8">
+                              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                              <p className="text-muted-foreground">Load data to see analysis</p>
+                            </div>
+                          );
+                        }
+
+                        // Create a map to store which employees have which managers
+                        const employeeManagersMap = new Map<string, Set<string>>();
+
+                        // First, get all managers for each employee from mapping data
+                        employeeMappings.forEach(emp => {
+                          const email = emp.Email.toLowerCase().trim();
+                          if (!employeeManagersMap.has(email)) {
+                            employeeManagersMap.set(email, new Set());
+                          }
+
+                          // Add all manager types if they exist and are valid emails
+                          const managersSet = employeeManagersMap.get(email)!;
+
+                          if (emp.Manager && emp.Manager.includes('@')) {
+                            managersSet.add(emp.Manager.toLowerCase().trim());
+                          }
+                          if (emp.AccountManager && emp.AccountManager.includes('@')) {
+                            managersSet.add(emp.AccountManager.toLowerCase().trim());
+                          }
+                          if (emp.POC && emp.POC.includes('@')) {
+                            managersSet.add(emp.POC.toLowerCase().trim());
+                          }
+                        });
+
+                        // Create a map of encrypted submitter IDs to their feedback given
+                        const submitterFeedbackMap = new Map<string, Set<string>>();
+
+                        responses.forEach(response => {
+                          const submitterId = (response['Encrypted Submitter ID'] as string || '').trim();
+                          const managerEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+
+                          if (submitterId && managerEmail && managerEmail.includes('@')) {
+                            if (!submitterFeedbackMap.has(submitterId)) {
+                              submitterFeedbackMap.set(submitterId, new Set());
+                            }
+                            submitterFeedbackMap.get(submitterId)!.add(managerEmail);
+                          }
+                        });
+
+                        // Now we need to match encrypted submitter IDs with employee emails
+                        // This is tricky since emails are encrypted in responses
+                        // We'll create a best-effort matching system
+
+                        // First, let's create a mapping of possible employee IDs (different formats)
+                        const employeeIdVariations = new Map<string, string>(); // variation -> actual email
+
+                        employeeMappings.forEach(emp => {
+                          const email = emp.Email.toLowerCase().trim();
+                          const ldap = (emp.Ldap || '').toLowerCase().trim();
+                          const emailLocalPart = email.split('@')[0];
+
+                          // Add different variations for matching
+                          if (email) {
+                            // Full email
+                            employeeIdVariations.set(email, email);
+                            // Email local part (before @)
+                            if (emailLocalPart) {
+                              employeeIdVariations.set(emailLocalPart, email);
+                            }
+                          }
+                          if (ldap) {
+                            // LDAP username
+                            employeeIdVariations.set(ldap, email);
+                            // LDAP with domain
+                            employeeIdVariations.set(`${ldap}@company.com`, email);
+                          }
+                        });
+
+                        // Also, let's extract any identifiable patterns from encrypted IDs
+                        // and try to match with email local parts
+                        const submitterToEmailMap = new Map<string, string>(); // encrypted ID -> actual email
+
+                        submitterFeedbackMap.forEach((_, submitterId) => {
+                          // Try different matching strategies
+
+                          // Strategy 1: Check if submitter ID contains any employee identifier
+                          for (const [variation, actualEmail] of employeeIdVariations.entries()) {
+                            if (submitterId.toLowerCase().includes(variation) ||
+                              variation.includes(submitterId.toLowerCase())) {
+                              submitterToEmailMap.set(submitterId, actualEmail);
+                              break;
+                            }
+                          }
+
+                          // Strategy 2: If no match yet, try matching by feedback patterns
+                          if (!submitterToEmailMap.has(submitterId)) {
+                            // Get all feedback from this submitter
+                            const feedbackSet = submitterFeedbackMap.get(submitterId)!;
+
+                            // Try to find an employee who has these specific managers
+                            for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
+                              // Check if all feedback given matches this employee's managers
+                              const feedbackArray = Array.from(feedbackSet);
+                              const matches = feedbackArray.filter(feedback => empManagers.has(feedback));
+
+                              // If most feedback matches this employee's managers, it's likely them
+                              if (matches.length > 0 && matches.length === feedbackArray.length) {
+                                submitterToEmailMap.set(submitterId, empEmail);
+                                break;
+                              }
+                            }
+                          }
+                        });
+
+                        // Now calculate incomplete feedback (1 or 2 managers)
+                        const incompleteEmployees = [];
+                        let totalIncompleteCount = 0;
+                        let totalPossibleFeedbacksForIncomplete = 0;
+                        let totalFeedbackGivenForIncomplete = 0;
+
+                        // Check each employee from mapping data
+                        for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
+                          const totalManagers = empManagers.size;
+                          if (totalManagers === 0) continue;
+
+                          // Find all submitter IDs that map to this employee
+                          const employeeSubmitters: string[] = [];
+                          submitterToEmailMap.forEach((email, submitterId) => {
+                            if (email === empEmail) {
+                              employeeSubmitters.push(submitterId);
+                            }
+                          });
+
+                          // If no submitter found, skip (this would be "No Feedback")
+                          if (employeeSubmitters.length === 0) continue;
+
+                          // Combine all feedback from all submitters for this employee
+                          const allFeedbackForEmployee = new Set<string>();
+                          employeeSubmitters.forEach(submitterId => {
+                            const feedback = submitterFeedbackMap.get(submitterId);
+                            if (feedback) {
+                              feedback.forEach(manager => allFeedbackForEmployee.add(manager));
+                            }
+                          });
+
+                          const feedbackGivenCount = allFeedbackForEmployee.size;
+
+                          // Check if feedback is incomplete (1 or 2 out of total managers)
+                          if (feedbackGivenCount > 0 && feedbackGivenCount < totalManagers) {
+                            incompleteEmployees.push({
+                              email: empEmail,
+                              totalManagers: totalManagers,
+                              feedbackGiven: feedbackGivenCount,
+                              feedbackMissing: totalManagers - feedbackGivenCount
+                            });
+                            totalIncompleteCount++;
+                            totalPossibleFeedbacksForIncomplete += totalManagers;
+                            totalFeedbackGivenForIncomplete += feedbackGivenCount;
+                          }
+                        }
+
+                        const completionRateForIncomplete = totalPossibleFeedbacksForIncomplete > 0
+                          ? Math.round((totalFeedbackGivenForIncomplete / totalPossibleFeedbacksForIncomplete) * 100)
+                          : 0;
+
+                        return (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-3xl font-bold text-yellow-600">
+                                  {totalIncompleteCount}
+                                </div>
+                                <div className="text-sm text-muted-foreground">Employees</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-medium">Partially completed</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {completionRateForIncomplete}% completion
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div>
+                                <div className="flex justify-between text-sm mb-1">
+                                  <span>Feedback Completion</span>
+                                  <span className="font-medium">{completionRateForIncomplete}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-yellow-500 h-2 rounded-full"
+                                    style={{ width: `${completionRateForIncomplete}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div className="p-2 bg-blue-50 rounded border">
+                                  <div className="font-medium">Total Possible</div>
+                                  <div className="text-lg font-bold text-blue-700">
+                                    {totalPossibleFeedbacksForIncomplete}
+                                  </div>
+                                  <div className="text-blue-600">Feedback opportunities</div>
+                                </div>
+                                <div className="p-2 bg-yellow-50 rounded border">
+                                  <div className="font-medium">Given</div>
+                                  <div className="text-lg font-bold text-yellow-700">
+                                    {totalFeedbackGivenForIncomplete}
+                                  </div>
+                                  <div className="text-yellow-600">Feedbacks submitted</div>
+                                </div>
+                              </div>
+
+                              {/* {incompleteEmployees.length > 0 && (
+                                <div className="border rounded-lg p-3 bg-yellow-50">
+                                  <h4 className="font-medium text-sm mb-2 text-yellow-800">
+                                    Sample Incomplete Profiles
+                                  </h4>
+                                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {incompleteEmployees.slice(0, 3).map((emp, idx) => (
+                                      <div key={idx} className="text-sm p-2 bg-white rounded border border-yellow-200">
+                                        <div className="font-medium truncate">
+                                          {emp.email.split('@')[0]}
+                                        </div>
+                                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                          <span>{emp.feedbackGiven}/{emp.totalManagers} managers</span>
+                                          <span className="text-yellow-600">{emp.feedbackMissing} pending</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {incompleteEmployees.length > 3 && (
+                                      <div className="text-center text-xs text-yellow-600 pt-2">
+                                        + {incompleteEmployees.length - 3} more
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )} */}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+
+                  {/* Card 2: No Feedback (0 managers) */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5 text-red-600" />
+                        No Feedback
+                      </CardTitle>
+                      <CardDescription>
+                        Employees who haven't given any feedback
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {(() => {
+                        if (!employeeMappings.length || !responses.length) {
+                          return (
+                            <div className="text-center py-8">
+                              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                              <p className="text-muted-foreground">Load data to see analysis</p>
+                            </div>
+                          );
+                        }
+
+                        // Create a map to store which employees have which managers
+                        const employeeManagersMap = new Map<string, Set<string>>();
+
+                        employeeMappings.forEach(emp => {
+                          const email = emp.Email.toLowerCase().trim();
+                          if (!employeeManagersMap.has(email)) {
+                            employeeManagersMap.set(email, new Set());
+                          }
+
+                          const managersSet = employeeManagersMap.get(email)!;
+
+                          if (emp.Manager && emp.Manager.includes('@')) {
+                            managersSet.add(emp.Manager.toLowerCase().trim());
+                          }
+                          if (emp.AccountManager && emp.AccountManager.includes('@')) {
+                            managersSet.add(emp.AccountManager.toLowerCase().trim());
+                          }
+                          if (emp.POC && emp.POC.includes('@')) {
+                            managersSet.add(emp.POC.toLowerCase().trim());
+                          }
+                        });
+
+                        // Create a map of encrypted submitter IDs to their feedback given
+                        const submitterFeedbackMap = new Map<string, Set<string>>();
+
+                        responses.forEach(response => {
+                          const submitterId = (response['Encrypted Submitter ID'] as string || '').trim();
+                          const managerEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+
+                          if (submitterId && managerEmail && managerEmail.includes('@')) {
+                            if (!submitterFeedbackMap.has(submitterId)) {
+                              submitterFeedbackMap.set(submitterId, new Set());
+                            }
+                            submitterFeedbackMap.get(submitterId)!.add(managerEmail);
+                          }
+                        });
+
+                        // Create mapping of possible employee identifiers
+                        const employeeIdVariations = new Map<string, string>();
+
+                        employeeMappings.forEach(emp => {
+                          const email = emp.Email.toLowerCase().trim();
+                          const ldap = (emp.Ldap || '').toLowerCase().trim();
+                          const emailLocalPart = email.split('@')[0];
+
+                          if (email) {
+                            employeeIdVariations.set(email, email);
+                            if (emailLocalPart) {
+                              employeeIdVariations.set(emailLocalPart, email);
+                            }
+                          }
+                          if (ldap) {
+                            employeeIdVariations.set(ldap, email);
+                            employeeIdVariations.set(`${ldap}@company.com`, email);
+                          }
+                        });
+
+                        // Create submitter to email mapping
+                        const submitterToEmailMap = new Map<string, string>();
+
+                        submitterFeedbackMap.forEach((_, submitterId) => {
+                          // Try to match submitter ID with employee variations
+                          for (const [variation, actualEmail] of employeeIdVariations.entries()) {
+                            if (submitterId.toLowerCase().includes(variation) ||
+                              variation.includes(submitterId.toLowerCase())) {
+                              submitterToEmailMap.set(submitterId, actualEmail);
+                              break;
+                            }
+                          }
+
+                          // If still no match, try manager matching
+                          if (!submitterToEmailMap.has(submitterId)) {
+                            const feedbackSet = submitterFeedbackMap.get(submitterId)!;
+
+                            for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
+                              const feedbackArray = Array.from(feedbackSet);
+                              const matches = feedbackArray.filter(feedback => empManagers.has(feedback));
+
+                              if (matches.length > 0 && matches.length === feedbackArray.length) {
+                                submitterToEmailMap.set(submitterId, empEmail);
+                                break;
+                              }
+                            }
+                          }
+                        });
+
+                        // Find employees with NO feedback
+                        const noFeedbackEmployees = [];
+                        let totalNoFeedbackCount = 0;
+                        let totalPossibleFeedbacksForNoFeedback = 0;
+
+                        // Get all employee emails from mapping
+                        const allEmployeeEmails = new Set(employeeMappings.map(emp => emp.Email.toLowerCase().trim()));
+
+                        // Check each employee
+                        for (const empEmail of allEmployeeEmails) {
+                          const empManagers = employeeManagersMap.get(empEmail) || new Set();
+                          const totalManagers = empManagers.size;
+                          if (totalManagers === 0) continue;
+
+                          // Check if this employee has any submitter IDs associated
+                          let hasAssociatedSubmitter = false;
+                          submitterToEmailMap.forEach((email, _) => {
+                            if (email === empEmail) {
+                              hasAssociatedSubmitter = true;
+                            }
+                          });
+
+                          // Also check direct matching with submitter IDs
+                          if (!hasAssociatedSubmitter) {
+                            for (const submitterId of submitterFeedbackMap.keys()) {
+                              // Try to match by various patterns
+                              const emailLocalPart = empEmail.split('@')[0];
+                              if (submitterId.toLowerCase().includes(emailLocalPart) ||
+                                submitterId.toLowerCase().includes(empEmail) ||
+                                empEmail.includes(submitterId.toLowerCase())) {
+                                hasAssociatedSubmitter = true;
+                                break;
+                              }
+                            }
+                          }
+
+                          if (!hasAssociatedSubmitter) {
+                            noFeedbackEmployees.push({
+                              email: empEmail,
+                              totalManagers: totalManagers,
+                              feedbackGiven: 0,
+                              feedbackMissing: totalManagers
+                            });
+                            totalNoFeedbackCount++;
+                            totalPossibleFeedbacksForNoFeedback += totalManagers;
+                          }
+                        }
+
+                        const participationRate = employeeMappings.length > 0
+                          ? Math.round(((employeeMappings.length - totalNoFeedbackCount) / employeeMappings.length) * 100)
+                          : 0;
+
+                        return (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-3xl font-bold text-red-600">
+                                  {totalNoFeedbackCount}
+                                </div>
+                                <div className="text-sm text-muted-foreground">Employees</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-medium">No feedback given</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {participationRate}% participation rate
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div>
+                                <div className="flex justify-between text-sm mb-1">
+                                  <span>Overall Participation</span>
+                                  <span className="font-medium">{participationRate}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-red-500 h-2 rounded-full"
+                                    style={{ width: `${participationRate}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div className="p-2 bg-red-50 rounded border">
+                                  <div className="font-medium">Pending Feedback</div>
+                                  <div className="text-lg font-bold text-red-700">
+                                    {totalPossibleFeedbacksForNoFeedback}
+                                  </div>
+                                  <div className="text-red-600">Total possible</div>
+                                </div>
+                                <div className="p-2 bg-gray-100 rounded border">
+                                  <div className="font-medium">Affected Managers</div>
+                                  <div className="text-lg font-bold text-gray-700">
+                                    {new Set(
+                                      noFeedbackEmployees.flatMap(emp =>
+                                        Array.from(employeeManagersMap.get(emp.email) || [])
+                                      )
+                                    ).size}
+                                  </div>
+                                  <div className="text-gray-600">Awaiting feedback</div>
+                                </div>
+                              </div>
+                              {/* 
+                              {noFeedbackEmployees.length > 0 && (
+                                <div className="border rounded-lg p-3 bg-red-50">
+                                  <h4 className="font-medium text-sm mb-2 text-red-800">
+                                    Sample Employees
+                                  </h4>
+                                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {noFeedbackEmployees.slice(0, 3).map((emp, idx) => (
+                                      <div key={idx} className="text-sm p-2 bg-white rounded border border-red-200">
+                                        <div className="font-medium truncate text-red-700">
+                                          {emp.email.split('@')[0]}
+                                        </div>
+                                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                          <span>Managers: {emp.totalManagers}</span>
+                                          <span className="text-red-600">0 feedbacks</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {noFeedbackEmployees.length > 3 && (
+                                      <div className="text-center text-xs text-red-600 pt-2">
+                                        + {noFeedbackEmployees.length - 3} more
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )} */}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+
+                  {/* Card 3: Completed Feedback (all 3 managers) */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        Completed Feedback
+                      </CardTitle>
+                      <CardDescription>
+                        Employees who gave feedback to all 3 managers (POC, Manager, Account Manager)
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {(() => {
+                        if (!employeeMappings.length || !responses.length) {
+                          return (
+                            <div className="text-center py-8">
+                              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                              <p className="text-muted-foreground">Load data to see analysis</p>
+                            </div>
+                          );
+                        }
+
+                        // Create a map to store which employees have which managers
+                        const employeeManagersMap = new Map<string, Set<string>>();
+                        const employeeManagerDetails = new Map<string, {
+                          manager: string;
+                          accountManager: string;
+                          poc: string;
+                        }>();
+
+                        employeeMappings.forEach(emp => {
+                          const email = emp.Email.toLowerCase().trim();
+                          if (!employeeManagersMap.has(email)) {
+                            employeeManagersMap.set(email, new Set());
+                          }
+
+                          const managersSet = employeeManagersMap.get(email)!;
+                          const managerDetails = {
+                            manager: (emp.Manager || '').toLowerCase().trim(),
+                            accountManager: (emp.AccountManager || '').toLowerCase().trim(),
+                            poc: (emp.POC || '').toLowerCase().trim()
+                          };
+
+                          employeeManagerDetails.set(email, managerDetails);
+
+                          // Add all managers to the set
+                          if (managerDetails.manager && managerDetails.manager.includes('@')) {
+                            managersSet.add(managerDetails.manager);
+                          }
+                          if (managerDetails.accountManager && managerDetails.accountManager.includes('@')) {
+                            managersSet.add(managerDetails.accountManager);
+                          }
+                          if (managerDetails.poc && managerDetails.poc.includes('@')) {
+                            managersSet.add(managerDetails.poc);
+                          }
+                        });
+
+                        // Create a map of encrypted submitter IDs to their feedback given
+                        const submitterFeedbackMap = new Map<string, Set<string>>();
+
+                        responses.forEach(response => {
+                          const submitterId = (response['Encrypted Submitter ID'] as string || '').trim();
+                          const managerEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+
+                          if (submitterId && managerEmail && managerEmail.includes('@')) {
+                            if (!submitterFeedbackMap.has(submitterId)) {
+                              submitterFeedbackMap.set(submitterId, new Set());
+                            }
+                            submitterFeedbackMap.get(submitterId)!.add(managerEmail);
+                          }
+                        });
+
+                        // Create mapping of possible employee identifiers
+                        const employeeIdVariations = new Map<string, string>();
+
+                        employeeMappings.forEach(emp => {
+                          const email = emp.Email.toLowerCase().trim();
+                          const ldap = (emp.Ldap || '').toLowerCase().trim();
+                          const emailLocalPart = email.split('@')[0];
+
+                          if (email) {
+                            employeeIdVariations.set(email, email);
+                            if (emailLocalPart) {
+                              employeeIdVariations.set(emailLocalPart, email);
+                            }
+                          }
+                          if (ldap) {
+                            employeeIdVariations.set(ldap, email);
+                            employeeIdVariations.set(`${ldap}@company.com`, email);
+                          }
+                        });
+
+                        // Create submitter to email mapping with enhanced matching
+                        const submitterToEmailMap = new Map<string, string>();
+
+                        submitterFeedbackMap.forEach((feedbackSet, submitterId) => {
+                          // Strategy 1: Direct pattern matching
+                          for (const [variation, actualEmail] of employeeIdVariations.entries()) {
+                            if (submitterId.toLowerCase().includes(variation) ||
+                              variation.includes(submitterId.toLowerCase())) {
+                              submitterToEmailMap.set(submitterId, actualEmail);
+                              break;
+                            }
+                          }
+
+                          // Strategy 2: Manager-based matching
+                          if (!submitterToEmailMap.has(submitterId)) {
+                            const feedbackArray = Array.from(feedbackSet);
+
+                            // Find employee whose managers match the feedback
+                            for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
+                              const matches = feedbackArray.filter(feedback => empManagers.has(feedback));
+
+                              // If all feedback matches this employee's managers
+                              if (matches.length === feedbackArray.length && matches.length > 0) {
+                                submitterToEmailMap.set(submitterId, empEmail);
+                                break;
+                              }
+                            }
+                          }
+
+                          // Strategy 3: Cross-reference with other responses
+                          if (!submitterToEmailMap.has(submitterId)) {
+                            // Look for patterns in other columns that might help
+                            const matchingResponses = responses.filter(r =>
+                              (r['Encrypted Submitter ID'] as string || '').trim() === submitterId
+                            );
+
+                            if (matchingResponses.length > 0) {
+                              // Try to extract patterns from other columns
+                              const sampleResponse = matchingResponses[0];
+                              const process = (sampleResponse['Process'] || '').toString().toLowerCase();
+                              const role = (sampleResponse['Role Reviewed'] || '').toString().toLowerCase();
+
+                              // Find employee with matching process/role
+                              const matchingEmployee = employeeMappings.find(emp =>
+                                (emp.Process || '').toLowerCase().includes(process) ||
+                                process.includes((emp.Process || '').toLowerCase())
+                              );
+
+                              if (matchingEmployee) {
+                                submitterToEmailMap.set(submitterId, matchingEmployee.Email.toLowerCase().trim());
+                              }
+                            }
+                          }
+                        });
+
+                        // Find employees with COMPLETE feedback (all 3 managers)
+                        const completeEmployees = [];
+                        let totalCompleteCount = 0;
+                        let totalFeedbacksGiven = 0;
+                        let employeesWith3Managers = 0;
+
+                        // Check each employee
+                        for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
+                          const totalManagers = empManagers.size;
+
+                          // Count employees who have all 3 types of managers
+                          const details = employeeManagerDetails.get(empEmail);
+                          const hasAllThree = details &&
+                            details.manager && details.manager.includes('@') &&
+                            details.accountManager && details.accountManager.includes('@') &&
+                            details.poc && details.poc.includes('@');
+
+                          if (hasAllThree) {
+                            employeesWith3Managers++;
+                          }
+
+                          if (totalManagers < 3) continue; // Skip employees with less than 3 managers
+
+                          // Find all submitter IDs that map to this employee
+                          const employeeSubmitters: string[] = [];
+                          submitterToEmailMap.forEach((email, submitterId) => {
+                            if (email === empEmail) {
+                              employeeSubmitters.push(submitterId);
+                            }
+                          });
+
+                          // Also check for direct matches that might have been missed
+                          if (employeeSubmitters.length === 0) {
+                            const emailLocalPart = empEmail.split('@')[0];
+                            for (const submitterId of submitterFeedbackMap.keys()) {
+                              if (submitterId.toLowerCase().includes(emailLocalPart) ||
+                                submitterId.toLowerCase().includes(empEmail)) {
+                                employeeSubmitters.push(submitterId);
+                                submitterToEmailMap.set(submitterId, empEmail);
+                              }
+                            }
+                          }
+
+                          // If no submitters found, this employee has no feedback
+                          if (employeeSubmitters.length === 0) continue;
+
+                          // Combine all feedback from all submitters for this employee
+                          const allFeedbackForEmployee = new Set<string>();
+                          employeeSubmitters.forEach(submitterId => {
+                            const feedback = submitterFeedbackMap.get(submitterId);
+                            if (feedback) {
+                              feedback.forEach(manager => allFeedbackForEmployee.add(manager));
+                            }
+                          });
+
+                          // Check if all managers have been covered
+                          const allManagersCovered = Array.from(empManagers).every(manager =>
+                            allFeedbackForEmployee.has(manager)
+                          );
+
+                          if (allManagersCovered) {
+                            completeEmployees.push({
+                              email: empEmail,
+                              totalManagers: totalManagers,
+                              feedbackGiven: allFeedbackForEmployee.size,
+                              managerCount: details ?
+                                (details.manager ? 1 : 0) +
+                                (details.accountManager ? 1 : 0) +
+                                (details.poc ? 1 : 0) : 0
+                            });
+                            totalCompleteCount++;
+                            totalFeedbacksGiven += allFeedbackForEmployee.size;
+                          }
+                        }
+
+                        const completionRateFor3Managers = employeesWith3Managers > 0
+                          ? Math.round((totalCompleteCount / employeesWith3Managers) * 100)
+                          : 0;
+
+                        return (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-3xl font-bold text-green-600">
+                                  {totalCompleteCount}
+                                </div>
+                                <div className="text-sm text-muted-foreground">Employees</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-medium">Fully completed</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {completionRateFor3Managers}% of eligible
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div>
+                                <div className="flex justify-between text-sm mb-1">
+                                  <span>Completion Rate</span>
+                                  <span className="font-medium">{completionRateFor3Managers}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-green-600 h-2 rounded-full"
+                                    style={{ width: `${completionRateFor3Managers}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div className="p-2 bg-green-50 rounded border">
+                                  <div className="font-medium">With 3 Managers</div>
+                                  <div className="text-lg font-bold text-green-700">
+                                    {employeesWith3Managers}
+                                  </div>
+                                  <div className="text-green-600">Eligible employees</div>
+                                </div>
+                                <div className="p-2 bg-purple-50 rounded border">
+                                  <div className="font-medium">Total Feedback</div>
+                                  <div className="text-lg font-bold text-purple-700">
+                                    {totalFeedbacksGiven}
+                                  </div>
+                                  <div className="text-purple-600">Reviews given</div>
+                                </div>
+                              </div>
+
+                              {completeEmployees.length > 0 && (
+                                <div className="border rounded-lg p-3 bg-green-50">
+                                  <h4 className="font-medium text-sm mb-2 text-green-800">
+                                    Recently Completed
+                                  </h4>
+                                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {completeEmployees.slice(0, 3).map((emp, idx) => (
+                                      <div key={idx} className="text-sm p-2 bg-white rounded border border-green-200">
+                                        <div className="flex items-center justify-between">
+                                          <div className="font-medium truncate text-green-700">
+                                            {emp.email.split('@')[0]}
+                                          </div>
+                                          <div className="flex items-center gap-1">
+                                            <CheckCircle className="w-4 h-4 text-green-600" />
+                                            <span className="text-xs font-bold text-green-600">
+                                              {emp.feedbackGiven}/{emp.managerCount || emp.totalManagers}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <div className="text-xs text-green-600 mt-1">
+                                          ✓ All managers covered
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {completeEmployees.length > 3 && (
+                                      <div className="text-center text-xs text-green-600 pt-2">
+                                        + {completeEmployees.length - 3} more completed
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+
+              {/* Responses by Quarter Card */}
 
               <Card>
                 <CardHeader>
                   <CardTitle>Responses by Quarter</CardTitle>
+                  <CardDescription>
+                    Distribution of feedback submissions across quarters
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-4 gap-4">
                     {['Q1', 'Q2', 'Q3', 'Q4'].map(quarter => {
-                      const count = stats.quarterlyData?.[quarter] || 0;
+                      const count = stats.quarterlyData?.[quarter as keyof typeof stats.quarterlyData] || 0;
                       const totalCount = Object.values(stats.quarterlyData || {}).reduce((sum, val) => sum + (val || 0), 0);
                       const percentage = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
 
@@ -1602,10 +2721,23 @@ const AdminPage = () => {
                                 style={{ width: `${percentage}%` }}
                               ></div>
                             </div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {percentage}% of total
+                            </div>
                           </div>
                         </div>
                       );
                     })}
+                  </div>
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-muted-foreground">
+                        Total responses: {Object.values(stats.quarterlyData || {}).reduce((sum, val) => sum + (val || 0), 0)}
+                      </div>
+                      {/* <div className="text-xs text-muted-foreground">
+          {stats.quarterlyData?.Unknown || 0} responses with unknown quarter
+        </div> */}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
