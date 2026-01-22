@@ -2392,101 +2392,594 @@ const FeedbackPage = () => {
     ) && selectedTarget !== null;
   };
 
-  const handleSubmit = async () => {
-    if (!canSubmit() || !selectedTarget || !userData) {
-      toast({
-        title: 'Incomplete Form',
-        description: 'Please answer all questions before submitting.',
-        variant: 'destructive',
-      });
-      return;
-    }
+// In FeedbackPage.tsx - Updated handleSubmit function
+// const handleSubmit = async () => {
+//   if (!canSubmit() || !selectedTarget || !userData) {
+//     toast({
+//       title: 'Incomplete Form',
+//       description: 'Please answer all questions before submitting.',
+//       variant: 'destructive',
+//     });
+//     return;
+//   }
 
-    // Check if user has already submitted feedback for this target recently
-    if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
-      const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
-      const message = cooldownEnd ? 
-        `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
-        `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
+//   // Check if user has already submitted feedback for this target recently
+//   if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
+//     const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
+//     const message = cooldownEnd ? 
+//       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
+//       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
+    
+//     toast({
+//       title: 'Feedback Already Submitted',
+//       description: message,
+//       variant: 'destructive',
+//     });
+//     return;
+//   }
+
+//   setIsSubmitting(true);
+//   try {
+//     // Generate Encrypted Submitter ID (16-character hash)
+//     const generateEncryptedId = (email: string, name: string): string => {
+//       const salt = 'vox-feedback-2024'; // Add a salt for more security
+//       const data = `${email}-${name}-${new Date().toISOString().split('T')[0]}`;
       
-      toast({
-        title: 'Feedback Already Submitted',
-        description: message,
-        variant: 'destructive',
-      });
-      return;
-    }
+//       // Simple hash function (you can use crypto library for stronger)
+//       let hash = 0;
+//       for (let i = 0; i < data.length; i++) {
+//         const char = data.charCodeAt(i);
+//         hash = ((hash << 5) - hash) + char;
+//         hash = hash & hash; // Convert to 32bit integer
+//       }
+      
+//       // Convert to hex and take first 16 characters
+//       const hexString = Math.abs(hash).toString(16).padStart(32, '0');
+//       return hexString.substring(0, 16).toUpperCase();
+//     };
 
-    setIsSubmitting(true);
-    try {
-      // Prepare feedback data
-      const feedbackData: Record<string, any> = {
-        'Timestamp': new Date().toISOString(),
-        'Reviewer Email': userData.email,
-        'Reviewer Name': userData.name,
-        'Reviewer Process': userData.process,
-        'Role Reviewed': selectedRole,
-        'Process': selectedTarget?.process || '',
-        'Management Email ID': selectedTarget?.email || '',
-        'Management Name': selectedTarget?.name || '',
-        'Additional Comments': comments
-      };
+//     // Generate the encrypted ID
+//     const encryptedId = generateEncryptedId(userData.email, userData.name);
 
-      if (userData.ldap) {
-        feedbackData['Reviewer LDAP'] = userData.ldap;
+//     // Prepare feedback data with TEXT values
+//     const feedbackData: Record<string, any> = {
+//       'Timestamp': new Date().toISOString(),
+//       'Reviewer Email': userData.email,
+//       'Reviewer Name': userData.name,
+//       'Reviewer Process': userData.process,
+//       'Encrypted Submitter ID': encryptedId, // This will now populate
+//       'Role Reviewed': selectedRole,
+//       'Process': selectedTarget.process || '',
+//       'Management Email ID': selectedTarget.email || '',
+//       'Management Name': selectedTarget.name || '',
+//       'Additional Comments': comments
+//     };
+
+//     // Add LDAP if available
+//     if (userData.ldap) {
+//       feedbackData['Reviewer LDAP'] = userData.ldap;
+//     }
+
+//     console.log('Submitting feedback with these details:', {
+//       reviewerEmail: userData.email,
+//       reviewerName: userData.name,
+//       encryptedId: encryptedId,
+//       managementEmail: selectedTarget.email,
+//       managementName: selectedTarget.name,
+//       role: selectedRole
+//     });
+
+//     // Convert numerical answers (1-5) back to TEXT values for Google Sheets
+//     const ratingTextMap: Record<string, string> = {
+//       '1': 'Strongly Disagree',
+//       '2': 'Disagree', 
+//       '3': 'Neutral',
+//       '4': 'Agree',
+//       '5': 'Strongly Agree'
+//     };
+
+//     // Add all question answers as TEXT values
+//     questions.forEach((q) => {
+//       const columnName = q.question_text;
+//       const answerValue = answers[q.question_id];
+      
+//       if (answerValue) {
+//         // Convert numerical value (1-5) to text rating
+//         const textValue = ratingTextMap[answerValue] || answerValue;
+//         feedbackData[columnName] = textValue;
+//       } else {
+//         feedbackData[columnName] = ''; // Empty if no answer
+//       }
+//     });
+
+//     console.log('Full submission data (sample):', {
+//       encryptedId: feedbackData['Encrypted Submitter ID'],
+//       ratings: Object.keys(feedbackData)
+//         .filter(key => questions.some(q => q.question_text === key))
+//         .slice(0, 3)
+//         .reduce((obj, key) => {
+//           obj[key] = feedbackData[key];
+//           return obj;
+//         }, {} as Record<string, any>)
+//     });
+
+//     // Submit to Google Sheets
+//     const result = await submitFeedback(feedbackData);
+
+//     if (result.success) {
+//       // Save to local storage to track cooldown
+//       saveFeedbackSubmission(
+//         selectedTarget.email,
+//         userData.email,
+//         selectedRole,
+//         selectedTarget.name
+//       );
+      
+//       setStep('success');
+//       toast({
+//         title: 'Success!',
+//         description: `Your feedback for ${selectedTarget.name} has been submitted.`,
+//       });
+//     } else {
+//       throw new Error(result.error || 'Submission failed');
+//     }
+//   } catch (err) {
+//     console.error('Submission error:', err);
+    
+//     // Provide user-friendly error message
+//     let errorMessage = 'Failed to submit feedback. ';
+//     if (err instanceof Error) {
+//       if (err.message.includes('403') || err.message.includes('permission')) {
+//         errorMessage = 'Permission denied by Google Sheets. Please contact administrator.';
+//       } else if (err.message.includes('Encrypted Submitter ID')) {
+//         errorMessage = 'Error generating encrypted ID. Please try again.';
+//       } else {
+//         errorMessage += err.message;
+//       }
+//     }
+    
+//     toast({
+//       title: 'Submission Failed',
+//       description: errorMessage,
+//       variant: 'destructive',
+//     });
+//   } finally {
+//     setIsSubmitting(false);
+//   }
+// };
+// In FeedbackPage.tsx - Complete handleSubmit function with SHA-256 hashing
+// const handleSubmit = async () => {
+//   if (!canSubmit() || !selectedTarget || !userData) {
+//     toast({
+//       title: 'Incomplete Form',
+//       description: 'Please answer all questions before submitting.',
+//       variant: 'destructive',
+//     });
+//     return;
+//   }
+
+//   if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
+//     const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
+//     const message = cooldownEnd ? 
+//       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
+//       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
+    
+//     toast({
+//       title: 'Feedback Already Submitted',
+//       description: message,
+//       variant: 'destructive',
+//     });
+//     return;
+//   }
+
+//   setIsSubmitting(true);
+//   try {
+//     // Function to hash email (returns Promise<string>)
+//     const hashEmail = async (email: string): Promise<string> => {
+//       const normalizedEmail = email.trim().toLowerCase();
+      
+//       // Try Web Crypto API first
+//       if (typeof crypto !== 'undefined' && crypto.subtle) {
+//         try {
+//           const encoder = new TextEncoder();
+//           const data = encoder.encode(normalizedEmail);
+//           const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+//           const hashArray = Array.from(new Uint8Array(hashBuffer));
+//           return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+//         } catch (error) {
+//           console.warn('Web Crypto error, using fallback:', error);
+//         }
+//       }
+      
+//       // Fallback: deterministic hash
+//       let hash = 0;
+//       for (let i = 0; i < normalizedEmail.length; i++) {
+//         hash = ((hash << 5) - hash) + normalizedEmail.charCodeAt(i);
+//         hash = hash & hash; // Convert to 32-bit integer
+//       }
+      
+//       // Create 64-character hex string
+//       const baseHex = Math.abs(hash).toString(16).padStart(8, '0');
+//       // Repeat pattern to get 64 characters
+//       return baseHex.repeat(8).substring(0, 64);
+//     };
+
+//     // Generate hashes (await both)
+//     const [reviewerEmailHash, managementEmailHash] = await Promise.all([
+//       hashEmail(userData.email),
+//       hashEmail(selectedTarget.email)
+//     ]);
+
+//     // Prepare feedback data
+//     const feedbackData: Record<string, any> = {
+//       'Timestamp': new Date().toISOString(),
+//       'Reviewer Email': reviewerEmailHash, // SHA-256 hash
+//       'Reviewer Name': userData.name,
+//       'Reviewer Process': userData.process,
+//       'Role Reviewed': selectedRole,
+//       'Process': selectedTarget.process || '',
+//       'Management Email ID': managementEmailHash, // SHA-256 hash
+//       'Management Name': selectedTarget.name || '',
+//       'Additional Comments': comments
+//     };
+
+//     if (userData.ldap) {
+//       feedbackData['Reviewer LDAP'] = userData.ldap;
+//     }
+
+//     // Convert numerical ratings to text
+//     const ratingTextMap: Record<string, string> = {
+//       '1': 'Strongly Disagree',
+//       '2': 'Disagree', 
+//       '3': 'Neutral',
+//       '4': 'Agree',
+//       '5': 'Strongly Agree'
+//     };
+
+//     questions.forEach((q) => {
+//       const columnName = q.question_text;
+//       const answerValue = answers[q.question_id];
+      
+//       if (answerValue) {
+//         feedbackData[columnName] = ratingTextMap[answerValue] || answerValue;
+//       } else {
+//         feedbackData[columnName] = '';
+//       }
+//     });
+
+//     // Submit to Google Sheets
+//     const result = await submitFeedback(feedbackData);
+
+//     if (result.success) {
+//       saveFeedbackSubmission(
+//         selectedTarget.email,
+//         userData.email,
+//         selectedRole,
+//         selectedTarget.name
+//       );
+      
+//       setStep('success');
+//       toast({
+//         title: 'Success!',
+//         description: `Your feedback for ${selectedTarget.name} has been submitted.`,
+//       });
+//     } else {
+//       throw new Error(result.error || 'Submission failed');
+//     }
+//   } catch (err) {
+//     console.error('Submission error:', err);
+//     toast({
+//       title: 'Submission Failed',
+//       description: err instanceof Error ? err.message : 'Please try again later.',
+//       variant: 'destructive',
+//     });
+//   } finally {
+//     setIsSubmitting(false);
+//   }
+// };
+// const handleSubmit = async () => {
+//   if (!canSubmit() || !selectedTarget || !userData) {
+//     toast({
+//       title: 'Incomplete Form',
+//       description: 'Please answer all questions before submitting.',
+//       variant: 'destructive',
+//     });
+//     return;
+//   }
+
+//   // Check if user has already submitted feedback for this target recently
+//   if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
+//     const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
+//     const message = cooldownEnd ? 
+//       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
+//       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
+    
+//     toast({
+//       title: 'Feedback Already Submitted',
+//       description: message,
+//       variant: 'destructive',
+//     });
+//     return;
+//   }
+
+//   setIsSubmitting(true);
+//   try {
+//     // Function to generate SHA-256 hash of email
+//     const generateSHA256Hash = async (email: string): Promise<string> => {
+//       const normalizedEmail = email.trim().toLowerCase();
+      
+//       // Web Crypto API (modern browsers)
+//       if (typeof crypto !== 'undefined' && crypto.subtle) {
+//         try {
+//           const encoder = new TextEncoder();
+//           const data = encoder.encode(normalizedEmail);
+//           const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+//           const hashArray = Array.from(new Uint8Array(hashBuffer));
+//           return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+//         } catch (error) {
+//           console.warn('Web Crypto failed, using fallback:', error);
+//         }
+//       }
+      
+//       // Fallback hash function (deterministic 64-char hex)
+//       let hash = 0;
+//       for (let i = 0; i < normalizedEmail.length; i++) {
+//         const char = normalizedEmail.charCodeAt(i);
+//         hash = ((hash << 5) - hash) + char;
+//         hash = hash & hash;
+//       }
+      
+//       // Create consistent 64-character hex string
+//       const baseHex = Math.abs(hash).toString(16).padStart(8, '0');
+//       return baseHex.repeat(8).substring(0, 64);
+//     };
+
+//     // Hash ONLY the submitter's email (person giving feedback)
+//     const reviewerEmailHash = await generateSHA256Hash(userData.email);
+    
+//     // DO NOT hash management email - keep it plain text
+//     const managementEmailPlain = selectedTarget.email;
+
+//     // Prepare feedback data
+//     const feedbackData: Record<string, any> = {
+//       'Timestamp': new Date().toISOString(),
+//       'Reviewer Email': reviewerEmailHash, // SHA-256 hash (anonymous)
+//       'Reviewer Name': userData.name,
+//       'Reviewer Process': userData.process,
+//       'Role Reviewed': selectedRole,
+//       'Process': selectedTarget.process || '',
+//       'Management Email ID': managementEmailPlain, // PLAIN TEXT (not hashed)
+//       'Management Name': selectedTarget.name || '',
+//       'Additional Comments': comments
+//     };
+
+//     // Add LDAP if available
+//     if (userData.ldap) {
+//       feedbackData['Reviewer LDAP'] = userData.ldap;
+//     }
+
+//     console.log('Submitting feedback (submitter anonymous, management identifiable):', {
+//       reviewerHash: `${reviewerEmailHash.substring(0, 16)}...`,
+//       reviewerOriginal: userData.email, // For debugging only
+//       managementEmail: managementEmailPlain, // Plain text
+//       managementName: selectedTarget.name,
+//       role: selectedRole
+//     });
+
+//     // Convert numerical answers to TEXT values
+//     const ratingTextMap: Record<string, string> = {
+//       '1': 'Strongly Disagree',
+//       '2': 'Disagree', 
+//       '3': 'Neutral',
+//       '4': 'Agree',
+//       '5': 'Strongly Agree'
+//     };
+
+//     // Add all question answers as TEXT values
+//     questions.forEach((q) => {
+//       const columnName = q.question_text;
+//       const answerValue = answers[q.question_id];
+      
+//       if (answerValue) {
+//         const textValue = ratingTextMap[answerValue] || answerValue;
+//         feedbackData[columnName] = textValue;
+//       } else {
+//         feedbackData[columnName] = '';
+//       }
+//     });
+
+//     // Submit to Google Sheets
+//     const result = await submitFeedback(feedbackData);
+
+//     if (result.success) {
+//       // Save to local storage (using original emails for cooldown tracking)
+//       saveFeedbackSubmission(
+//         selectedTarget.email, // Plain management email
+//         userData.email, // Original reviewer email for cooldown
+//         selectedRole,
+//         selectedTarget.name
+//       );
+      
+//       setStep('success');
+//       toast({
+//         title: 'Success!',
+//         description: `Your anonymous feedback for ${selectedTarget.name} has been submitted.`,
+//       });
+//     } else {
+//       throw new Error(result.error || 'Submission failed');
+//     }
+//   } catch (err) {
+//     console.error('Submission error:', err);
+    
+//     // Provide user-friendly error message
+//     let errorMessage = 'Failed to submit feedback. ';
+//     if (err instanceof Error) {
+//       if (err.message.includes('403') || err.message.includes('permission')) {
+//         errorMessage = 'Permission denied by Google Sheets. Please contact administrator.';
+//       } else {
+//         errorMessage += err.message;
+//       }
+//     }
+    
+//     toast({
+//       title: 'Submission Failed',
+//       description: errorMessage,
+//       variant: 'destructive',
+//     });
+//   } finally {
+//     setIsSubmitting(false);
+//   }
+// };
+const handleSubmit = async () => {
+  if (!canSubmit() || !selectedTarget || !userData) {
+    toast({
+      title: 'Incomplete Form',
+      description: 'Please answer all questions before submitting.',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
+    const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
+    const message = cooldownEnd ? 
+      `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
+      `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
+    
+    toast({
+      title: 'Feedback Already Submitted',
+      description: message,
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  setIsSubmitting(true);
+  try {
+    // Function to generate SHA-256 hash
+    const generateSHA256Hash = async (email: string): Promise<string> => {
+      const normalizedEmail = email.trim().toLowerCase();
+      
+      if (typeof crypto !== 'undefined' && crypto.subtle) {
+        try {
+          const encoder = new TextEncoder();
+          const data = encoder.encode(normalizedEmail);
+          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (error) {
+          console.warn('Web Crypto failed, using fallback:', error);
+        }
       }
+      
+      // Fallback
+      let hash = 0;
+      for (let i = 0; i < normalizedEmail.length; i++) {
+        const char = normalizedEmail.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      
+      const baseHex = Math.abs(hash).toString(16).padStart(8, '0');
+      return baseHex.repeat(8).substring(0, 64);
+    };
 
-      console.log('Submitting feedback with these details:', {
-        reviewerEmail: userData.email,
-        reviewerName: userData.name,
-        reviewerLdap: userData.ldap,
-        managementEmail: selectedTarget?.email,
-        managementName: selectedTarget?.name,
-        role: selectedRole
+    // Hash the submitter's email
+    const encryptedSubmitterId = await generateSHA256Hash(userData.email);
+
+    // Prepare feedback data - MATCH EXACT COLUMN NAMES FROM YOUR SHEET
+    const feedbackData: Record<string, any> = {
+      'Timestamp': new Date().toISOString(),
+      'Encrypted Submitter ID': encryptedSubmitterId, // ✅ CORRECT COLUMN NAME
+      'Role Reviewed': selectedRole,
+      'Process': selectedTarget.process || '',
+      'Management Email ID': selectedTarget.email, // Plain text
+      
+      // Demographic fields (you might want to collect these separately)
+      'Gender': '', // You'll need to collect this
+      'Tenure': '', // You'll need to collect this
+      'Designation/Level': '', // You'll need to collect this
+      'Age': '', // You'll need to collect this
+      'Gender of the user': '', // You'll need to collect this
+      
+      // Add question answers
+      'Additional Comments': comments
+    };
+
+    console.log('Submitting with encrypted ID:', {
+      encryptedId: encryptedSubmitterId,
+      length: encryptedSubmitterId.length,
+      columnName: 'Encrypted Submitter ID',
+      managementEmail: selectedTarget.email
+    });
+
+    // Convert numerical answers to TEXT values and map to your sheet columns
+    const ratingTextMap: Record<string, string> = {
+      '1': 'Strongly Disagree',
+      '2': 'Disagree', 
+      '3': 'Neutral',
+      '4': 'Agree',
+      '5': 'Strongly Agree'
+    };
+
+    // Map your questions to the exact column names in your sheet
+    // You need to match each question to its exact column name
+    questions.forEach((q) => {
+      const columnName = q.question_text; // This should match your sheet column names
+      
+      // Debug: Log the column name
+      console.log('Processing question:', {
+        questionId: q.question_id,
+        questionText: q.question_text,
+        columnName: columnName
       });
-
-      // Add all question answers
-      questions.forEach((q) => {
-        const columnName = q.question_text;
-        const answerValue = answers[q.question_id];
-        const ratingValue = answerValue ? parseInt(answerValue) : '';
-        feedbackData[columnName] = ratingValue;
-      });
-
-      console.log('Full submission data:', feedbackData);
-
-      // Submit to Google Sheets
-      const result = await submitFeedback(feedbackData);
-
-      if (result.success) {
-        // Save to local storage to track cooldown
-        saveFeedbackSubmission(
-          selectedTarget.email,
-          userData.email,
-          selectedRole,
-          selectedTarget.name
-        );
-        
-        setStep('success');
-        toast({
-          title: 'Success!',
-          description: `Your feedback for ${selectedTarget?.name} has been submitted.`,
-        });
+      
+      const answerValue = answers[q.question_id];
+      
+      if (answerValue) {
+        const textValue = ratingTextMap[answerValue] || answerValue;
+        feedbackData[columnName] = textValue;
       } else {
-        throw new Error(result.error || 'Submission failed');
+        feedbackData[columnName] = '';
       }
-    } catch (err) {
-      console.error('Submission error:', err);
-      toast({
-        title: 'Submission Failed',
-        description: err instanceof Error ? err.message : 'Please try again later.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    });
 
+    // Debug: Check if encrypted ID is in the data
+    console.log('Final data check - Encrypted Submitter ID exists?', 
+      'Encrypted Submitter ID' in feedbackData,
+      'Value:', feedbackData['Encrypted Submitter ID']
+    );
+
+    // Submit to Google Sheets
+    const result = await submitFeedback(feedbackData);
+
+    if (result.success) {
+      saveFeedbackSubmission(
+        selectedTarget.email,
+        userData.email,
+        selectedRole,
+        selectedTarget.name
+      );
+      
+      setStep('success');
+      toast({
+        title: 'Success!',
+        description: `Your feedback for ${selectedTarget.name} has been submitted.`,
+      });
+    } else {
+      throw new Error(result.error || 'Submission failed');
+    }
+  } catch (err) {
+    console.error('Submission error:', err);
+    toast({
+      title: 'Submission Failed',
+      description: err instanceof Error ? err.message : 'Please try again later.',
+      variant: 'destructive',
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const resetAndGiveMore = () => {
     setAnswers({});
     setComments('');
