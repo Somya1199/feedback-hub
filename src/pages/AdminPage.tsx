@@ -732,6 +732,39 @@ const AdminPage = () => {
       };
     }).sort((a, b) => b.meanScore - a.meanScore);
   };
+  // Add this function after calculateQuarterlyData
+const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
+  if (!responses.length) return 0;
+  
+  const now = new Date();
+  const startDate = new Date();
+  
+  switch (period) {
+    case 'week':
+      startDate.setDate(now.getDate() - 7);
+      break;
+    case 'month':
+      startDate.setMonth(now.getMonth() - 1);
+      break;
+    case 'quarter':
+      startDate.setMonth(now.getMonth() - 3);
+      break;
+  }
+  
+  return responses.filter(response => {
+    const timestamp = response.Timestamp as string;
+    if (!timestamp) return false;
+    
+    try {
+      const responseDate = new Date(timestamp);
+      // Handle invalid dates
+      if (isNaN(responseDate.getTime())) return false;
+      return responseDate >= startDate && responseDate <= now;
+    } catch {
+      return false;
+    }
+  }).length;
+};
 
   const convertResponseToScore = (response: string): number => {
     switch (response) {
@@ -2695,52 +2728,279 @@ const AdminPage = () => {
 
 
               {/* Responses by Quarter Card */}
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Responses by Quarter</CardTitle>
-                  <CardDescription>
-                    Distribution of feedback submissions across quarters
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-4 gap-4">
-                    {['Q1', 'Q2', 'Q3', 'Q4'].map(quarter => {
-                      const count = stats.quarterlyData?.[quarter as keyof typeof stats.quarterlyData] || 0;
-                      const totalCount = Object.values(stats.quarterlyData || {}).reduce((sum, val) => sum + (val || 0), 0);
-                      const percentage = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
-
-                      return (
-                        <div key={quarter} className="text-center p-4 bg-accent/10 rounded-xl border border-accent/30 hover:bg-accent/20 transition-colors">
-                          <div className="flex flex-col items-center">
-                            <span className="text-2xl font-bold text-secondary">{count}</span>
-                            <p className="text-sm text-muted-foreground">{quarter}</p>
-                            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-secondary h-2 rounded-full"
-                                style={{ width: `${percentage}%` }}
-                              ></div>
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              {percentage}% of total
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-muted-foreground">
-                        Total responses: {Object.values(stats.quarterlyData || {}).reduce((sum, val) => sum + (val || 0), 0)}
-                      </div>
-                      {/* <div className="text-xs text-muted-foreground">
-          {stats.quarterlyData?.Unknown || 0} responses with unknown quarter
-        </div> */}
+{/* Responses by Quarter & Time Period Card */}
+<Card>
+  <CardHeader>
+    <CardTitle>Submission Frequency</CardTitle>
+    <CardDescription>
+      Feedback submission trends across different time periods
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    {/* Weekly, Monthly, Quarterly Section */}
+    <div className="mb-8">
+      <h4 className="text-lg font-medium mb-4">Recent Activity</h4>
+      <div className="grid grid-cols-3 gap-4">
+        {(() => {
+          // Helper function to calculate submissions in time period
+          const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
+            if (!responses.length) return 0;
+            
+            const now = new Date();
+            const startDate = new Date();
+            
+            switch (period) {
+              case 'week':
+                startDate.setDate(now.getDate() - 7);
+                break;
+              case 'month':
+                startDate.setMonth(now.getMonth() - 1);
+                break;
+              case 'quarter':
+                startDate.setMonth(now.getMonth() - 3);
+                break;
+            }
+            
+            return responses.filter(response => {
+              const responseDate = new Date(response.Timestamp as string);
+              return responseDate >= startDate && responseDate <= now;
+            }).length;
+          };
+          
+          const weeklyCount = calculateTimePeriodCount('week');
+          const monthlyCount = calculateTimePeriodCount('month');
+          const quarterlyCount = calculateTimePeriodCount('quarter');
+          
+          const timePeriods = [
+            { label: 'This Week', count: weeklyCount, color: 'bg-blue-500', period: 'week' },
+            { label: 'This Month', count: monthlyCount, color: 'bg-green-500', period: 'month' },
+            { label: 'This Quarter', count: quarterlyCount, color: 'bg-purple-500', period: 'quarter' }
+          ];
+          
+          return timePeriods.map((period, index) => {
+            // Calculate percentage change compared to previous period
+            const getPreviousPeriodCount = (currentPeriod: string) => {
+              const now = new Date();
+              const startDate = new Date();
+              const endDate = new Date();
+              
+              switch (currentPeriod) {
+                case 'week':
+                  startDate.setDate(now.getDate() - 14);
+                  endDate.setDate(now.getDate() - 7);
+                  break;
+                case 'month':
+                  startDate.setMonth(now.getMonth() - 2);
+                  endDate.setMonth(now.getMonth() - 1);
+                  break;
+                case 'quarter':
+                  startDate.setMonth(now.getMonth() - 6);
+                  endDate.setMonth(now.getMonth() - 3);
+                  break;
+                default:
+                  return 0;
+              }
+              
+              return responses.filter(response => {
+                const responseDate = new Date(response.Timestamp as string);
+                return responseDate >= startDate && responseDate <= endDate;
+              }).length;
+            };
+            
+            const previousCount = getPreviousPeriodCount(period.period);
+            const percentageChange = previousCount > 0 
+              ? Math.round(((period.count - previousCount) / previousCount) * 100)
+              : period.count > 0 ? 100 : 0;
+            
+            // Calculate average per day/week/month
+            const getAverageText = (count: number, period: string) => {
+              switch (period) {
+                case 'week':
+                  return `${(count / 7).toFixed(1)}/day`;
+                case 'month':
+                  return `${(count / 30).toFixed(1)}/day`;
+                case 'quarter':
+                  return `${(count / 90).toFixed(1)}/day`;
+                default:
+                  return '';
+              }
+            };
+            
+            return (
+              <div key={index} className="text-center p-4 rounded-xl border hover:shadow-md transition-shadow">
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl font-bold text-gray-800">{period.count}</span>
+                  <p className="text-sm font-medium text-gray-700">{period.label}</p>
+                  
+                  {/* Change indicator */}
+                  {percentageChange !== 0 && (
+                    <div className={`mt-1 text-xs px-2 py-0.5 rounded-full ${percentageChange > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {percentageChange > 0 ? '↑' : '↓'} {Math.abs(percentageChange)}%
+                    </div>
+                  )}
+                  
+                  {/* Progress bar */}
+                  <div className="mt-2 w-full">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-500">Progress</span>
+                      <span className="font-medium">{getAverageText(period.count, period.period)}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${period.color}`}
+                        style={{ width: `${Math.min((period.count / (responses.length || 1)) * 100, 100)}%` }}
+                      ></div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  
+                  {/* Additional info */}
+                  <div className="mt-2 text-xs text-gray-500">
+                    {period.count > 0 ? (
+                      <>
+                        {Math.round((period.count / responses.length) * 100)}% of total
+                      </>
+                    ) : 'No submissions'}
+                  </div>
+                </div>
+              </div>
+            );
+          });
+        })()}
+      </div>
+    </div>
+    
+    {/* Quarterly Distribution Section */}
+    <div>
+      <h4 className="text-lg font-medium mb-4">Quarterly Distribution</h4>
+      <div className="grid grid-cols-4 gap-4">
+        {['Q1', 'Q2', 'Q3', 'Q4'].map(quarter => {
+          const count = stats.quarterlyData?.[quarter as keyof typeof stats.quarterlyData] || 0;
+          const totalCount = Object.values(stats.quarterlyData || {}).reduce((sum, val) => sum + (val || 0), 0);
+          const percentage = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+          
+          // Determine if this quarter is current
+          const currentDate = new Date();
+          const currentMonth = currentDate.getMonth() + 1;
+          const getCurrentQuarter = () => {
+            if (currentMonth >= 1 && currentMonth <= 3) return 'Q1';
+            if (currentMonth >= 4 && currentMonth <= 6) return 'Q2';
+            if (currentMonth >= 7 && currentMonth <= 9) return 'Q3';
+            return 'Q4';
+          };
+          const isCurrentQuarter = quarter === getCurrentQuarter();
+
+          return (
+            <div key={quarter} className={`text-center p-4 rounded-xl border ${isCurrentQuarter ? 'bg-secondary/10 border-secondary/30' : 'bg-gray-50 border-gray-200'} hover:shadow-md transition-shadow`}>
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <span className="text-2xl font-bold text-gray-800">{count}</span>
+                  {isCurrentQuarter && (
+                    <span className="text-xs bg-secondary text-white px-2 py-0.5 rounded-full">
+                      Current
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-medium text-gray-700">{quarter}</p>
+                
+                {/* Progress bar */}
+                <div className="mt-2 w-full">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-500">Share</span>
+                    <span className="font-medium">{percentage}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${isCurrentQuarter ? 'bg-secondary' : 'bg-gray-400'}`}
+                      style={{ width: `${Math.min(percentage, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                {/* Additional info */}
+                <div className="mt-2 text-xs text-gray-500">
+                  {count > 0 ? (
+                    <>
+                      {totalCount > 0 && `${percentage}% of total`}
+                    </>
+                  ) : 'No submissions'}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Summary Stats */}
+      <div className="mt-6 pt-4 border-t">
+        {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-sm text-gray-500">Total Responses</div>
+            <div className="text-xl font-bold text-gray-800">{responses.length}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500">This Week</div>
+            <div className="text-xl font-bold text-blue-600">
+              {(() => {
+                const weeklyCount = calculateTimePeriodCount('week');
+                return weeklyCount;
+              })()}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500">This Month</div>
+            <div className="text-xl font-bold text-green-600">
+              {(() => {
+                const monthlyCount = calculateTimePeriodCount('month');
+                return monthlyCount;
+              })()}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500">This Quarter</div>
+            <div className="text-xl font-bold text-purple-600">
+              {(() => {
+                const quarterlyCount = calculateTimePeriodCount('quarter');
+                return quarterlyCount;
+              })()}
+            </div>
+          </div>
+        </div> */}
+        
+        {/* Activity trend indicator */}
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium">Activity Trend</div>
+              <div className="text-xs text-gray-500">
+                {(() => {
+                  const weekly = calculateTimePeriodCount('week');
+                  const monthly = calculateTimePeriodCount('month');
+                  const quarterly = calculateTimePeriodCount('quarter');
+                  
+                  const weeklyAvg = weekly / 7;
+                  const monthlyAvg = monthly / 30;
+                  
+                  if (weeklyAvg > monthlyAvg) {
+                    return "Submission rate increasing this week";
+                  } else if (weeklyAvg < monthlyAvg) {
+                    return "Submission rate decreasing this week";
+                  } else {
+                    return "Steady submission rate";
+                  }
+                })()}
+              </div>
+            </div>
+            <div className="text-sm font-medium">
+              {responses.length > 0 ? 
+                `${((calculateTimePeriodCount('week') / responses.length) * 100).toFixed(1)}% of responses this week` : 
+                'No data'}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </CardContent>
+</Card>
             </div>
           </TabsContent>
 
