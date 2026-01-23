@@ -39,6 +39,12 @@ const AdminPage = () => {
   const [selectedLeader, setSelectedLeader] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  // Add these to your existing filter state
+  const [globalFilters, setGlobalFilters] = useState({
+    client: '',
+    process: '',
+    accountManager: ''
+  });
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -133,6 +139,53 @@ const AdminPage = () => {
   };
 
   // Function to transform mapping data
+  // const transformMappingData = (data: any[]): EmployeeMapping[] => {
+  //   if (!data || data.length === 0) {
+  //     return [];
+  //   }
+
+  //   console.log('Transforming mapping data, rows:', data.length);
+
+  //   // Create a set to track unique employees by email
+  //   const uniqueEmployees = new Map<string, EmployeeMapping>();
+
+  //   data.forEach((row, index) => {
+  //     // Look for LDAP/email fields in different possible formats
+  //     const ldap = row.Ldap || row.ldap || row['LDAP'] || row['Ldap '] || '';
+  //     const email = row.Email || row.email || row['Email '] || row['email '] || '';
+
+  //     if ((ldap && typeof ldap === 'string' && ldap.trim() !== '') ||
+  //       (email && typeof email === 'string' && email.includes('@'))) {
+
+  //       const employeeKey = email.toLowerCase() || ldap.toLowerCase();
+
+  //       if (!uniqueEmployees.has(employeeKey)) {
+  //         uniqueEmployees.set(employeeKey, {
+  //           Email: email || `${ldap.toLowerCase()}@company.com`,
+  //           Ldap: ldap || email.split('@')[0] || `Employee-${index + 1}`,
+  //           Process: row.Process || row.process || row['Process '] || 'Unknown',
+  //           POC: row.POC || row.poc || '',
+  //           Manager: row.Manager || row.manager || '',
+  //           AccountManager: row['Account manager'] || row.AccountManager || row['Account Manager'] || ''
+  //         });
+  //       }
+  //     }
+  //   });
+
+  //   const result = Array.from(uniqueEmployees.values());
+  //   console.log(`Transformed ${data.length} rows to ${result.length} unique employees`);
+
+  //   // Log first few employees for debugging
+  //   if (result.length > 0) {
+  //     console.log('Sample employees (first 3):');
+  //     result.slice(0, 3).forEach((emp, i) => {
+  //       console.log(`${i + 1}. LDAP: ${emp.Ldap}, Email: ${emp.Email}, Process: ${emp.Process}`);
+  //     });
+  //   }
+
+  //   return result;
+  // };
+  // Update the transformMappingData function to include Client
   const transformMappingData = (data: any[]): EmployeeMapping[] => {
     if (!data || data.length === 0) {
       return [];
@@ -160,7 +213,8 @@ const AdminPage = () => {
             Process: row.Process || row.process || row['Process '] || 'Unknown',
             POC: row.POC || row.poc || '',
             Manager: row.Manager || row.manager || '',
-            AccountManager: row['Account manager'] || row.AccountManager || row['Account Manager'] || ''
+            AccountManager: row['Account manager'] || row.AccountManager || row['Account Manager'] || '',
+            Client: row.Client || row.client || row['Client '] || '' // Add Client field
           });
         }
       }
@@ -173,13 +227,12 @@ const AdminPage = () => {
     if (result.length > 0) {
       console.log('Sample employees (first 3):');
       result.slice(0, 3).forEach((emp, i) => {
-        console.log(`${i + 1}. LDAP: ${emp.Ldap}, Email: ${emp.Email}, Process: ${emp.Process}`);
+        console.log(`${i + 1}. LDAP: ${emp.Ldap}, Email: ${emp.Email}, Process: ${emp.Process}, Client: ${emp.Client}`);
       });
     }
 
     return result;
   };
-
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     try {
@@ -224,6 +277,62 @@ const AdminPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+  // Add this function inside your component
+  const getRespondingEmployees = (): Set<string> => {
+    const respondingEmployees = new Set<string>();
+
+    if (!employeeMappings.length || !responses.length) {
+      return respondingEmployees;
+    }
+
+    // Create a map of email parts to employee emails for faster lookup
+    const emailPartsMap = new Map<string, string>();
+
+    employeeMappings.forEach(emp => {
+      const email = (emp.Email as string || '').toLowerCase().trim();
+      if (email && email.includes('@')) {
+        const localPart = email.split('@')[0];
+        const domainPart = email.split('@')[1];
+
+        // Store multiple ways to match
+        emailPartsMap.set(email, email);
+        emailPartsMap.set(localPart, email);
+
+        // Also store common variations
+        if (localPart.includes('.')) {
+          const withoutDots = localPart.replace(/\./g, '');
+          emailPartsMap.set(withoutDots, email);
+        }
+
+        // Store first 5-10 characters as potential hash components
+        for (let i = 5; i <= Math.min(10, localPart.length); i++) {
+          emailPartsMap.set(localPart.substring(0, i), email);
+        }
+      }
+    });
+
+    // Check each response's submitter ID
+    responses.forEach(response => {
+      const submitterId = (response['Encrypted Submitter ID'] as string || '').toLowerCase().trim();
+      if (!submitterId || submitterId.length < 5) return;
+
+      // Try exact match first
+      if (emailPartsMap.has(submitterId)) {
+        respondingEmployees.add(emailPartsMap.get(submitterId)!);
+        return;
+      }
+
+      // Try partial matches
+      for (const [key, email] of emailPartsMap.entries()) {
+        if (submitterId.includes(key) || key.includes(submitterId)) {
+          respondingEmployees.add(email);
+          break;
+        }
+      }
+    });
+
+    return respondingEmployees;
   };
 
   const emailToName = (email: string) => {
@@ -369,6 +478,214 @@ const AdminPage = () => {
       console.error('Error parsing date for quarter:', dateString, error);
       return 'Unknown';
     }
+  };
+  const calculateFilteredTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
+    const filteredResponses = getFilteredResponses();
+    if (!filteredResponses.length) return 0;
+
+    const now = new Date();
+    const startDate = new Date();
+
+    switch (period) {
+      case 'week':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        startDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'quarter':
+        startDate.setMonth(now.getMonth() - 3);
+        break;
+    }
+
+    return filteredResponses.filter(response => {
+      const timestamp = response.Timestamp as string;
+      if (!timestamp) return false;
+
+      try {
+        const responseDate = new Date(timestamp);
+        // Handle invalid dates
+        if (isNaN(responseDate.getTime())) return false;
+        return responseDate >= startDate && responseDate <= now;
+      } catch {
+        return false;
+      }
+    }).length;
+  };
+  // const getFilteredResponses = (): FeedbackResponse[] => {
+  //   if (!responses.length) return [];
+
+  //   const filteredMappings = getFilteredEmployeeMappings();
+  //   if (!filteredMappings.length && !globalFilters.accountManager) {
+  //     return responses; // No filters applied
+  //   }
+
+  //   return responses.filter(response => {
+  //     const submitterId = (response['Encrypted Submitter ID'] as string || '').toLowerCase().trim();
+  //     const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+  //     const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+
+  //     // 1. Check if submitter matches any filtered employee
+  //     let matchesEmployee = false;
+  //     let matchesAccountManager = false;
+  //     let matchesProcess = false;
+
+  //     // Check against employee mappings
+  //     if (filteredMappings.length > 0) {
+  //       for (const emp of filteredMappings) {
+  //         const empEmail = (emp.Email as string || '').toLowerCase().trim();
+  //         const empLdap = (emp.Ldap as string || '').toLowerCase().trim();
+  //         const empAccountManager = (emp.AccountManager as string || '').toLowerCase().trim();
+  //         const empProcess = (emp.Process as string || '').toLowerCase().trim();
+
+  //         // Check if submitter ID contains email or ldap
+  //         if (empEmail && submitterId.includes(empEmail)) {
+  //           matchesEmployee = true;
+  //           break;
+  //         }
+  //         if (empLdap && submitterId.includes(empLdap)) {
+  //           matchesEmployee = true;
+  //           break;
+  //         }
+  //         // Check if email matches without domain
+  //         if (empEmail.includes('@')) {
+  //           const emailLocalPart = empEmail.split('@')[0];
+  //           if (submitterId.includes(emailLocalPart)) {
+  //             matchesEmployee = true;
+  //             break;
+  //           }
+  //         }
+  //       }
+  //     }
+
+  //     // 2. Check if management email matches account manager filter
+  //     if (globalFilters.accountManager) {
+  //       const filterAccountManager = globalFilters.accountManager.toLowerCase();
+
+  //       // Direct match
+  //       if (managementEmail === filterAccountManager) {
+  //         matchesAccountManager = true;
+  //       }
+
+  //       // Check if any employee in filtered mappings has this account manager
+  //       if (filteredMappings.length > 0) {
+  //         const matchingEmployee = filteredMappings.find(emp => {
+  //           const empAccountManager = (emp.AccountManager as string || '').toLowerCase().trim();
+  //           return empAccountManager === filterAccountManager;
+  //         });
+  //         if (matchingEmployee) {
+  //           matchesAccountManager = true;
+  //         }
+  //       }
+  //     } else {
+  //       matchesAccountManager = true; // No account manager filter
+  //     }
+
+  //     // 3. Check process filter
+  //     if (globalFilters.process) {
+  //       const filterProcess = globalFilters.process.toLowerCase();
+  //       matchesProcess = responseProcess === filterProcess;
+
+  //       // Also check if any filtered employee has this process
+  //       if (!matchesProcess && filteredMappings.length > 0) {
+  //         const matchingEmployee = filteredMappings.find(emp => {
+  //           const empProcess = (emp.Process as string || '').toLowerCase().trim();
+  //           return empProcess === filterProcess;
+  //         });
+  //         if (matchingEmployee) {
+  //           matchesProcess = true;
+  //         }
+  //       }
+  //     } else {
+  //       matchesProcess = true; // No process filter
+  //     }
+
+  //     // Return true if:
+  //     // - We have employee matches OR no employee filters
+  //     // - AND account manager matches OR no account manager filter
+  //     // - AND process matches OR no process filter
+  //     const hasEmployeeFilters = filteredMappings.length > 0 || globalFilters.client;
+  //     const employeeCondition = !hasEmployeeFilters || matchesEmployee;
+  //     const accountManagerCondition = !globalFilters.accountManager || matchesAccountManager;
+  //     const processCondition = !globalFilters.process || matchesProcess;
+
+  //     return employeeCondition && accountManagerCondition && processCondition;
+  //   });
+  // };
+
+  //   const getFilteredResponses = (): FeedbackResponse[] => {
+  //   if (!responses.length) return [];
+
+  //   // If no global filters are applied, return all responses
+  //   if (!globalFilters.client && !globalFilters.process && !globalFilters.accountManager) {
+  //     return responses;
+  //   }
+
+  //   return responses.filter(response => {
+  //     const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+  //     const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+
+  //     // Check process filter
+  //     if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
+  //       return false;
+  //     }
+
+  //     // Check account manager filter - compare with management email
+  //     if (globalFilters.accountManager) {
+  //       const filterAccountManager = globalFilters.accountManager.toLowerCase();
+  //       if (managementEmail !== filterAccountManager) {
+  //         return false;
+  //       }
+  //     }
+
+  //     // Note: Client filter cannot be applied as there's no client field in response sheet
+  //     // Unless you add it to the response sheet
+
+  //     return true;
+  //   });
+  // };
+
+  const getFilteredResponses = (): FeedbackResponse[] => {
+    if (!responses.length) return [];
+
+    // If no global filters are applied, return all responses
+    if (!globalFilters.process && !globalFilters.accountManager) {
+      return responses;
+    }
+
+    return responses.filter(response => {
+      const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+      const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+
+      // Check process filter
+      if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
+        return false;
+      }
+
+      // Check account manager filter - compare with management email
+      if (globalFilters.accountManager) {
+        const filterAccountManager = globalFilters.accountManager.toLowerCase();
+        if (managementEmail !== filterAccountManager) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  const getFilteredEmployeeMappings = (): EmployeeMapping[] => {
+    if (!employeeMappings.length) return [];
+
+    return employeeMappings.filter(emp => {
+      // Client filter
+      if (globalFilters.client && emp.Client !== globalFilters.client) return false;
+
+      // Process filter
+      if (globalFilters.process && emp.Process !== globalFilters.process) return false;
+
+      return true;
+    });
   };
 
   const filterResponses = (responses: FeedbackResponse[]) => {
@@ -733,38 +1050,38 @@ const AdminPage = () => {
     }).sort((a, b) => b.meanScore - a.meanScore);
   };
   // Add this function after calculateQuarterlyData
-const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
-  if (!responses.length) return 0;
-  
-  const now = new Date();
-  const startDate = new Date();
-  
-  switch (period) {
-    case 'week':
-      startDate.setDate(now.getDate() - 7);
-      break;
-    case 'month':
-      startDate.setMonth(now.getMonth() - 1);
-      break;
-    case 'quarter':
-      startDate.setMonth(now.getMonth() - 3);
-      break;
-  }
-  
-  return responses.filter(response => {
-    const timestamp = response.Timestamp as string;
-    if (!timestamp) return false;
-    
-    try {
-      const responseDate = new Date(timestamp);
-      // Handle invalid dates
-      if (isNaN(responseDate.getTime())) return false;
-      return responseDate >= startDate && responseDate <= now;
-    } catch {
-      return false;
+  const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
+    if (!responses.length) return 0;
+
+    const now = new Date();
+    const startDate = new Date();
+
+    switch (period) {
+      case 'week':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        startDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'quarter':
+        startDate.setMonth(now.getMonth() - 3);
+        break;
     }
-  }).length;
-};
+
+    return responses.filter(response => {
+      const timestamp = response.Timestamp as string;
+      if (!timestamp) return false;
+
+      try {
+        const responseDate = new Date(timestamp);
+        // Handle invalid dates
+        if (isNaN(responseDate.getTime())) return false;
+        return responseDate >= startDate && responseDate <= now;
+      } catch {
+        return false;
+      }
+    }).length;
+  };
 
   const convertResponseToScore = (response: string): number => {
     switch (response) {
@@ -1112,6 +1429,14 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
     return responses.filter(r => r['Additional Comments'] &&
       (r['Additional Comments'] as string).trim().length > 10).length;
   };
+  const calculateFilteredQuarterlyData = (quarter: string) => {
+    const filteredResponses = getFilteredResponses();
+
+    return filteredResponses.filter(response => {
+      const quarterFromDate = getQuarterFromDate(response.Timestamp || response.Date || '');
+      return quarterFromDate === quarter;
+    }).length;
+  };
 
   const calculateLeaderAnalytics = () => {
     const leaderMap = new Map<string, {
@@ -1331,582 +1656,571 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
               </CardContent>
             </Card>
           </TabsContent>
+
           <TabsContent value="home" className="space-y-6">
             <div className="animate-fade-in">
-              <h2 className="text-2xl font-bold text-foreground mb-4">Dashboard Overview</h2>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
 
-              {/* 4-card grid */}
-              {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <Users className="w-8 h-8 text-secondary mx-auto mb-2" />
-                      <span className="text-3xl font-bold block">{stats.uniqueSubmitters}</span>
-                      <span className="text-sm text-muted-foreground">Unique Submitters</span>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        {stats.totalResponses} total responses
+                {/* Global Filters */}
+                <div className="flex flex-wrap gap-4">
+                  {/* Process Filter */}
+                  <div className="min-w-[180px]">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Filter by Process
+                    </label>
+                    <select
+                      value={globalFilters.process}
+                      onChange={(e) => setGlobalFilters(prev => ({ ...prev, process: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+                    >
+                      <option value="">All Processes</option>
+                      {Array.from(new Set(responses.map(r => r['Process'] as string).filter(Boolean)))
+                        .sort()
+                        .map(process => (
+                          <option key={process} value={process}>
+                            {process}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {/* Account Manager Filter */}
+                  <div className="min-w-[180px]">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Filter by Account Manager
+                    </label>
+                    <select
+                      value={globalFilters.accountManager}
+                      onChange={(e) => setGlobalFilters(prev => ({ ...prev, accountManager: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+                    >
+                      <option value="">All Managers</option>
+                      {Array.from(new Set(responses.map(r => r['Management Email ID'] as string).filter(Boolean)))
+                        .sort()
+                        .map(manager => (
+                          <option key={manager} value={manager}>
+                            {manager.split('@')[0]}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {/* Clear Filters Button */}
+                  {(globalFilters.process || globalFilters.accountManager) && (
+                    <div className="flex items-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setGlobalFilters({ client: '', process: '', accountManager: '' })}
+                        className="h-10"
+                      >
+                        Clear Filters
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Filter Summary */}
+              {(globalFilters.process || globalFilters.accountManager) && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                    <div>
+                      <h3 className="font-medium text-gray-700">Filtered View</h3>
+                      <p className="text-sm text-gray-500">
+                        {(() => {
+                          const filteredResponses = getFilteredResponses();
+                          return `Showing ${filteredResponses.length} out of ${responses.length} responses`;
+                        })()}
+                        {globalFilters.process && ` in process "${globalFilters.process}"`}
+                        {globalFilters.accountManager && ` for manager "${globalFilters.accountManager.split('@')[0]}"`}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setGlobalFilters({ client: '', process: '', accountManager: '' })}
+                      className="mt-2 sm:mt-0"
+                    >
+                      Clear All Filters
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Active Filters Display */}
+              {(globalFilters.process || globalFilters.accountManager) && (
+                <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-blue-700">Active Dashboard Filters:</span>
+                    {globalFilters.process && (
+                      <div className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        <span className="font-medium">Process:</span>
+                        <span>{globalFilters.process}</span>
+                        <button
+                          onClick={() => setGlobalFilters(prev => ({ ...prev, process: '' }))}
+                          className="ml-1 text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {globalFilters.accountManager && (
+                      <div className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        <span className="font-medium">Account Manager:</span>
+                        <span>{globalFilters.accountManager.split('@')[0]}</span>
+                        <button
+                          onClick={() => setGlobalFilters(prev => ({ ...prev, accountManager: '' }))}
+                          className="ml-1 text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 3-card grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {/* Card 1: Unique Submitters - Compact */}
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Users className="w-5 h-5 text-secondary" />
+                          <span className="text-sm font-medium text-muted-foreground">Unique Submitters</span>
+                        </div>
+                        <span className="text-2xl font-bold block leading-tight">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return 0;
+
+                            // Get unique encrypted submitter IDs from filtered responses
+                            const uniqueSubmitters = new Set(
+                              filteredResponses
+                                .map(r => r['Encrypted Submitter ID'] as string)
+                                .filter(Boolean)
+                            );
+
+                            return uniqueSubmitters.size;
+                          })()}
+                        </span>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return "0 total responses";
+
+                            const uniqueSubmitters = new Set(
+                              filteredResponses
+                                .map(r => r['Encrypted Submitter ID'] as string)
+                                .filter(Boolean)
+                            );
+
+                            const avgPerSubmitter = uniqueSubmitters.size > 0
+                              ? (filteredResponses.length / uniqueSubmitters.size).toFixed(1)
+                              : 0;
+
+                            return `${filteredResponses.length} total responses • ${avgPerSubmitter} avg/submitter`;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
+                          Participants
+                        </div>
+                        {globalFilters.process || globalFilters.accountManager ? (
+                          <div className="text-xs text-muted-foreground mt-1">Filtered</div>
+                        ) : null}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <AlertTriangle className="w-8 h-8 text-accent mx-auto mb-2" />
-                      {mappingLoading ? (
-                        <div className="py-4">
-                          <Loader2 className="w-6 h-6 mx-auto animate-spin text-muted-foreground" />
-                          <div className="text-sm text-muted-foreground mt-2">Loading employee data...</div>
+                {/* Card 2: Incomplete Feedback - Compact */}
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    {loading ? (
+                      <div className="flex items-center justify-center py-3">
+                        <div className="text-center">
+                          <Loader2 className="w-5 h-5 mx-auto animate-spin text-muted-foreground mb-2" />
+                          <div className="text-xs text-muted-foreground">Loading data...</div>
                         </div>
-                      ) : employeeMappings.length === 0 ? (
-                        <div>
-                          <div className="text-3xl font-bold text-gray-400">?</div>
-                          <span className="text-sm text-muted-foreground">Pending Users</span>
-                          <div className="mt-3 text-xs text-gray-600">
-                            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                              <div className="flex items-start">
-                                <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
-                                <div>
-                                  <div className="font-medium text-yellow-700">Mapping sheet not loaded</div>
-                                  <div className="text-yellow-600 mt-1">
-                                    Click "Refresh Data" to load employee mapping
-                                  </div>
+                      </div>
+                    ) : responses.length === 0 ? (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                            <span className="text-sm font-medium text-muted-foreground">Incomplete Feedback</span>
+                          </div>
+                          <div className="text-2xl font-bold text-gray-300">?</div>
+                        </div>
+                        <div className="mt-3 space-y-2">
+                          <div className="text-xs p-2 bg-yellow-50 border border-yellow-100 rounded">
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="w-3 h-3 text-yellow-600 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <div className="font-medium text-yellow-700 text-xs">No response data</div>
+                                <div className="text-yellow-600 text-xs mt-0.5">
+                                  No feedback responses found yet
                                 </div>
                               </div>
                             </div>
-                            <div className="mt-3 space-y-2">
-                              <div className="flex justify-between">
-                                <span>Feedback responses loaded:</span>
-                                <span className="font-medium">{responses.length}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Unique submitters:</span>
-                                <span className="font-medium text-green-600">{stats.uniqueSubmitters}</span>
-                              </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <AlertTriangle className="w-5 h-5 text-accent" />
+                              <span className="text-sm font-medium text-muted-foreground">Incomplete Feedback</span>
+                            </div>
+                            <span className="text-2xl font-bold block leading-tight text-red-600">
+                              {(() => {
+                                const filteredResponses = getFilteredResponses();
+                                if (!filteredResponses.length) return 0;
+
+                                // Count how many managers each submitter has reviewed
+                                const submitterManagersMap = new Map<string, Set<string>>();
+
+                                filteredResponses.forEach(response => {
+                                  const submitterId = response['Encrypted Submitter ID'] as string;
+                                  const managerEmail = response['Management Email ID'] as string;
+
+                                  if (submitterId && managerEmail) {
+                                    if (!submitterManagersMap.has(submitterId)) {
+                                      submitterManagersMap.set(submitterId, new Set());
+                                    }
+                                    submitterManagersMap.get(submitterId)!.add(managerEmail.toLowerCase().trim());
+                                  }
+                                });
+
+                                // Count submitters who have reviewed less than 3 managers
+                                let incompleteCount = 0;
+                                submitterManagersMap.forEach((managers, submitterId) => {
+                                  if (managers.size < 3) {
+                                    incompleteCount++;
+                                  }
+                                });
+
+                                return incompleteCount;
+                              })()}
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <div className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded-full font-medium">
+                              Incomplete
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {(() => {
+                                const filteredResponses = getFilteredResponses();
+                                const uniqueSubmitters = new Set(
+                                  filteredResponses
+                                    .map(r => r['Encrypted Submitter ID'] as string)
+                                    .filter(Boolean)
+                                );
+                                return `${uniqueSubmitters.size} total submitters`;
+                              })()}
                             </div>
                           </div>
                         </div>
-                      ) : (
-                        <>
-                          <span className="text-3xl font-bold block text-red-600">
-                            {pendingUsers}
-                          </span>
-                          <span className="text-sm text-muted-foreground">Pending Users</span>
-                          <div className="mt-2 text-xs text-gray-600">
-                            <div className="flex justify-between">
-                              <span>Total employees:</span>
-                              <span className="font-medium">{employeeMappings.length}</span>
+
+                        <div className="mt-3 space-y-2">
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500">Completion Rate:</span>
+                              <span className="font-medium text-green-600">
+                                {(() => {
+                                  const filteredResponses = getFilteredResponses();
+                                  if (!filteredResponses.length) return "0%";
+
+                                  const submitterManagersMap = new Map<string, Set<string>>();
+
+                                  filteredResponses.forEach(response => {
+                                    const submitterId = response['Encrypted Submitter ID'] as string;
+                                    const managerEmail = response['Management Email ID'] as string;
+
+                                    if (submitterId && managerEmail) {
+                                      if (!submitterManagersMap.has(submitterId)) {
+                                        submitterManagersMap.set(submitterId, new Set());
+                                      }
+                                      submitterManagersMap.get(submitterId)!.add(managerEmail.toLowerCase().trim());
+                                    }
+                                  });
+
+                                  let completeCount = 0;
+                                  let totalSubmitters = 0;
+
+                                  submitterManagersMap.forEach((managers, submitterId) => {
+                                    totalSubmitters++;
+                                    if (managers.size >= 3) {
+                                      completeCount++;
+                                    }
+                                  });
+
+                                  return totalSubmitters > 0
+                                    ? `${Math.round((completeCount / totalSubmitters) * 100)}%`
+                                    : "0%";
+                                })()}
+                              </span>
                             </div>
-                            <div className="flex justify-between">
-                              <span>Participation rate:</span>
-                              <span className="font-medium text-green-600">{actualParticipationRate}%</span>
-                            </div>
-                            <div className="mt-2 w-full bg-gray-200 rounded-full h-1">
+                            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                               <div
-                                className="bg-green-500 h-1 rounded-full"
-                                style={{ width: `${actualParticipationRate}%` }}
-                              ></div>
+                                className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${(() => {
+                                    const filteredResponses = getFilteredResponses();
+                                    if (!filteredResponses.length) return 0;
+
+                                    const submitterManagersMap = new Map<string, Set<string>>();
+
+                                    filteredResponses.forEach(response => {
+                                      const submitterId = response['Encrypted Submitter ID'] as string;
+                                      const managerEmail = response['Management Email ID'] as string;
+
+                                      if (submitterId && managerEmail) {
+                                        if (!submitterManagersMap.has(submitterId)) {
+                                          submitterManagersMap.set(submitterId, new Set());
+                                        }
+                                        submitterManagersMap.get(submitterId)!.add(managerEmail.toLowerCase().trim());
+                                      }
+                                    });
+
+                                    let completeCount = 0;
+                                    let totalSubmitters = 0;
+
+                                    submitterManagersMap.forEach((managers, submitterId) => {
+                                      totalSubmitters++;
+                                      if (managers.size >= 3) {
+                                        completeCount++;
+                                      }
+                                    });
+
+                                    return totalSubmitters > 0
+                                      ? Math.min((completeCount / totalSubmitters) * 100, 100)
+                                      : 0;
+                                  })()}%`
+                                }}
+                              />
                             </div>
                           </div>
-                        </>
-                      )}
-                    </div>
+                          {/* <div className="flex justify-between text-xs text-gray-500">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div> */}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <div className="flex items-center justify-center mb-3">
-                        <Users className="w-6 h-6 text-secondary mr-2" />
-                        <span className="text-sm font-medium">Gender Distribution</span>
+                {/* Card 3: Gender Distribution - Compact */}
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-5 h-5 text-secondary" />
+                        <span className="text-sm font-medium text-muted-foreground">Gender Distribution</span>
                       </div>
+                      <div className="text-xs px-2 py-1 bg-purple-50 text-purple-700 rounded-full font-medium">
+                        Diversity
+                      </div>
+                    </div>
 
-                      {(() => {
-                        // Calculate gender distribution from unique submitters
-                        const genderMap = new Map<string, number>();
-                        const submitterMap = new Map<string, string>();
+                    {(() => {
+                      // Get filtered responses based on global filters
+                      const filteredResponses = getFilteredResponses();
 
-                        responses.forEach(response => {
-                          const submitterId = response['Encrypted Submitter ID'] as string;
-                          const gender = (response['Gender'] as string)?.trim() || 'Unknown';
+                      const genderMap = new Map<string, number>();
+                      const submitterMap = new Map<string, string>();
 
-                          if (submitterId && !submitterMap.has(submitterId)) {
-                            submitterMap.set(submitterId, gender);
+                      // Track unique submitters and their gender from filtered responses
+                      filteredResponses.forEach(response => {
+                        const submitterId = response['Encrypted Submitter ID'] as string;
+                        const gender = (response['Gender'] as string)?.trim() || 'Unknown';
+
+                        // Only count each submitter once
+                        if (submitterId && !submitterMap.has(submitterId)) {
+                          submitterMap.set(submitterId, gender);
+                        }
+                      });
+
+                      // Count genders from unique submitters
+                      submitterMap.forEach(gender => {
+                        let genderKey = gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+
+                        // Normalize gender values
+                        if (!['Male', 'Female', 'Other', 'Prefer not to say'].includes(genderKey)) {
+                          if (genderKey === 'Unknown' || !genderKey) {
+                            genderKey = 'Unknown';
+                          } else {
+                            if (genderKey.toLowerCase().includes('female')) genderKey = 'Female';
+                            else if (genderKey.toLowerCase().includes('male')) genderKey = 'Male';
+                            else genderKey = 'Other';
                           }
-                        });
-
-                        // Count genders from unique submitters
-                        submitterMap.forEach(gender => {
-                          let genderKey = gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
-
-                          if (!['Male', 'Female', 'Other', 'Prefer not to say'].includes(genderKey)) {
-                            if (genderKey === 'Unknown' || !genderKey) {
-                              genderKey = 'Unknown';
-                            } else {
-                              if (genderKey.toLowerCase().includes('female')) genderKey = 'Female';
-                              else if (genderKey.toLowerCase().includes('male')) genderKey = 'Male';
-                              else genderKey = 'Other';
-                            }
-                          }
-
-                          genderMap.set(genderKey, (genderMap.get(genderKey) || 0) + 1);
-                        });
-
-                        const totalUniqueSubmitters = submitterMap.size;
-
-                        if (totalUniqueSubmitters === 0) {
-                          return (
-                            <div className="py-4">
-                              <div className="text-2xl font-bold text-gray-400">?</div>
-                              <div className="text-sm text-muted-foreground mt-1">No data</div>
-                              <div className="text-xs text-gray-500 mt-2">Unique submitters: {stats.uniqueSubmitters}</div>
-                            </div>
-                          );
                         }
 
-                        // Convert to array and sort
-                        const genderData = Array.from(genderMap.entries())
-                          .map(([gender, count]) => ({
-                            gender,
-                            count,
-                            percentage: Math.round((count / totalUniqueSubmitters) * 100)
-                          }))
-                          .sort((a, b) => b.count - a.count);
+                        genderMap.set(genderKey, (genderMap.get(genderKey) || 0) + 1);
+                      });
 
-                        // Colors for pie chart segments
-                        const colors = {
-                          'Male': '#3b82f6', // Blue
-                          'Female': '#ec4899', // Pink
-                          'Other': '#8b5cf6', // Purple
-                          'Unknown': '#6b7280', // Gray
-                          'Prefer not to say': '#10b981' // Green
-                        };
+                      const totalUniqueSubmitters = submitterMap.size;
 
-                        // Calculate pie chart segments
-                        let cumulativePercentage = 0;
-                        const segments = genderData.map(item => {
-                          const segment = {
-                            ...item,
-                            start: cumulativePercentage,
-                            end: cumulativePercentage + item.percentage,
-                            color: colors[item.gender as keyof typeof colors] || '#9ca3af'
-                          };
-                          cumulativePercentage += item.percentage;
-                          return segment;
-                        });
-
-                        // Create SVG pie chart
-                        const size = 140;
-                        const radius = 55;
-                        const center = size / 2;
-
+                      if (totalUniqueSubmitters === 0) {
                         return (
-                          <div>
-                            <div className="relative mx-auto mb-2" style={{ width: size, height: size }}>
-                              <svg width={size} height={size} className="mb-2">
-                                {segments.map((segment, index) => {
-                                  if (segment.percentage === 0) return null;
-
-                                  const startAngle = (segment.start / 100) * 360 - 90;
-                                  const endAngle = (segment.end / 100) * 360 - 90;
-
-                                  const startRad = (startAngle * Math.PI) / 180;
-                                  const endRad = (endAngle * Math.PI) / 180;
-
-                                  const x1 = center + radius * Math.cos(startRad);
-                                  const y1 = center + radius * Math.sin(startRad);
-                                  const x2 = center + radius * Math.cos(endRad);
-                                  const y2 = center + radius * Math.sin(endRad);
-
-                                  const largeArc = segment.percentage > 50 ? 1 : 0;
-
-                                  const pathData = [
-                                    `M ${center} ${center}`,
-                                    `L ${x1} ${y1}`,
-                                    `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
-                                    'Z'
-                                  ].join(' ');
-
-                                  return (
-                                    <path
-                                      key={index}
-                                      d={pathData}
-                                      fill={segment.color}
-                                      stroke="white"
-                                      strokeWidth="2"
-                                    />
-                                  );
-                                })}
-
-                          
-                                <circle
-                                  cx={center}
-                                  cy={center}
-                                  r={radius * 0.5}
-                                  fill="white"
-                                />
-
-                                <text
-                                  x={center}
-                                  y={center - 8}
-                                  textAnchor="middle"
-                                  className="text-base font-bold fill-gray-700"
-                                >
-                                  {totalUniqueSubmitters}
-                                </text>
-                                <text
-                                  x={center}
-                                  y={center + 12}
-                                  textAnchor="middle"
-                                  className="text-sm fill-gray-500"
-                                >
-                                  Users
-                                </text>
-                              </svg>
+                          <div className="py-4 text-center">
+                            <div className="text-2xl font-bold text-gray-300 mb-1">?</div>
+                            <div className="text-sm text-muted-foreground">No data</div>
+                            <div className="text-xs text-gray-400 mt-2">
+                              {globalFilters.process || globalFilters.accountManager ?
+                                'No submissions match current filters' :
+                                'Awaiting submissions'}
                             </div>
+                          </div>
+                        );
+                      }
 
-                            <div className="mt-4 space-y-2">
+                      const genderData = Array.from(genderMap.entries())
+                        .map(([gender, count]) => ({
+                          gender,
+                          count,
+                          percentage: Math.round((count / totalUniqueSubmitters) * 100)
+                        }))
+                        .sort((a, b) => b.count - a.count);
+
+                      const colors = {
+                        'Male': '#3b82f6',
+                        'Female': '#ec4899',
+                        'Other': '#8b5cf6',
+                        'Unknown': '#9ca3af',
+                        'Prefer not to say': '#10b981'
+                      };
+
+                      const size = 90;
+                      const radius = 35;
+                      const center = size / 2;
+                      let cumulativePercentage = 0;
+                      const segments = genderData.map(item => {
+                        const segment = {
+                          ...item,
+                          start: cumulativePercentage,
+                          end: cumulativePercentage + item.percentage,
+                          color: colors[item.gender as keyof typeof colors] || '#9ca3af'
+                        };
+                        cumulativePercentage += item.percentage;
+                        return segment;
+                      });
+
+                      return (
+                        <div className="flex items-center gap-4">
+                          <div className="relative flex-shrink-0">
+                            <svg width={size} height={size} className="drop-shadow-sm">
+                              {segments.map((segment, index) => {
+                                if (segment.percentage === 0) return null;
+
+                                const startAngle = (segment.start / 100) * 360 - 90;
+                                const endAngle = (segment.end / 100) * 360 - 90;
+
+                                const startRad = (startAngle * Math.PI) / 180;
+                                const endRad = (endAngle * Math.PI) / 180;
+
+                                const x1 = center + radius * Math.cos(startRad);
+                                const y1 = center + radius * Math.sin(startRad);
+                                const x2 = center + radius * Math.cos(endRad);
+                                const y2 = center + radius * Math.sin(endRad);
+
+                                const largeArc = segment.percentage > 50 ? 1 : 0;
+
+                                const pathData = [
+                                  `M ${center} ${center}`,
+                                  `L ${x1} ${y1}`,
+                                  `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                                  'Z'
+                                ].join(' ');
+
+                                return (
+                                  <path
+                                    key={index}
+                                    d={pathData}
+                                    fill={segment.color}
+                                    stroke="white"
+                                    strokeWidth="1.5"
+                                  />
+                                );
+                              })}
+
+                              <circle
+                                cx={center}
+                                cy={center}
+                                r={radius * 0.4}
+                                fill="white"
+                              />
+
+                              <text
+                                x={center}
+                                y={center - 4}
+                                textAnchor="middle"
+                                style={{ fontSize: '10px', fontWeight: '600', fill: '#374151' }}
+                              >
+                                {totalUniqueSubmitters}
+                              </text>
+                              <text
+                                x={center}
+                                y={center + 5}
+                                textAnchor="middle"
+                                style={{ fontSize: '8px', fill: '#6b7280' }}
+                              >
+                                Users
+                              </text>
+                            </svg>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="space-y-2">
                               {genderData.map((item, index) => (
-                                <div key={index} className="flex items-center justify-between text-sm">
-                                  <div className="flex items-center">
+                                <div key={index} className="flex items-center justify-between text-xs">
+                                  <div className="flex items-center truncate">
                                     <div
-                                      className="w-4 h-4 rounded-full mr-3"
+                                      className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
                                       style={{ backgroundColor: colors[item.gender as keyof typeof colors] || '#9ca3af' }}
                                     />
-                                    <span className="font-medium">{item.gender}</span>
+                                    <span className="font-medium truncate">{item.gender}</span>
                                   </div>
-                                  <div className="text-right">
-                                    <div className="font-bold text-base">
-                                      {item.percentage}%
-                                    </div>
-                                    <div className="text-gray-500 text-xs">
-                                      ({item.count})
-                                    </div>
+                                  <div className="text-right flex-shrink-0 ml-2">
+                                    <span className="font-bold">{item.percentage}%</span>
+                                    <span className="text-gray-500 ml-1">({item.count})</span>
                                   </div>
                                 </div>
                               ))}
                             </div>
+                            <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                              <div className="flex justify-between">
+                                <span>Total diversity score:</span>
+                                <span className="font-medium text-gray-700">
+                                  {genderData.length > 1 ? Math.max(...genderData.map(g => g.percentage)) - Math.min(...genderData.filter(g => g.percentage > 0).map(g => g.percentage)) : 0}% spread
+                                </span>
+                              </div>
+                              {globalFilters.process || globalFilters.accountManager ? (
+                                <div className="mt-1 text-xs text-blue-600">
+                                  Filtered by: {globalFilters.process || ''} {(globalFilters.process && globalFilters.accountManager) ? '•' : ''}
+                                  {globalFilters.accountManager ? globalFilters.accountManager.split('@')[0] : ''}
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
-                        );
-                      })()}
-                    </div>
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
-              </div> */}
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-  {/* Card 1: Unique Submitters - Compact */}
-  <Card className="hover:shadow-md transition-shadow">
-    <CardContent className="p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="w-5 h-5 text-secondary" />
-            <span className="text-sm font-medium text-muted-foreground">Unique Submitters</span>
-          </div>
-          <span className="text-2xl font-bold block leading-tight">{stats.uniqueSubmitters}</span>
-          <div className="mt-2 text-xs text-muted-foreground">
-            {stats.totalResponses} total responses
-            <span className="ml-2 text-green-600 font-medium">
-              • {stats.totalResponses > 0 ? (stats.totalResponses / stats.uniqueSubmitters).toFixed(1) : 0} avg/submitter
-            </span>
-          </div>
-        </div>
-        <div className="flex flex-col items-end">
-          <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
-            Participants
-          </div>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-
-  {/* Card 2: Pending Users - Compact */}
-  <Card className="hover:shadow-md transition-shadow">
-    <CardContent className="p-5">
-      {mappingLoading ? (
-        <div className="flex items-center justify-center py-3">
-          <div className="text-center">
-            <Loader2 className="w-5 h-5 mx-auto animate-spin text-muted-foreground mb-2" />
-            <div className="text-xs text-muted-foreground">Loading employee data...</div>
-          </div>
-        </div>
-      ) : employeeMappings.length === 0 ? (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-yellow-500" />
-              <span className="text-sm font-medium text-muted-foreground">Pending Users</span>
-            </div>
-            <div className="text-2xl font-bold text-gray-300">?</div>
-          </div>
-          <div className="mt-3 space-y-2">
-            <div className="text-xs p-2 bg-yellow-50 border border-yellow-100 rounded">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="w-3 h-3 text-yellow-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="font-medium text-yellow-700 text-xs">Mapping needed</div>
-                  <div className="text-yellow-600 text-xs mt-0.5">
-                    Load employee mapping
-                  </div>
-                </div>
               </div>
-            </div>
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Responses:</span>
-                <span className="font-medium">{responses.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Submitters:</span>
-                <span className="font-medium text-green-600">{stats.uniqueSubmitters}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-start justify-between mb-2">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-5 h-5 text-accent" />
-                <span className="text-sm font-medium text-muted-foreground">Pending Users</span>
-              </div>
-              <span className="text-2xl font-bold block leading-tight text-red-600">
-                {pendingUsers}
-              </span>
-            </div>
-            <div className="flex flex-col items-end">
-              <div className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded-full font-medium">
-                Action needed
-              </div>
-              <div className="text-xs text-gray-500 mt-1">{employeeMappings.length} total</div>
-            </div>
-          </div>
-          
-          <div className="mt-3 space-y-2">
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Participation:</span>
-                <span className="font-medium text-green-600">{actualParticipationRate}%</span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
-                  style={{ width: `${actualParticipationRate}%` }}
-                />
-              </div>
-            </div>
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>0%</span>
-              <span>50%</span>
-              <span>100%</span>
-            </div>
-          </div>
-        </div>
-      )}
-    </CardContent>
-  </Card>
 
-  {/* Card 3: Gender Distribution - Compact */}
-  <Card className="hover:shadow-md transition-shadow">
-    <CardContent className="p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-secondary" />
-          <span className="text-sm font-medium text-muted-foreground">Gender Distribution</span>
-        </div>
-        <div className="text-xs px-2 py-1 bg-purple-50 text-purple-700 rounded-full font-medium">
-          Diversity
-        </div>
-      </div>
-
-      {(() => {
-        // Calculate gender distribution from unique submitters
-        const genderMap = new Map<string, number>();
-        const submitterMap = new Map<string, string>();
-
-        responses.forEach(response => {
-          const submitterId = response['Encrypted Submitter ID'] as string;
-          const gender = (response['Gender'] as string)?.trim() || 'Unknown';
-
-          if (submitterId && !submitterMap.has(submitterId)) {
-            submitterMap.set(submitterId, gender);
-          }
-        });
-
-        // Count genders from unique submitters
-        submitterMap.forEach(gender => {
-          let genderKey = gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
-
-          if (!['Male', 'Female', 'Other', 'Prefer not to say'].includes(genderKey)) {
-            if (genderKey === 'Unknown' || !genderKey) {
-              genderKey = 'Unknown';
-            } else {
-              if (genderKey.toLowerCase().includes('female')) genderKey = 'Female';
-              else if (genderKey.toLowerCase().includes('male')) genderKey = 'Male';
-              else genderKey = 'Other';
-            }
-          }
-
-          genderMap.set(genderKey, (genderMap.get(genderKey) || 0) + 1);
-        });
-
-        const totalUniqueSubmitters = submitterMap.size;
-
-        if (totalUniqueSubmitters === 0) {
-          return (
-            <div className="py-4 text-center">
-              <div className="text-2xl font-bold text-gray-300 mb-1">?</div>
-              <div className="text-sm text-muted-foreground">No data</div>
-              <div className="text-xs text-gray-400 mt-2">Awaiting submissions</div>
-            </div>
-          );
-        }
-
-        // Convert to array and sort
-        const genderData = Array.from(genderMap.entries())
-          .map(([gender, count]) => ({
-            gender,
-            count,
-            percentage: Math.round((count / totalUniqueSubmitters) * 100)
-          }))
-          .sort((a, b) => b.count - a.count);
-
-        // Colors for pie chart segments
-        const colors = {
-          'Male': '#3b82f6', // Blue
-          'Female': '#ec4899', // Pink
-          'Other': '#8b5cf6', // Purple
-          'Unknown': '#9ca3af', // Gray
-          'Prefer not to say': '#10b981' // Green
-        };
-
-        // Compact pie chart - smaller size
-        const size = 90;
-        const radius = 35;
-        const center = size / 2;
-        let cumulativePercentage = 0;
-        const segments = genderData.map(item => {
-          const segment = {
-            ...item,
-            start: cumulativePercentage,
-            end: cumulativePercentage + item.percentage,
-            color: colors[item.gender as keyof typeof colors] || '#9ca3af'
-          };
-          cumulativePercentage += item.percentage;
-          return segment;
-        });
-
-        return (
-          <div className="flex items-center gap-4">
-            {/* Compact Pie Chart */}
-            <div className="relative flex-shrink-0">
-              <svg width={size} height={size} className="drop-shadow-sm">
-                {segments.map((segment, index) => {
-                  if (segment.percentage === 0) return null;
-
-                  const startAngle = (segment.start / 100) * 360 - 90;
-                  const endAngle = (segment.end / 100) * 360 - 90;
-
-                  const startRad = (startAngle * Math.PI) / 180;
-                  const endRad = (endAngle * Math.PI) / 180;
-
-                  const x1 = center + radius * Math.cos(startRad);
-                  const y1 = center + radius * Math.sin(startRad);
-                  const x2 = center + radius * Math.cos(endRad);
-                  const y2 = center + radius * Math.sin(endRad);
-
-                  const largeArc = segment.percentage > 50 ? 1 : 0;
-
-                  const pathData = [
-                    `M ${center} ${center}`,
-                    `L ${x1} ${y1}`,
-                    `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
-                    'Z'
-                  ].join(' ');
-
-                  return (
-                    <path
-                      key={index}
-                      d={pathData}
-                      fill={segment.color}
-                      stroke="white"
-                      strokeWidth="1.5"
-                    />
-                  );
-                })}
-
-                {/* Center circle */}
-                <circle
-                  cx={center}
-                  cy={center}
-                  r={radius * 0.4}
-                  fill="white"
-                />
-
-                {/* Center text */}
-               <text
-  x={center}
-  y={center - 4}
-  textAnchor="middle"
-  style={{ fontSize: '10px', fontWeight: '600', fill: '#374151' }}
->
-  {totalUniqueSubmitters}
-</text>
-<text
-  x={center}
-  y={center + 5}
-  textAnchor="middle"
-  style={{ fontSize: '8px', fill: '#6b7280' }}
->
-  Users
-</text>
-              </svg>
-            </div>
-
-            {/* Compact Legend */}
-            <div className="flex-1 min-w-0">
-              <div className="space-y-2">
-                {genderData.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center truncate">
-                      <div
-                        className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
-                        style={{ backgroundColor: colors[item.gender as keyof typeof colors] || '#9ca3af' }}
-                      />
-                      <span className="font-medium truncate">{item.gender}</span>
-                    </div>
-                    <div className="text-right flex-shrink-0 ml-2">
-                      <span className="font-bold">{item.percentage}%</span>
-                      <span className="text-gray-500 ml-1">({item.count})</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Total summary */}
-              <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                <div className="flex justify-between">
-                  <span>Total diversity score:</span>
-                  <span className="font-medium text-gray-700">
-                    {genderData.length > 1 ? Math.max(...genderData.map(g => g.percentage)) - Math.min(...genderData.filter(g => g.percentage > 0).map(g => g.percentage)) : 0}% spread
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-    </CardContent>
-  </Card>
-</div>
-
-              {/* Pending Submissions Analysis - 2 cards side by side */}
-              {/* Pending Submissions Analysis - 3 cards side by side */}
+              {/* Feedback Completion Status - Updated for response-only data */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-foreground mb-4">Feedback Completion Status</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1918,173 +2232,49 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
                         Incomplete Feedback
                       </CardTitle>
                       <CardDescription>
-                        Employees who gave feedback to 1 or 2 managers
+                        Submitters who reviewed 1 or 2 managers
+                        {globalFilters.process && ` • Process: ${globalFilters.process}`}
+                        {globalFilters.accountManager && ` • Manager: ${globalFilters.accountManager.split('@')[0]}`}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       {(() => {
-                        if (!employeeMappings.length || !responses.length) {
+                        const filteredResponses = getFilteredResponses();
+                        if (!filteredResponses.length) {
                           return (
                             <div className="text-center py-8">
                               <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                              <p className="text-muted-foreground">Load data to see analysis</p>
+                              <p className="text-muted-foreground">No data to analyze</p>
                             </div>
                           );
                         }
 
-                        // Create a map to store which employees have which managers
-                        const employeeManagersMap = new Map<string, Set<string>>();
+                        const submitterManagersMap = new Map<string, Set<string>>();
 
-                        // First, get all managers for each employee from mapping data
-                        employeeMappings.forEach(emp => {
-                          const email = emp.Email.toLowerCase().trim();
-                          if (!employeeManagersMap.has(email)) {
-                            employeeManagersMap.set(email, new Set());
-                          }
+                        filteredResponses.forEach(response => {
+                          const submitterId = response['Encrypted Submitter ID'] as string;
+                          const managerEmail = response['Management Email ID'] as string;
 
-                          // Add all manager types if they exist and are valid emails
-                          const managersSet = employeeManagersMap.get(email)!;
-
-                          if (emp.Manager && emp.Manager.includes('@')) {
-                            managersSet.add(emp.Manager.toLowerCase().trim());
-                          }
-                          if (emp.AccountManager && emp.AccountManager.includes('@')) {
-                            managersSet.add(emp.AccountManager.toLowerCase().trim());
-                          }
-                          if (emp.POC && emp.POC.includes('@')) {
-                            managersSet.add(emp.POC.toLowerCase().trim());
+                          if (submitterId && managerEmail) {
+                            if (!submitterManagersMap.has(submitterId)) {
+                              submitterManagersMap.set(submitterId, new Set());
+                            }
+                            submitterManagersMap.get(submitterId)!.add(managerEmail.toLowerCase().trim());
                           }
                         });
 
-                        // Create a map of encrypted submitter IDs to their feedback given
-                        const submitterFeedbackMap = new Map<string, Set<string>>();
+                        const incompleteSubmitters = Array.from(submitterManagersMap.entries())
+                          .filter(([_, managers]) => managers.size > 0 && managers.size < 3)
+                          .map(([submitterId, managers]) => ({
+                            submitterId,
+                            managerCount: managers.size
+                          }));
 
-                        responses.forEach(response => {
-                          const submitterId = (response['Encrypted Submitter ID'] as string || '').trim();
-                          const managerEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
-
-                          if (submitterId && managerEmail && managerEmail.includes('@')) {
-                            if (!submitterFeedbackMap.has(submitterId)) {
-                              submitterFeedbackMap.set(submitterId, new Set());
-                            }
-                            submitterFeedbackMap.get(submitterId)!.add(managerEmail);
-                          }
-                        });
-
-                        // Now we need to match encrypted submitter IDs with employee emails
-                        // This is tricky since emails are encrypted in responses
-                        // We'll create a best-effort matching system
-
-                        // First, let's create a mapping of possible employee IDs (different formats)
-                        const employeeIdVariations = new Map<string, string>(); // variation -> actual email
-
-                        employeeMappings.forEach(emp => {
-                          const email = emp.Email.toLowerCase().trim();
-                          const ldap = (emp.Ldap || '').toLowerCase().trim();
-                          const emailLocalPart = email.split('@')[0];
-
-                          // Add different variations for matching
-                          if (email) {
-                            // Full email
-                            employeeIdVariations.set(email, email);
-                            // Email local part (before @)
-                            if (emailLocalPart) {
-                              employeeIdVariations.set(emailLocalPart, email);
-                            }
-                          }
-                          if (ldap) {
-                            // LDAP username
-                            employeeIdVariations.set(ldap, email);
-                            // LDAP with domain
-                            employeeIdVariations.set(`${ldap}@company.com`, email);
-                          }
-                        });
-
-                        // Also, let's extract any identifiable patterns from encrypted IDs
-                        // and try to match with email local parts
-                        const submitterToEmailMap = new Map<string, string>(); // encrypted ID -> actual email
-
-                        submitterFeedbackMap.forEach((_, submitterId) => {
-                          // Try different matching strategies
-
-                          // Strategy 1: Check if submitter ID contains any employee identifier
-                          for (const [variation, actualEmail] of employeeIdVariations.entries()) {
-                            if (submitterId.toLowerCase().includes(variation) ||
-                              variation.includes(submitterId.toLowerCase())) {
-                              submitterToEmailMap.set(submitterId, actualEmail);
-                              break;
-                            }
-                          }
-
-                          // Strategy 2: If no match yet, try matching by feedback patterns
-                          if (!submitterToEmailMap.has(submitterId)) {
-                            // Get all feedback from this submitter
-                            const feedbackSet = submitterFeedbackMap.get(submitterId)!;
-
-                            // Try to find an employee who has these specific managers
-                            for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
-                              // Check if all feedback given matches this employee's managers
-                              const feedbackArray = Array.from(feedbackSet);
-                              const matches = feedbackArray.filter(feedback => empManagers.has(feedback));
-
-                              // If most feedback matches this employee's managers, it's likely them
-                              if (matches.length > 0 && matches.length === feedbackArray.length) {
-                                submitterToEmailMap.set(submitterId, empEmail);
-                                break;
-                              }
-                            }
-                          }
-                        });
-
-                        // Now calculate incomplete feedback (1 or 2 managers)
-                        const incompleteEmployees = [];
-                        let totalIncompleteCount = 0;
-                        let totalPossibleFeedbacksForIncomplete = 0;
-                        let totalFeedbackGivenForIncomplete = 0;
-
-                        // Check each employee from mapping data
-                        for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
-                          const totalManagers = empManagers.size;
-                          if (totalManagers === 0) continue;
-
-                          // Find all submitter IDs that map to this employee
-                          const employeeSubmitters: string[] = [];
-                          submitterToEmailMap.forEach((email, submitterId) => {
-                            if (email === empEmail) {
-                              employeeSubmitters.push(submitterId);
-                            }
-                          });
-
-                          // If no submitter found, skip (this would be "No Feedback")
-                          if (employeeSubmitters.length === 0) continue;
-
-                          // Combine all feedback from all submitters for this employee
-                          const allFeedbackForEmployee = new Set<string>();
-                          employeeSubmitters.forEach(submitterId => {
-                            const feedback = submitterFeedbackMap.get(submitterId);
-                            if (feedback) {
-                              feedback.forEach(manager => allFeedbackForEmployee.add(manager));
-                            }
-                          });
-
-                          const feedbackGivenCount = allFeedbackForEmployee.size;
-
-                          // Check if feedback is incomplete (1 or 2 out of total managers)
-                          if (feedbackGivenCount > 0 && feedbackGivenCount < totalManagers) {
-                            incompleteEmployees.push({
-                              email: empEmail,
-                              totalManagers: totalManagers,
-                              feedbackGiven: feedbackGivenCount,
-                              feedbackMissing: totalManagers - feedbackGivenCount
-                            });
-                            totalIncompleteCount++;
-                            totalPossibleFeedbacksForIncomplete += totalManagers;
-                            totalFeedbackGivenForIncomplete += feedbackGivenCount;
-                          }
-                        }
-
-                        const completionRateForIncomplete = totalPossibleFeedbacksForIncomplete > 0
-                          ? Math.round((totalFeedbackGivenForIncomplete / totalPossibleFeedbacksForIncomplete) * 100)
+                        const totalIncompleteCount = incompleteSubmitters.length;
+                        const totalPossibleFeedbacks = incompleteSubmitters.reduce((sum, submitter) => sum + submitter.managerCount, 0);
+                        const maxPossibleFeedbacks = incompleteSubmitters.length * 3;
+                        const completionRate = maxPossibleFeedbacks > 0
+                          ? Math.round((totalPossibleFeedbacks / maxPossibleFeedbacks) * 100)
                           : 0;
 
                         return (
@@ -2094,12 +2284,12 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
                                 <div className="text-3xl font-bold text-yellow-600">
                                   {totalIncompleteCount}
                                 </div>
-                                <div className="text-sm text-muted-foreground">Employees</div>
+                                <div className="text-sm text-muted-foreground">Submitters</div>
                               </div>
                               <div className="text-right">
                                 <div className="text-sm font-medium">Partially completed</div>
                                 <div className="text-xs text-muted-foreground">
-                                  {completionRateForIncomplete}% completion
+                                  {completionRate}% completion
                                 </div>
                               </div>
                             </div>
@@ -2108,12 +2298,12 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
                               <div>
                                 <div className="flex justify-between text-sm mb-1">
                                   <span>Feedback Completion</span>
-                                  <span className="font-medium">{completionRateForIncomplete}%</span>
+                                  <span className="font-medium">{completionRate}%</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                   <div
                                     className="bg-yellow-500 h-2 rounded-full"
-                                    style={{ width: `${completionRateForIncomplete}%` }}
+                                    style={{ width: `${completionRate}%` }}
                                   ></div>
                                 </div>
                               </div>
@@ -2122,295 +2312,292 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
                                 <div className="p-2 bg-blue-50 rounded border">
                                   <div className="font-medium">Total Possible</div>
                                   <div className="text-lg font-bold text-blue-700">
-                                    {totalPossibleFeedbacksForIncomplete}
+                                    {maxPossibleFeedbacks}
                                   </div>
                                   <div className="text-blue-600">Feedback opportunities</div>
                                 </div>
                                 <div className="p-2 bg-yellow-50 rounded border">
                                   <div className="font-medium">Given</div>
                                   <div className="text-lg font-bold text-yellow-700">
-                                    {totalFeedbackGivenForIncomplete}
+                                    {totalPossibleFeedbacks}
                                   </div>
                                   <div className="text-yellow-600">Feedbacks submitted</div>
                                 </div>
                               </div>
-
-                              {/* {incompleteEmployees.length > 0 && (
-                                <div className="border rounded-lg p-3 bg-yellow-50">
-                                  <h4 className="font-medium text-sm mb-2 text-yellow-800">
-                                    Sample Incomplete Profiles
-                                  </h4>
-                                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                                    {incompleteEmployees.slice(0, 3).map((emp, idx) => (
-                                      <div key={idx} className="text-sm p-2 bg-white rounded border border-yellow-200">
-                                        <div className="font-medium truncate">
-                                          {emp.email.split('@')[0]}
-                                        </div>
-                                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                                          <span>{emp.feedbackGiven}/{emp.totalManagers} managers</span>
-                                          <span className="text-yellow-600">{emp.feedbackMissing} pending</span>
-                                        </div>
-                                      </div>
-                                    ))}
-                                    {incompleteEmployees.length > 3 && (
-                                      <div className="text-center text-xs text-yellow-600 pt-2">
-                                        + {incompleteEmployees.length - 3} more
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )} */}
                             </div>
                           </div>
                         );
                       })()}
                     </CardContent>
                   </Card>
+                  {/* Card 2: Potential Non-Respondents (calculated from mapping + response) */}
+             {/* Card 2: Potential Non-Respondents (calculated from mapping + response) */}
+<Card>
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+      <AlertTriangle className="w-5 h-5 text-red-600" />
+      Potential Non-Respondents
+    </CardTitle>
+    <CardDescription>
+      Employees in mapping sheet who haven't submitted feedback • 
+      {responses.length} responses from {new Set(responses.map(r => r['Encrypted Submitter ID']).filter(Boolean)).size} unique submitters
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    {mappingLoading ? (
+      <div className="flex items-center justify-center py-3">
+        <div className="text-center">
+          <Loader2 className="w-5 h-5 mx-auto animate-spin text-muted-foreground mb-2" />
+          <div className="text-xs text-muted-foreground">Loading mapping data...</div>
+        </div>
+      </div>
+    ) : employeeMappings.length === 0 ? (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-yellow-500" />
+            <span className="text-sm font-medium text-muted-foreground">Mapping Data Needed</span>
+          </div>
+          <div className="text-2xl font-bold text-gray-300">?</div>
+        </div>
+        <div className="mt-3 space-y-2">
+          <div className="text-xs p-2 bg-yellow-50 border border-yellow-100 rounded">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-3 h-3 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="font-medium text-yellow-700 text-xs">Load mapping sheet</div>
+                <div className="text-yellow-600 text-xs mt-0.5">
+                  Click "Refresh Data" to load employee mapping for accurate non-respondent counts
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div>
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="w-5 h-5 text-accent" />
+              <span className="text-sm font-medium text-muted-foreground">Potential Non-Respondents</span>
+            </div>
+            <span className="text-2xl font-bold block leading-tight text-red-600">
+              {(() => {
+                // Each person should submit 3 feedback forms (one for each manager)
+                // Count unique encrypted submitter IDs that have 3 or more responses
+                const submitterCounts = new Map<string, number>();
+                
+                responses.forEach(response => {
+                  const submitterId = response['Encrypted Submitter ID'] as string;
+                  if (submitterId) {
+                    submitterCounts.set(submitterId, (submitterCounts.get(submitterId) || 0) + 1);
+                  }
+                });
+                
+                // Submitters who have completed all 3 feedbacks
+                const completedSubmitters = Array.from(submitterCounts.entries())
+                  .filter(([_, count]) => count >= 3)
+                  .map(([submitterId]) => submitterId);
+                
+                // Total employees in mapping sheet
+                const totalEmployees = employeeMappings.length;
+                
+                // Assuming each completed submitter represents one employee
+                // This is the best estimate we can make without direct email matching
+                const estimatedNonRespondents = Math.max(0, totalEmployees - completedSubmitters.length);
+                
+                console.log('Non-respondent estimation:', {
+                  totalEmployees,
+                  uniqueSubmitters: submitterCounts.size,
+                  completedSubmitters: completedSubmitters.length,
+                  estimatedNonRespondents,
+                  submitterCounts: Array.from(submitterCounts.entries())
+                });
+                
+                return estimatedNonRespondents;
+              })()}
+            </span>
+          </div>
+          <div className="flex flex-col items-end">
+            <div className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded-full font-medium">
+              Action needed
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {employeeMappings.length} total employees
+            </div>
+          </div>
+        </div>
 
-                  {/* Card 2: No Feedback (0 managers) */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5 text-red-600" />
-                        No Feedback
-                      </CardTitle>
-                      <CardDescription>
-                        Employees who haven't given any feedback
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {(() => {
-                        if (!employeeMappings.length || !responses.length) {
-                          return (
-                            <div className="text-center py-8">
-                              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                              <p className="text-muted-foreground">Load data to see analysis</p>
-                            </div>
-                          );
-                        }
+        <div className="mt-3 space-y-2">
+          <div className="space-y-1 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500">Participation Rate:</span>
+              <span className="font-medium text-green-600">
+                {(() => {
+                  const submitterCounts = new Map<string, number>();
+                  
+                  responses.forEach(response => {
+                    const submitterId = response['Encrypted Submitter ID'] as string;
+                    if (submitterId) {
+                      submitterCounts.set(submitterId, (submitterCounts.get(submitterId) || 0) + 1);
+                    }
+                  });
+                  
+                  const completedSubmitters = Array.from(submitterCounts.entries())
+                    .filter(([_, count]) => count >= 3)
+                    .map(([submitterId]) => submitterId);
+                  
+                  const participationRate = employeeMappings.length > 0
+                    ? Math.round((completedSubmitters.length / employeeMappings.length) * 100)
+                    : 0;
+                  
+                  return `${participationRate}%`;
+                })()}
+              </span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
+                style={{
+                  width: `${(() => {
+                    const submitterCounts = new Map<string, number>();
+                    
+                    responses.forEach(response => {
+                      const submitterId = response['Encrypted Submitter ID'] as string;
+                      if (submitterId) {
+                        submitterCounts.set(submitterId, (submitterCounts.get(submitterId) || 0) + 1);
+                      }
+                    });
+                    
+                    const completedSubmitters = Array.from(submitterCounts.entries())
+                      .filter(([_, count]) => count >= 3)
+                      .map(([submitterId]) => submitterId);
+                    
+                    return employeeMappings.length > 0
+                      ? Math.min((completedSubmitters.length / employeeMappings.length) * 100, 100)
+                      : 0;
+                  })()}%`
+                }}
+              />
+            </div>
+          </div>
 
-                        // Create a map to store which employees have which managers
-                        const employeeManagersMap = new Map<string, Set<string>>();
-
-                        employeeMappings.forEach(emp => {
-                          const email = emp.Email.toLowerCase().trim();
-                          if (!employeeManagersMap.has(email)) {
-                            employeeManagersMap.set(email, new Set());
-                          }
-
-                          const managersSet = employeeManagersMap.get(email)!;
-
-                          if (emp.Manager && emp.Manager.includes('@')) {
-                            managersSet.add(emp.Manager.toLowerCase().trim());
-                          }
-                          if (emp.AccountManager && emp.AccountManager.includes('@')) {
-                            managersSet.add(emp.AccountManager.toLowerCase().trim());
-                          }
-                          if (emp.POC && emp.POC.includes('@')) {
-                            managersSet.add(emp.POC.toLowerCase().trim());
-                          }
-                        });
-
-                        // Create a map of encrypted submitter IDs to their feedback given
-                        const submitterFeedbackMap = new Map<string, Set<string>>();
-
-                        responses.forEach(response => {
-                          const submitterId = (response['Encrypted Submitter ID'] as string || '').trim();
-                          const managerEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
-
-                          if (submitterId && managerEmail && managerEmail.includes('@')) {
-                            if (!submitterFeedbackMap.has(submitterId)) {
-                              submitterFeedbackMap.set(submitterId, new Set());
-                            }
-                            submitterFeedbackMap.get(submitterId)!.add(managerEmail);
-                          }
-                        });
-
-                        // Create mapping of possible employee identifiers
-                        const employeeIdVariations = new Map<string, string>();
-
-                        employeeMappings.forEach(emp => {
-                          const email = emp.Email.toLowerCase().trim();
-                          const ldap = (emp.Ldap || '').toLowerCase().trim();
-                          const emailLocalPart = email.split('@')[0];
-
-                          if (email) {
-                            employeeIdVariations.set(email, email);
-                            if (emailLocalPart) {
-                              employeeIdVariations.set(emailLocalPart, email);
-                            }
-                          }
-                          if (ldap) {
-                            employeeIdVariations.set(ldap, email);
-                            employeeIdVariations.set(`${ldap}@company.com`, email);
-                          }
-                        });
-
-                        // Create submitter to email mapping
-                        const submitterToEmailMap = new Map<string, string>();
-
-                        submitterFeedbackMap.forEach((_, submitterId) => {
-                          // Try to match submitter ID with employee variations
-                          for (const [variation, actualEmail] of employeeIdVariations.entries()) {
-                            if (submitterId.toLowerCase().includes(variation) ||
-                              variation.includes(submitterId.toLowerCase())) {
-                              submitterToEmailMap.set(submitterId, actualEmail);
-                              break;
-                            }
-                          }
-
-                          // If still no match, try manager matching
-                          if (!submitterToEmailMap.has(submitterId)) {
-                            const feedbackSet = submitterFeedbackMap.get(submitterId)!;
-
-                            for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
-                              const feedbackArray = Array.from(feedbackSet);
-                              const matches = feedbackArray.filter(feedback => empManagers.has(feedback));
-
-                              if (matches.length > 0 && matches.length === feedbackArray.length) {
-                                submitterToEmailMap.set(submitterId, empEmail);
-                                break;
-                              }
-                            }
-                          }
-                        });
-
-                        // Find employees with NO feedback
-                        const noFeedbackEmployees = [];
-                        let totalNoFeedbackCount = 0;
-                        let totalPossibleFeedbacksForNoFeedback = 0;
-
-                        // Get all employee emails from mapping
-                        const allEmployeeEmails = new Set(employeeMappings.map(emp => emp.Email.toLowerCase().trim()));
-
-                        // Check each employee
-                        for (const empEmail of allEmployeeEmails) {
-                          const empManagers = employeeManagersMap.get(empEmail) || new Set();
-                          const totalManagers = empManagers.size;
-                          if (totalManagers === 0) continue;
-
-                          // Check if this employee has any submitter IDs associated
-                          let hasAssociatedSubmitter = false;
-                          submitterToEmailMap.forEach((email, _) => {
-                            if (email === empEmail) {
-                              hasAssociatedSubmitter = true;
-                            }
-                          });
-
-                          // Also check direct matching with submitter IDs
-                          if (!hasAssociatedSubmitter) {
-                            for (const submitterId of submitterFeedbackMap.keys()) {
-                              // Try to match by various patterns
-                              const emailLocalPart = empEmail.split('@')[0];
-                              if (submitterId.toLowerCase().includes(emailLocalPart) ||
-                                submitterId.toLowerCase().includes(empEmail) ||
-                                empEmail.includes(submitterId.toLowerCase())) {
-                                hasAssociatedSubmitter = true;
-                                break;
-                              }
-                            }
-                          }
-
-                          if (!hasAssociatedSubmitter) {
-                            noFeedbackEmployees.push({
-                              email: empEmail,
-                              totalManagers: totalManagers,
-                              feedbackGiven: 0,
-                              feedbackMissing: totalManagers
-                            });
-                            totalNoFeedbackCount++;
-                            totalPossibleFeedbacksForNoFeedback += totalManagers;
-                          }
-                        }
-
-                        const participationRate = employeeMappings.length > 0
-                          ? Math.round(((employeeMappings.length - totalNoFeedbackCount) / employeeMappings.length) * 100)
-                          : 0;
-
-                        return (
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="text-3xl font-bold text-red-600">
-                                  {totalNoFeedbackCount}
-                                </div>
-                                <div className="text-sm text-muted-foreground">Employees</div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-sm font-medium">No feedback given</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {participationRate}% participation rate
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="space-y-3">
-                              <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span>Overall Participation</span>
-                                  <span className="font-medium">{participationRate}%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="bg-red-500 h-2 rounded-full"
-                                    style={{ width: `${participationRate}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-3 text-xs">
-                                <div className="p-2 bg-red-50 rounded border">
-                                  <div className="font-medium">Pending Feedback</div>
-                                  <div className="text-lg font-bold text-red-700">
-                                    {totalPossibleFeedbacksForNoFeedback}
-                                  </div>
-                                  <div className="text-red-600">Total possible</div>
-                                </div>
-                                <div className="p-2 bg-gray-100 rounded border">
-                                  <div className="font-medium">Affected Managers</div>
-                                  <div className="text-lg font-bold text-gray-700">
-                                    {new Set(
-                                      noFeedbackEmployees.flatMap(emp =>
-                                        Array.from(employeeManagersMap.get(emp.email) || [])
-                                      )
-                                    ).size}
-                                  </div>
-                                  <div className="text-gray-600">Awaiting feedback</div>
-                                </div>
-                              </div>
-                              {/* 
-                              {noFeedbackEmployees.length > 0 && (
-                                <div className="border rounded-lg p-3 bg-red-50">
-                                  <h4 className="font-medium text-sm mb-2 text-red-800">
-                                    Sample Employees
-                                  </h4>
-                                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                                    {noFeedbackEmployees.slice(0, 3).map((emp, idx) => (
-                                      <div key={idx} className="text-sm p-2 bg-white rounded border border-red-200">
-                                        <div className="font-medium truncate text-red-700">
-                                          {emp.email.split('@')[0]}
-                                        </div>
-                                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                                          <span>Managers: {emp.totalManagers}</span>
-                                          <span className="text-red-600">0 feedbacks</span>
-                                        </div>
-                                      </div>
-                                    ))}
-                                    {noFeedbackEmployees.length > 3 && (
-                                      <div className="text-center text-xs text-red-600 pt-2">
-                                        + {noFeedbackEmployees.length - 3} more
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )} */}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
-
+          <div className="grid grid-cols-3 gap-3 text-xs mt-3">
+            <div className="p-2 bg-blue-50 rounded border">
+              <div className="font-medium">Total Employees</div>
+              <div className="text-lg font-bold text-blue-700">
+                {employeeMappings.length}
+              </div>
+              <div className="text-blue-600">In mapping sheet</div>
+            </div>
+            <div className="p-2 bg-green-50 rounded border">
+              <div className="font-medium">Completed</div>
+              <div className="text-lg font-bold text-green-700">
+                {(() => {
+                  const submitterCounts = new Map<string, number>();
+                  
+                  responses.forEach(response => {
+                    const submitterId = response['Encrypted Submitter ID'] as string;
+                    if (submitterId) {
+                      submitterCounts.set(submitterId, (submitterCounts.get(submitterId) || 0) + 1);
+                    }
+                  });
+                  
+                  return Array.from(submitterCounts.entries())
+                    .filter(([_, count]) => count >= 3)
+                    .length;
+                })()}
+              </div>
+              <div className="text-green-600">Submitted all 3 feedbacks</div>
+            </div>
+            <div className="p-2 bg-yellow-50 rounded border">
+              <div className="font-medium">Partial</div>
+              <div className="text-lg font-bold text-yellow-700">
+                {(() => {
+                  const submitterCounts = new Map<string, number>();
+                  
+                  responses.forEach(response => {
+                    const submitterId = response['Encrypted Submitter ID'] as string;
+                    if (submitterId) {
+                      submitterCounts.set(submitterId, (submitterCounts.get(submitterId) || 0) + 1);
+                    }
+                  });
+                  
+                  return Array.from(submitterCounts.entries())
+                    .filter(([_, count]) => count > 0 && count < 3)
+                    .length;
+                })()}
+              </div>
+              <div className="text-yellow-600">Submitted 1-2 feedbacks</div>
+            </div>
+          </div>
+          
+          {/* Response Statistics */}
+          {/* <div className="mt-3 p-2 bg-gray-50 rounded border text-xs">
+            <div className="font-medium text-gray-700">Response Statistics</div>
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              <div>
+                <span className="text-gray-500">Total responses:</span>
+                <span className="font-medium ml-1">{responses.length}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Unique submitters:</span>
+                <span className="font-medium ml-1">
+                  {new Set(responses.map(r => r['Encrypted Submitter ID']).filter(Boolean)).size}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Avg responses per submitter:</span>
+                <span className="font-medium ml-1">
+                  {responses.length > 0 ? 
+                    (responses.length / new Set(responses.map(r => r['Encrypted Submitter ID']).filter(Boolean)).size).toFixed(1) : 
+                    '0'}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Expected total:</span>
+                <span className="font-medium ml-1">{employeeMappings.length * 3}</span>
+                <span className="text-gray-400 text-xs ml-1">(3 per employee)</span>
+              </div>
+            </div>
+            
+            {responses.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <div className="font-medium text-gray-700 mb-1">Response Counts by Submitter:</div>
+                <div className="space-y-1 max-h-20 overflow-y-auto">
+                  {(() => {
+                    const submitterCounts = new Map<string, number>();
+                    
+                    responses.forEach(response => {
+                      const submitterId = response['Encrypted Submitter ID'] as string;
+                      if (submitterId) {
+                        submitterCounts.set(submitterId, (submitterCounts.get(submitterId) || 0) + 1);
+                      }
+                    });
+                    
+                    return Array.from(submitterCounts.entries())
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([submitterId, count], index) => (
+                        <div key={index} className="flex justify-between">
+                          <span className="truncate max-w-[120px]" title={submitterId}>
+                            {submitterId.substring(0, 10)}...
+                          </span>
+                          <span className={`font-medium ${count === 3 ? 'text-green-600' : 'text-yellow-600'}`}>
+                            {count} feedback{count !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      ));
+                  })()}
+                </div>
+              </div>
+            )}
+          </div> */}
+        </div>
+      </div>
+    )}
+  </CardContent>
+</Card>
                   {/* Card 3: Completed Feedback (all 3 managers) */}
                   <Card>
                     <CardHeader>
@@ -2419,222 +2606,49 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
                         Completed Feedback
                       </CardTitle>
                       <CardDescription>
-                        Employees who gave feedback to all 3 managers (POC, Manager, Account Manager)
+                        Submitters who reviewed 3 or more managers
+                        {globalFilters.process && ` • Process: ${globalFilters.process}`}
+                        {globalFilters.accountManager && ` • Manager: ${globalFilters.accountManager.split('@')[0]}`}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       {(() => {
-                        if (!employeeMappings.length || !responses.length) {
+                        const filteredResponses = getFilteredResponses();
+                        if (!filteredResponses.length) {
                           return (
                             <div className="text-center py-8">
                               <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                              <p className="text-muted-foreground">Load data to see analysis</p>
+                              <p className="text-muted-foreground">No data to analyze</p>
                             </div>
                           );
                         }
 
-                        // Create a map to store which employees have which managers
-                        const employeeManagersMap = new Map<string, Set<string>>();
-                        const employeeManagerDetails = new Map<string, {
-                          manager: string;
-                          accountManager: string;
-                          poc: string;
-                        }>();
+                        const submitterManagersMap = new Map<string, Set<string>>();
 
-                        employeeMappings.forEach(emp => {
-                          const email = emp.Email.toLowerCase().trim();
-                          if (!employeeManagersMap.has(email)) {
-                            employeeManagersMap.set(email, new Set());
-                          }
+                        filteredResponses.forEach(response => {
+                          const submitterId = response['Encrypted Submitter ID'] as string;
+                          const managerEmail = response['Management Email ID'] as string;
 
-                          const managersSet = employeeManagersMap.get(email)!;
-                          const managerDetails = {
-                            manager: (emp.Manager || '').toLowerCase().trim(),
-                            accountManager: (emp.AccountManager || '').toLowerCase().trim(),
-                            poc: (emp.POC || '').toLowerCase().trim()
-                          };
-
-                          employeeManagerDetails.set(email, managerDetails);
-
-                          // Add all managers to the set
-                          if (managerDetails.manager && managerDetails.manager.includes('@')) {
-                            managersSet.add(managerDetails.manager);
-                          }
-                          if (managerDetails.accountManager && managerDetails.accountManager.includes('@')) {
-                            managersSet.add(managerDetails.accountManager);
-                          }
-                          if (managerDetails.poc && managerDetails.poc.includes('@')) {
-                            managersSet.add(managerDetails.poc);
+                          if (submitterId && managerEmail) {
+                            if (!submitterManagersMap.has(submitterId)) {
+                              submitterManagersMap.set(submitterId, new Set());
+                            }
+                            submitterManagersMap.get(submitterId)!.add(managerEmail.toLowerCase().trim());
                           }
                         });
 
-                        // Create a map of encrypted submitter IDs to their feedback given
-                        const submitterFeedbackMap = new Map<string, Set<string>>();
+                        const completeSubmitters = Array.from(submitterManagersMap.entries())
+                          .filter(([_, managers]) => managers.size >= 3)
+                          .map(([submitterId, managers]) => ({
+                            submitterId,
+                            managerCount: managers.size
+                          }));
 
-                        responses.forEach(response => {
-                          const submitterId = (response['Encrypted Submitter ID'] as string || '').trim();
-                          const managerEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
-
-                          if (submitterId && managerEmail && managerEmail.includes('@')) {
-                            if (!submitterFeedbackMap.has(submitterId)) {
-                              submitterFeedbackMap.set(submitterId, new Set());
-                            }
-                            submitterFeedbackMap.get(submitterId)!.add(managerEmail);
-                          }
-                        });
-
-                        // Create mapping of possible employee identifiers
-                        const employeeIdVariations = new Map<string, string>();
-
-                        employeeMappings.forEach(emp => {
-                          const email = emp.Email.toLowerCase().trim();
-                          const ldap = (emp.Ldap || '').toLowerCase().trim();
-                          const emailLocalPart = email.split('@')[0];
-
-                          if (email) {
-                            employeeIdVariations.set(email, email);
-                            if (emailLocalPart) {
-                              employeeIdVariations.set(emailLocalPart, email);
-                            }
-                          }
-                          if (ldap) {
-                            employeeIdVariations.set(ldap, email);
-                            employeeIdVariations.set(`${ldap}@company.com`, email);
-                          }
-                        });
-
-                        // Create submitter to email mapping with enhanced matching
-                        const submitterToEmailMap = new Map<string, string>();
-
-                        submitterFeedbackMap.forEach((feedbackSet, submitterId) => {
-                          // Strategy 1: Direct pattern matching
-                          for (const [variation, actualEmail] of employeeIdVariations.entries()) {
-                            if (submitterId.toLowerCase().includes(variation) ||
-                              variation.includes(submitterId.toLowerCase())) {
-                              submitterToEmailMap.set(submitterId, actualEmail);
-                              break;
-                            }
-                          }
-
-                          // Strategy 2: Manager-based matching
-                          if (!submitterToEmailMap.has(submitterId)) {
-                            const feedbackArray = Array.from(feedbackSet);
-
-                            // Find employee whose managers match the feedback
-                            for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
-                              const matches = feedbackArray.filter(feedback => empManagers.has(feedback));
-
-                              // If all feedback matches this employee's managers
-                              if (matches.length === feedbackArray.length && matches.length > 0) {
-                                submitterToEmailMap.set(submitterId, empEmail);
-                                break;
-                              }
-                            }
-                          }
-
-                          // Strategy 3: Cross-reference with other responses
-                          if (!submitterToEmailMap.has(submitterId)) {
-                            // Look for patterns in other columns that might help
-                            const matchingResponses = responses.filter(r =>
-                              (r['Encrypted Submitter ID'] as string || '').trim() === submitterId
-                            );
-
-                            if (matchingResponses.length > 0) {
-                              // Try to extract patterns from other columns
-                              const sampleResponse = matchingResponses[0];
-                              const process = (sampleResponse['Process'] || '').toString().toLowerCase();
-                              const role = (sampleResponse['Role Reviewed'] || '').toString().toLowerCase();
-
-                              // Find employee with matching process/role
-                              const matchingEmployee = employeeMappings.find(emp =>
-                                (emp.Process || '').toLowerCase().includes(process) ||
-                                process.includes((emp.Process || '').toLowerCase())
-                              );
-
-                              if (matchingEmployee) {
-                                submitterToEmailMap.set(submitterId, matchingEmployee.Email.toLowerCase().trim());
-                              }
-                            }
-                          }
-                        });
-
-                        // Find employees with COMPLETE feedback (all 3 managers)
-                        const completeEmployees = [];
-                        let totalCompleteCount = 0;
-                        let totalFeedbacksGiven = 0;
-                        let employeesWith3Managers = 0;
-
-                        // Check each employee
-                        for (const [empEmail, empManagers] of employeeManagersMap.entries()) {
-                          const totalManagers = empManagers.size;
-
-                          // Count employees who have all 3 types of managers
-                          const details = employeeManagerDetails.get(empEmail);
-                          const hasAllThree = details &&
-                            details.manager && details.manager.includes('@') &&
-                            details.accountManager && details.accountManager.includes('@') &&
-                            details.poc && details.poc.includes('@');
-
-                          if (hasAllThree) {
-                            employeesWith3Managers++;
-                          }
-
-                          if (totalManagers < 3) continue; // Skip employees with less than 3 managers
-
-                          // Find all submitter IDs that map to this employee
-                          const employeeSubmitters: string[] = [];
-                          submitterToEmailMap.forEach((email, submitterId) => {
-                            if (email === empEmail) {
-                              employeeSubmitters.push(submitterId);
-                            }
-                          });
-
-                          // Also check for direct matches that might have been missed
-                          if (employeeSubmitters.length === 0) {
-                            const emailLocalPart = empEmail.split('@')[0];
-                            for (const submitterId of submitterFeedbackMap.keys()) {
-                              if (submitterId.toLowerCase().includes(emailLocalPart) ||
-                                submitterId.toLowerCase().includes(empEmail)) {
-                                employeeSubmitters.push(submitterId);
-                                submitterToEmailMap.set(submitterId, empEmail);
-                              }
-                            }
-                          }
-
-                          // If no submitters found, this employee has no feedback
-                          if (employeeSubmitters.length === 0) continue;
-
-                          // Combine all feedback from all submitters for this employee
-                          const allFeedbackForEmployee = new Set<string>();
-                          employeeSubmitters.forEach(submitterId => {
-                            const feedback = submitterFeedbackMap.get(submitterId);
-                            if (feedback) {
-                              feedback.forEach(manager => allFeedbackForEmployee.add(manager));
-                            }
-                          });
-
-                          // Check if all managers have been covered
-                          const allManagersCovered = Array.from(empManagers).every(manager =>
-                            allFeedbackForEmployee.has(manager)
-                          );
-
-                          if (allManagersCovered) {
-                            completeEmployees.push({
-                              email: empEmail,
-                              totalManagers: totalManagers,
-                              feedbackGiven: allFeedbackForEmployee.size,
-                              managerCount: details ?
-                                (details.manager ? 1 : 0) +
-                                (details.accountManager ? 1 : 0) +
-                                (details.poc ? 1 : 0) : 0
-                            });
-                            totalCompleteCount++;
-                            totalFeedbacksGiven += allFeedbackForEmployee.size;
-                          }
-                        }
-
-                        const completionRateFor3Managers = employeesWith3Managers > 0
-                          ? Math.round((totalCompleteCount / employeesWith3Managers) * 100)
+                        const totalCompleteCount = completeSubmitters.length;
+                        const totalSubmitters = submitterManagersMap.size;
+                        const totalFeedbacksGiven = completeSubmitters.reduce((sum, submitter) => sum + submitter.managerCount, 0);
+                        const completionRate = totalSubmitters > 0
+                          ? Math.round((totalCompleteCount / totalSubmitters) * 100)
                           : 0;
 
                         return (
@@ -2644,12 +2658,12 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
                                 <div className="text-3xl font-bold text-green-600">
                                   {totalCompleteCount}
                                 </div>
-                                <div className="text-sm text-muted-foreground">Employees</div>
+                                <div className="text-sm text-muted-foreground">Submitters</div>
                               </div>
                               <div className="text-right">
                                 <div className="text-sm font-medium">Fully completed</div>
                                 <div className="text-xs text-muted-foreground">
-                                  {completionRateFor3Managers}% of eligible
+                                  {completionRate}% of submitters
                                 </div>
                               </div>
                             </div>
@@ -2658,23 +2672,23 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
                               <div>
                                 <div className="flex justify-between text-sm mb-1">
                                   <span>Completion Rate</span>
-                                  <span className="font-medium">{completionRateFor3Managers}%</span>
+                                  <span className="font-medium">{completionRate}%</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                   <div
                                     className="bg-green-600 h-2 rounded-full"
-                                    style={{ width: `${completionRateFor3Managers}%` }}
+                                    style={{ width: `${completionRate}%` }}
                                   ></div>
                                 </div>
                               </div>
 
                               <div className="grid grid-cols-2 gap-3 text-xs">
                                 <div className="p-2 bg-green-50 rounded border">
-                                  <div className="font-medium">With 3 Managers</div>
+                                  <div className="font-medium">With ≥3 Managers</div>
                                   <div className="text-lg font-bold text-green-700">
-                                    {employeesWith3Managers}
+                                    {totalCompleteCount}
                                   </div>
-                                  <div className="text-green-600">Eligible employees</div>
+                                  <div className="text-green-600">Completed submitters</div>
                                 </div>
                                 <div className="p-2 bg-purple-50 rounded border">
                                   <div className="font-medium">Total Feedback</div>
@@ -2684,39 +2698,6 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
                                   <div className="text-purple-600">Reviews given</div>
                                 </div>
                               </div>
-
-                              {completeEmployees.length > 0 && (
-                                <div className="border rounded-lg p-3 bg-green-50">
-                                  <h4 className="font-medium text-sm mb-2 text-green-800">
-                                    Recently Completed
-                                  </h4>
-                                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                                    {completeEmployees.slice(0, 3).map((emp, idx) => (
-                                      <div key={idx} className="text-sm p-2 bg-white rounded border border-green-200">
-                                        <div className="flex items-center justify-between">
-                                          <div className="font-medium truncate text-green-700">
-                                            {emp.email.split('@')[0]}
-                                          </div>
-                                          <div className="flex items-center gap-1">
-                                            <CheckCircle className="w-4 h-4 text-green-600" />
-                                            <span className="text-xs font-bold text-green-600">
-                                              {emp.feedbackGiven}/{emp.managerCount || emp.totalManagers}
-                                            </span>
-                                          </div>
-                                        </div>
-                                        <div className="text-xs text-green-600 mt-1">
-                                          ✓ All managers covered
-                                        </div>
-                                      </div>
-                                    ))}
-                                    {completeEmployees.length > 3 && (
-                                      <div className="text-center text-xs text-green-600 pt-2">
-                                        + {completeEmployees.length - 3} more completed
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           </div>
                         );
@@ -2726,284 +2707,280 @@ const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
                 </div>
               </div>
 
+              {/* Responses by Quarter & Time Period Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submission Frequency</CardTitle>
+                  <CardDescription>
+                    Feedback submission trends across different time periods
+                    {globalFilters.process && ` • Process: ${globalFilters.process}`}
+                    {globalFilters.accountManager && ` • Manager: ${globalFilters.accountManager.split('@')[0]}`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {/* Weekly, Monthly, Quarterly Section */}
+                  <div className="mb-8">
+                    <h4 className="text-lg font-medium mb-4">Recent Activity</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      {(() => {
+                        const calculateFilteredTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
+                          const filteredResponses = getFilteredResponses();
+                          if (!filteredResponses.length) return 0;
 
-              {/* Responses by Quarter Card */}
-{/* Responses by Quarter & Time Period Card */}
-<Card>
-  <CardHeader>
-    <CardTitle>Submission Frequency</CardTitle>
-    <CardDescription>
-      Feedback submission trends across different time periods
-    </CardDescription>
-  </CardHeader>
-  <CardContent>
-    {/* Weekly, Monthly, Quarterly Section */}
-    <div className="mb-8">
-      <h4 className="text-lg font-medium mb-4">Recent Activity</h4>
-      <div className="grid grid-cols-3 gap-4">
-        {(() => {
-          // Helper function to calculate submissions in time period
-          const calculateTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
-            if (!responses.length) return 0;
-            
-            const now = new Date();
-            const startDate = new Date();
-            
-            switch (period) {
-              case 'week':
-                startDate.setDate(now.getDate() - 7);
-                break;
-              case 'month':
-                startDate.setMonth(now.getMonth() - 1);
-                break;
-              case 'quarter':
-                startDate.setMonth(now.getMonth() - 3);
-                break;
-            }
-            
-            return responses.filter(response => {
-              const responseDate = new Date(response.Timestamp as string);
-              return responseDate >= startDate && responseDate <= now;
-            }).length;
-          };
-          
-          const weeklyCount = calculateTimePeriodCount('week');
-          const monthlyCount = calculateTimePeriodCount('month');
-          const quarterlyCount = calculateTimePeriodCount('quarter');
-          
-          const timePeriods = [
-            { label: 'This Week', count: weeklyCount, color: 'bg-blue-500', period: 'week' },
-            { label: 'This Month', count: monthlyCount, color: 'bg-green-500', period: 'month' },
-            { label: 'This Quarter', count: quarterlyCount, color: 'bg-purple-500', period: 'quarter' }
-          ];
-          
-          return timePeriods.map((period, index) => {
-            // Calculate percentage change compared to previous period
-            const getPreviousPeriodCount = (currentPeriod: string) => {
-              const now = new Date();
-              const startDate = new Date();
-              const endDate = new Date();
-              
-              switch (currentPeriod) {
-                case 'week':
-                  startDate.setDate(now.getDate() - 14);
-                  endDate.setDate(now.getDate() - 7);
-                  break;
-                case 'month':
-                  startDate.setMonth(now.getMonth() - 2);
-                  endDate.setMonth(now.getMonth() - 1);
-                  break;
-                case 'quarter':
-                  startDate.setMonth(now.getMonth() - 6);
-                  endDate.setMonth(now.getMonth() - 3);
-                  break;
-                default:
-                  return 0;
-              }
-              
-              return responses.filter(response => {
-                const responseDate = new Date(response.Timestamp as string);
-                return responseDate >= startDate && responseDate <= endDate;
-              }).length;
-            };
-            
-            const previousCount = getPreviousPeriodCount(period.period);
-            const percentageChange = previousCount > 0 
-              ? Math.round(((period.count - previousCount) / previousCount) * 100)
-              : period.count > 0 ? 100 : 0;
-            
-            // Calculate average per day/week/month
-            const getAverageText = (count: number, period: string) => {
-              switch (period) {
-                case 'week':
-                  return `${(count / 7).toFixed(1)}/day`;
-                case 'month':
-                  return `${(count / 30).toFixed(1)}/day`;
-                case 'quarter':
-                  return `${(count / 90).toFixed(1)}/day`;
-                default:
-                  return '';
-              }
-            };
-            
-            return (
-              <div key={index} className="text-center p-4 rounded-xl border hover:shadow-md transition-shadow">
-                <div className="flex flex-col items-center">
-                  <span className="text-2xl font-bold text-gray-800">{period.count}</span>
-                  <p className="text-sm font-medium text-gray-700">{period.label}</p>
-                  
-                  {/* Change indicator */}
-                  {percentageChange !== 0 && (
-                    <div className={`mt-1 text-xs px-2 py-0.5 rounded-full ${percentageChange > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {percentageChange > 0 ? '↑' : '↓'} {Math.abs(percentageChange)}%
-                    </div>
-                  )}
-                  
-                  {/* Progress bar */}
-                  <div className="mt-2 w-full">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-500">Progress</span>
-                      <span className="font-medium">{getAverageText(period.count, period.period)}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${period.color}`}
-                        style={{ width: `${Math.min((period.count / (responses.length || 1)) * 100, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  {/* Additional info */}
-                  <div className="mt-2 text-xs text-gray-500">
-                    {period.count > 0 ? (
-                      <>
-                        {Math.round((period.count / responses.length) * 100)}% of total
-                      </>
-                    ) : 'No submissions'}
-                  </div>
-                </div>
-              </div>
-            );
-          });
-        })()}
-      </div>
-    </div>
-    
-    {/* Quarterly Distribution Section */}
-    <div>
-      <h4 className="text-lg font-medium mb-4">Quarterly Distribution</h4>
-      <div className="grid grid-cols-4 gap-4">
-        {['Q1', 'Q2', 'Q3', 'Q4'].map(quarter => {
-          const count = stats.quarterlyData?.[quarter as keyof typeof stats.quarterlyData] || 0;
-          const totalCount = Object.values(stats.quarterlyData || {}).reduce((sum, val) => sum + (val || 0), 0);
-          const percentage = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
-          
-          // Determine if this quarter is current
-          const currentDate = new Date();
-          const currentMonth = currentDate.getMonth() + 1;
-          const getCurrentQuarter = () => {
-            if (currentMonth >= 1 && currentMonth <= 3) return 'Q1';
-            if (currentMonth >= 4 && currentMonth <= 6) return 'Q2';
-            if (currentMonth >= 7 && currentMonth <= 9) return 'Q3';
-            return 'Q4';
-          };
-          const isCurrentQuarter = quarter === getCurrentQuarter();
+                          const now = new Date();
+                          const startDate = new Date();
 
-          return (
-            <div key={quarter} className={`text-center p-4 rounded-xl border ${isCurrentQuarter ? 'bg-secondary/10 border-secondary/30' : 'bg-gray-50 border-gray-200'} hover:shadow-md transition-shadow`}>
-              <div className="flex flex-col items-center">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <span className="text-2xl font-bold text-gray-800">{count}</span>
-                  {isCurrentQuarter && (
-                    <span className="text-xs bg-secondary text-white px-2 py-0.5 rounded-full">
-                      Current
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm font-medium text-gray-700">{quarter}</p>
-                
-                {/* Progress bar */}
-                <div className="mt-2 w-full">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-500">Share</span>
-                    <span className="font-medium">{percentage}%</span>
+                          switch (period) {
+                            case 'week':
+                              startDate.setDate(now.getDate() - 7);
+                              break;
+                            case 'month':
+                              startDate.setMonth(now.getMonth() - 1);
+                              break;
+                            case 'quarter':
+                              startDate.setMonth(now.getMonth() - 3);
+                              break;
+                          }
+
+                          return filteredResponses.filter(response => {
+                            const timestamp = response.Timestamp as string;
+                            if (!timestamp) return false;
+
+                            try {
+                              const responseDate = new Date(timestamp);
+                              // Handle invalid dates
+                              if (isNaN(responseDate.getTime())) return false;
+                              return responseDate >= startDate && responseDate <= now;
+                            } catch {
+                              return false;
+                            }
+                          }).length;
+                        };
+
+                        const weeklyCount = calculateFilteredTimePeriodCount('week');
+                        const monthlyCount = calculateFilteredTimePeriodCount('month');
+                        const quarterlyCount = calculateFilteredTimePeriodCount('quarter');
+
+                        const timePeriods = [
+                          { label: 'This Week', count: weeklyCount, color: 'bg-blue-500', period: 'week' },
+                          { label: 'This Month', count: monthlyCount, color: 'bg-green-500', period: 'month' },
+                          { label: 'This Quarter', count: quarterlyCount, color: 'bg-purple-500', period: 'quarter' }
+                        ];
+
+                        return timePeriods.map((period, index) => {
+                          const percentageChange = 0;
+
+                          const getAverageText = (count: number, period: string) => {
+                            switch (period) {
+                              case 'week':
+                                return `${(count / 7).toFixed(1)}/day`;
+                              case 'month':
+                                return `${(count / 30).toFixed(1)}/day`;
+                              case 'quarter':
+                                return `${(count / 90).toFixed(1)}/day`;
+                              default:
+                                return '';
+                            }
+                          };
+
+                          return (
+                            <div key={index} className="text-center p-4 rounded-xl border hover:shadow-md transition-shadow">
+                              <div className="flex flex-col items-center">
+                                <span className="text-2xl font-bold text-gray-800">{period.count}</span>
+                                <p className="text-sm font-medium text-gray-700">{period.label}</p>
+
+                                {percentageChange !== 0 && (
+                                  <div className={`mt-1 text-xs px-2 py-0.5 rounded-full ${percentageChange > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                    {percentageChange > 0 ? '↑' : '↓'} {Math.abs(percentageChange)}%
+                                  </div>
+                                )}
+
+                                <div className="mt-2 w-full">
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span className="text-gray-500">Progress</span>
+                                    <span className="font-medium">{getAverageText(period.count, period.period)}</span>
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                      className={`h-2 rounded-full ${period.color}`}
+                                      style={{ width: `${Math.min((period.count / Math.max(responses.length, 1)) * 100, 100)}%` }}
+                                    ></div>
+                                  </div>
+                                </div>
+
+                                <div className="mt-2 text-xs text-gray-500">
+                                  {period.count > 0 ? (
+                                    <>
+                                      {Math.round((period.count / Math.max(responses.length, 1)) * 100)}% of total
+                                    </>
+                                  ) : 'No submissions'}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${isCurrentQuarter ? 'bg-secondary' : 'bg-gray-400'}`}
-                      style={{ width: `${Math.min(percentage, 100)}%` }}
-                    ></div>
+
+                  {/* Quarterly Distribution Section */}
+                  <div>
+                    <h4 className="text-lg font-medium mb-4">Quarterly Distribution</h4>
+                    <div className="grid grid-cols-4 gap-4">
+                      {['Q1', 'Q2', 'Q3', 'Q4'].map(quarter => {
+                        const calculateFilteredQuarterlyData = (quarter: string) => {
+                          const filteredResponses = getFilteredResponses();
+                          return filteredResponses.filter(response => {
+                            const quarterFromDate = getQuarterFromDate(response.Timestamp || response.Date || '');
+                            return quarterFromDate === quarter;
+                          }).length;
+                        };
+
+                        const count = calculateFilteredQuarterlyData(quarter);
+                        const filteredResponses = getFilteredResponses();
+                        const totalFilteredResponses = filteredResponses.length;
+                        const percentage = totalFilteredResponses > 0 ? Math.round((count / totalFilteredResponses) * 100) : 0;
+
+                        const currentDate = new Date();
+                        const currentMonth = currentDate.getMonth() + 1;
+                        const getCurrentQuarter = () => {
+                          if (currentMonth >= 1 && currentMonth <= 3) return 'Q1';
+                          if (currentMonth >= 4 && currentMonth <= 6) return 'Q2';
+                          if (currentMonth >= 7 && currentMonth <= 9) return 'Q3';
+                          return 'Q4';
+                        };
+                        const isCurrentQuarter = quarter === getCurrentQuarter();
+
+                        return (
+                          <div key={quarter} className={`text-center p-4 rounded-xl border ${isCurrentQuarter ? 'bg-secondary/10 border-secondary/30' : 'bg-gray-50 border-gray-200'} hover:shadow-md transition-shadow`}>
+                            <div className="flex flex-col items-center">
+                              <div className="flex items-center justify-center gap-2 mb-1">
+                                <span className="text-2xl font-bold text-gray-800">{count}</span>
+                                {isCurrentQuarter && (
+                                  <span className="text-xs bg-secondary text-white px-2 py-0.5 rounded-full">
+                                    Current
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm font-medium text-gray-700">{quarter}</p>
+
+                              <div className="mt-2 w-full">
+                                <div className="flex justify-between text-xs mb-1">
+                                  <span className="text-gray-500">Share</span>
+                                  <span className="font-medium">{percentage}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className={`h-2 rounded-full ${isCurrentQuarter ? 'bg-secondary' : 'bg-gray-400'}`}
+                                    style={{ width: `${Math.min(percentage, 100)}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+
+                              <div className="mt-2 text-xs text-gray-500">
+                                {count > 0 ? (
+                                  <>
+                                    {totalFilteredResponses > 0 && `${percentage}% of filtered`}
+                                  </>
+                                ) : 'No submissions'}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium">Activity Trend</div>
+                          <div className="text-xs text-gray-500">
+                            {(() => {
+                              const calculateFilteredTimePeriodCount = (period: 'week' | 'month' | 'quarter') => {
+                                const filteredResponses = getFilteredResponses();
+                                if (!filteredResponses.length) return 0;
+
+                                const now = new Date();
+                                const startDate = new Date();
+
+                                switch (period) {
+                                  case 'week':
+                                    startDate.setDate(now.getDate() - 7);
+                                    break;
+                                  case 'month':
+                                    startDate.setMonth(now.getMonth() - 1);
+                                    break;
+                                  case 'quarter':
+                                    startDate.setMonth(now.getMonth() - 3);
+                                    break;
+                                }
+
+                                return filteredResponses.filter(response => {
+                                  const timestamp = response.Timestamp as string;
+                                  if (!timestamp) return false;
+
+                                  try {
+                                    const responseDate = new Date(timestamp);
+                                    if (isNaN(responseDate.getTime())) return false;
+                                    return responseDate >= startDate && responseDate <= now;
+                                  } catch {
+                                    return false;
+                                  }
+                                }).length;
+                              };
+
+                              const weekly = calculateFilteredTimePeriodCount('week');
+                              const monthly = calculateFilteredTimePeriodCount('month');
+
+                              const weeklyAvg = weekly / 7;
+                              const monthlyAvg = monthly / 30;
+
+                              if (weeklyAvg > monthlyAvg) {
+                                return "Submission rate increasing this week";
+                              } else if (weeklyAvg < monthlyAvg) {
+                                return "Submission rate decreasing this week";
+                              } else {
+                                return "Steady submission rate";
+                              }
+                            })()}
+                          </div>
+                        </div>
+                        <div className="text-sm font-medium">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            const weeklyCount = (() => {
+                              if (!filteredResponses.length) return 0;
+
+                              const now = new Date();
+                              const startDate = new Date();
+                              startDate.setDate(now.getDate() - 7);
+
+                              return filteredResponses.filter(response => {
+                                const timestamp = response.Timestamp as string;
+                                if (!timestamp) return false;
+
+                                try {
+                                  const responseDate = new Date(timestamp);
+                                  if (isNaN(responseDate.getTime())) return false;
+                                  return responseDate >= startDate && responseDate <= now;
+                                } catch {
+                                  return false;
+                                }
+                              }).length;
+                            })();
+
+                            return filteredResponses.length > 0 ?
+                              `${((weeklyCount / filteredResponses.length) * 100).toFixed(1)}% of filtered responses this week` :
+                              'No filtered data';
+                          })()}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-                {/* Additional info */}
-                <div className="mt-2 text-xs text-gray-500">
-                  {count > 0 ? (
-                    <>
-                      {totalCount > 0 && `${percentage}% of total`}
-                    </>
-                  ) : 'No submissions'}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      {/* Summary Stats */}
-      <div className="mt-6 pt-4 border-t">
-        {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-sm text-gray-500">Total Responses</div>
-            <div className="text-xl font-bold text-gray-800">{responses.length}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-sm text-gray-500">This Week</div>
-            <div className="text-xl font-bold text-blue-600">
-              {(() => {
-                const weeklyCount = calculateTimePeriodCount('week');
-                return weeklyCount;
-              })()}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-sm text-gray-500">This Month</div>
-            <div className="text-xl font-bold text-green-600">
-              {(() => {
-                const monthlyCount = calculateTimePeriodCount('month');
-                return monthlyCount;
-              })()}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-sm text-gray-500">This Quarter</div>
-            <div className="text-xl font-bold text-purple-600">
-              {(() => {
-                const quarterlyCount = calculateTimePeriodCount('quarter');
-                return quarterlyCount;
-              })()}
-            </div>
-          </div>
-        </div> */}
-        
-        {/* Activity trend indicator */}
-        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium">Activity Trend</div>
-              <div className="text-xs text-gray-500">
-                {(() => {
-                  const weekly = calculateTimePeriodCount('week');
-                  const monthly = calculateTimePeriodCount('month');
-                  const quarterly = calculateTimePeriodCount('quarter');
-                  
-                  const weeklyAvg = weekly / 7;
-                  const monthlyAvg = monthly / 30;
-                  
-                  if (weeklyAvg > monthlyAvg) {
-                    return "Submission rate increasing this week";
-                  } else if (weeklyAvg < monthlyAvg) {
-                    return "Submission rate decreasing this week";
-                  } else {
-                    return "Steady submission rate";
-                  }
-                })()}
-              </div>
-            </div>
-            <div className="text-sm font-medium">
-              {responses.length > 0 ? 
-                `${((calculateTimePeriodCount('week') / responses.length) * 100).toFixed(1)}% of responses this week` : 
-                'No data'}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </CardContent>
-</Card>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
-
           <TabsContent value="analytics" className="space-y-6">
             <div className="animate-fade-in">
               <h2 className="text-2xl font-bold text-foreground mb-4">Analytics</h2>

@@ -6,6 +6,7 @@ export interface EmployeeMapping {
   POC: string;
   Manager: string;
   AccountManager: string;
+  Client: string; // Add this
 }
 
 export const fetchEmployeeMappings = async (): Promise<{
