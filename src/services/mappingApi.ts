@@ -7,6 +7,7 @@ export interface EmployeeMapping {
   Manager: string;
   AccountManager: string;
   Client: string; // Add this
+  Gender?: string; // Add this field
 }
 
 export const fetchEmployeeMappings = async (): Promise<{

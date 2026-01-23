@@ -197,18 +197,62 @@ const AdminPage = () => {
   //   return result;
   // };
   // Update the transformMappingData function to include Client
+  // const transformMappingData = (data: any[]): EmployeeMapping[] => {
+  //   if (!data || data.length === 0) {
+  //     return [];
+  //   }
+
+  //   console.log('Transforming mapping data, rows:', data.length);
+
+  //   // Create a set to track unique employees by email
+  //   const uniqueEmployees = new Map<string, EmployeeMapping>();
+
+  //   data.forEach((row, index) => {
+  //     // Look for LDAP/email fields in different possible formats
+  //     const ldap = row.Ldap || row.ldap || row['LDAP'] || row['Ldap '] || '';
+  //     const email = row.Email || row.email || row['Email '] || row['email '] || '';
+
+  //     if ((ldap && typeof ldap === 'string' && ldap.trim() !== '') ||
+  //       (email && typeof email === 'string' && email.includes('@'))) {
+
+  //       const employeeKey = email.toLowerCase() || ldap.toLowerCase();
+
+  //       if (!uniqueEmployees.has(employeeKey)) {
+  //         uniqueEmployees.set(employeeKey, {
+  //           Email: email || `${ldap.toLowerCase()}@company.com`,
+  //           Ldap: ldap || email.split('@')[0] || `Employee-${index + 1}`,
+  //           Process: row.Process || row.process || row['Process '] || 'Unknown',
+  //           POC: row.POC || row.poc || '',
+  //           Manager: row.Manager || row.manager || '',
+  //           AccountManager: row['Account manager'] || row.AccountManager || row['Account Manager'] || '',
+  //           Client: row.Client || row.client || row['Client '] || '' // Add Client field
+  //         });
+  //       }
+  //     }
+  //   });
+
+  //   const result = Array.from(uniqueEmployees.values());
+  //   console.log(`Transformed ${data.length} rows to ${result.length} unique employees`);
+
+  //   // Log first few employees for debugging
+  //   if (result.length > 0) {
+  //     console.log('Sample employees (first 3):');
+  //     result.slice(0, 3).forEach((emp, i) => {
+  //       console.log(`${i + 1}. LDAP: ${emp.Ldap}, Email: ${emp.Email}, Process: ${emp.Process}, Client: ${emp.Client}`);
+  //     });
+  //   }
+
+  //   return result;
+  // };
+
   const transformMappingData = (data: any[]): EmployeeMapping[] => {
     if (!data || data.length === 0) {
       return [];
     }
 
-    console.log('Transforming mapping data, rows:', data.length);
-
-    // Create a set to track unique employees by email
     const uniqueEmployees = new Map<string, EmployeeMapping>();
 
     data.forEach((row, index) => {
-      // Look for LDAP/email fields in different possible formats
       const ldap = row.Ldap || row.ldap || row['LDAP'] || row['Ldap '] || '';
       const email = row.Email || row.email || row['Email '] || row['email '] || '';
 
@@ -225,24 +269,14 @@ const AdminPage = () => {
             POC: row.POC || row.poc || '',
             Manager: row.Manager || row.manager || '',
             AccountManager: row['Account manager'] || row.AccountManager || row['Account Manager'] || '',
-            Client: row.Client || row.client || row['Client '] || '' // Add Client field
+            Client: row.Client || row.client || row['Client '] || '',
+            Gender: row.Gender || row.gender || row['Gender '] || 'Unknown' // Add this
           });
         }
       }
     });
 
-    const result = Array.from(uniqueEmployees.values());
-    console.log(`Transformed ${data.length} rows to ${result.length} unique employees`);
-
-    // Log first few employees for debugging
-    if (result.length > 0) {
-      console.log('Sample employees (first 3):');
-      result.slice(0, 3).forEach((emp, i) => {
-        console.log(`${i + 1}. LDAP: ${emp.Ldap}, Email: ${emp.Email}, Process: ${emp.Process}, Client: ${emp.Client}`);
-      });
-    }
-
-    return result;
+    return Array.from(uniqueEmployees.values());
   };
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -2232,7 +2266,6 @@ const AdminPage = () => {
               </div>
 
               {/* Feedback Completion Status - Updated for response-only data */}
-              {/* Feedback Completion Status - Updated for response-only data */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-foreground mb-4">Feedback Completion Status</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2343,12 +2376,15 @@ const AdminPage = () => {
                     </CardContent>
                   </Card>
 
+
+
+
                   {/* Card 2: Potential Non-Respondents (calculated from mapping + response) */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-red-600" />
-                        Potential Non-Respondents
+                        Non-Respondents
                       </CardTitle>
                       <CardDescription>
                         Employees in mapping sheet who haven't submitted feedback
@@ -2393,7 +2429,7 @@ const AdminPage = () => {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <AlertTriangle className="w-5 h-5 text-accent" />
-                                <span className="text-sm font-medium text-muted-foreground">Potential Non-Respondents</span>
+                                <span className="text-sm font-medium text-muted-foreground">Non-Respondents</span>
                               </div>
                               <span className="text-2xl font-bold block leading-tight text-red-600">
                                 {(() => {
@@ -2559,6 +2595,10 @@ const AdminPage = () => {
                     </CardContent>
                   </Card>
 
+                  {/* Card 3: Gender Distribution for Non-Respondents - FIXED */}
+                  {/* Card 3: Gender Distribution for Non-Respondents - FIXED WITH BETTER MATCHING */}
+
+
                   {/* Card 3: Completed Feedback (all 3 managers) */}
                   <Card>
                     <CardHeader>
@@ -2658,6 +2698,345 @@ const AdminPage = () => {
                                   </div>
                                   <div className="text-purple-600">Reviews given</div>
                                 </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-5 h-5 text-secondary" />
+                          <span className="text-sm font-medium text-muted-foreground">Non-Respondent Gender</span>
+                        </div>
+                        <div className="text-xs px-2 py-1 bg-purple-50 text-purple-700 rounded-full font-medium">
+                          Pending
+                        </div>
+                      </div>
+
+                      {(() => {
+                        // Get filtered responses and employee mappings
+                        const filteredResponses = getFilteredResponses();
+                        const filteredEmployeeMappings = getFilteredEmployeeMappings();
+
+                        if (!filteredEmployeeMappings.length || mappingLoading) {
+                          return (
+                            <div className="py-4 text-center">
+                              {mappingLoading ? (
+                                <>
+                                  <Loader2 className="w-5 h-5 mx-auto animate-spin text-muted-foreground mb-2" />
+                                  <div className="text-xs text-muted-foreground">Loading mapping data...</div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-2xl font-bold text-gray-300 mb-1">?</div>
+                                  <div className="text-sm text-muted-foreground">No mapping data</div>
+                                  <div className="text-xs text-gray-400 mt-2">
+                                    Load employee mapping data to see non-respondent gender distribution
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Create a map of employee identifiers for easier matching
+                        const employeeIdentifierMap = new Map<string, { email: string, gender: string, ldap: string }>();
+
+                        filteredEmployeeMappings.forEach(emp => {
+                          const email = (emp.Email as string || '').toLowerCase().trim();
+                          const ldap = (emp.Ldap as string || '').toLowerCase().trim();
+
+                          if (email && email.includes('@')) {
+                            // Get gender from mapping or default to Unknown
+                            const genderFromMapping = (emp.Gender as string)?.trim() || 'Unknown';
+                            let gender = genderFromMapping;
+
+                            // Normalize gender
+                            let genderKey = gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+                            if (!['Male', 'Female', 'Other', 'Prefer not to say', 'Unknown'].includes(genderKey)) {
+                              if (genderKey.toLowerCase().includes('female')) genderKey = 'Female';
+                              else if (genderKey.toLowerCase().includes('male')) genderKey = 'Male';
+                              else genderKey = 'Other';
+                            }
+
+                            // Store multiple identifiers for this employee
+                            const employeeInfo = {
+                              email,
+                              gender: genderKey,
+                              ldap
+                            };
+
+                            // Store by email
+                            employeeIdentifierMap.set(email, employeeInfo);
+
+                            // Also store by LDAP if available
+                            if (ldap) {
+                              employeeIdentifierMap.set(ldap, employeeInfo);
+                            }
+
+                            // Store by email local part (without domain)
+                            const emailLocalPart = email.split('@')[0];
+                            employeeIdentifierMap.set(emailLocalPart, employeeInfo);
+
+                            // Also store common variations (remove dots from email)
+                            if (emailLocalPart.includes('.')) {
+                              const emailWithoutDots = emailLocalPart.replace(/\./g, '');
+                              employeeIdentifierMap.set(emailWithoutDots, employeeInfo);
+                            }
+
+                            // Store first 5-8 characters as potential encrypted ID parts
+                            for (let i = 5; i <= Math.min(8, emailLocalPart.length); i++) {
+                              employeeIdentifierMap.set(emailLocalPart.substring(0, i), employeeInfo);
+                            }
+                          }
+                        });
+
+                        // Track which employees have submitted feedback
+                        const respondentEmployees = new Set<string>();
+
+                        filteredResponses.forEach(response => {
+                          const encryptedId = (response['Encrypted Submitter ID'] as string || '').toLowerCase().trim();
+
+                          if (encryptedId) {
+                            // Try multiple matching strategies
+                            let matchedEmployee = null;
+
+                            // 1. Direct match with any identifier
+                            if (employeeIdentifierMap.has(encryptedId)) {
+                              matchedEmployee = employeeIdentifierMap.get(encryptedId);
+                            }
+                            // 2. Check if encrypted ID contains any employee identifier
+                            else {
+                              for (const [identifier, employee] of employeeIdentifierMap.entries()) {
+                                if (identifier && encryptedId.includes(identifier)) {
+                                  matchedEmployee = employee;
+                                  break;
+                                }
+                              }
+                            }
+
+                            // 3. Check if any identifier contains the encrypted ID
+                            if (!matchedEmployee) {
+                              for (const [identifier, employee] of employeeIdentifierMap.entries()) {
+                                if (identifier && identifier.includes(encryptedId)) {
+                                  matchedEmployee = employee;
+                                  break;
+                                }
+                              }
+                            }
+
+                            if (matchedEmployee) {
+                              respondentEmployees.add(matchedEmployee.email);
+                            }
+                          }
+                        });
+
+                        // Count non-respondents by gender
+                        const nonRespondentGenderMap = new Map<string, number>();
+                        let totalNonRespondents = 0;
+
+                        // Track all unique employees from mapping
+                        const uniqueEmployees = new Set<string>();
+
+                        filteredEmployeeMappings.forEach(emp => {
+                          const email = (emp.Email as string || '').toLowerCase().trim();
+                          if (email && email.includes('@') && !uniqueEmployees.has(email)) {
+                            uniqueEmployees.add(email);
+
+                            // Check if this employee is a respondent
+                            if (!respondentEmployees.has(email)) {
+                              // This is a non-respondent
+                              totalNonRespondents++;
+
+                              // Get gender for this employee
+                              const employeeInfo = employeeIdentifierMap.get(email);
+                              const gender = employeeInfo?.gender || 'Unknown';
+
+                              nonRespondentGenderMap.set(gender,
+                                (nonRespondentGenderMap.get(gender) || 0) + 1);
+                            }
+                          }
+                        });
+
+                        const totalEmployees = uniqueEmployees.size;
+
+                        if (totalNonRespondents === 0) {
+                          return (
+                            <div className="py-4 text-center">
+                              <div className="text-2xl font-bold text-green-600 mb-1">0</div>
+                              <div className="text-sm text-muted-foreground">All employees responded</div>
+                              <div className="text-xs text-gray-400 mt-2">
+                                100% participation from {totalEmployees} employees
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Prepare gender data for display
+                        const genderData = Array.from(nonRespondentGenderMap.entries())
+                          .map(([gender, count]) => ({
+                            gender,
+                            count,
+                            percentage: totalNonRespondents > 0
+                              ? Math.round((count / totalNonRespondents) * 100)
+                              : 0
+                          }))
+                          .sort((a, b) => b.count - a.count);
+
+                        // Add missing gender categories with zero count
+                        const allGenderCategories = ['Male', 'Female', 'Other', 'Unknown', 'Prefer not to say'];
+                        allGenderCategories.forEach(gender => {
+                          if (!genderData.some(g => g.gender === gender)) {
+                            genderData.push({ gender, count: 0, percentage: 0 });
+                          }
+                        });
+
+                        // Sort again after adding missing categories
+                        genderData.sort((a, b) => b.count - a.count);
+
+                        const colors = {
+                          'Male': '#3b82f6',
+                          'Female': '#ec4899',
+                          'Other': '#8b5cf6',
+                          'Unknown': '#9ca3af',
+                          'Prefer not to say': '#10b981',
+                          'Other/Unknown': '#8b5cf6'
+                        };
+
+                        const size = 90;
+                        const radius = 35;
+                        const center = size / 2;
+
+                        // Only show segments for non-zero percentages
+                        const nonZeroGenderData = genderData.filter(item => item.percentage > 0);
+                        let cumulativePercentage = 0;
+                        const segments = nonZeroGenderData.map(item => {
+                          const segment = {
+                            ...item,
+                            start: cumulativePercentage,
+                            end: cumulativePercentage + item.percentage,
+                            color: colors[item.gender as keyof typeof colors] || '#9ca3af'
+                          };
+                          cumulativePercentage += item.percentage;
+                          return segment;
+                        });
+
+                        return (
+                          <div className="flex items-center gap-4">
+                            <div className="relative flex-shrink-0">
+                              <svg width={size} height={size} className="drop-shadow-sm">
+                                {segments.map((segment, index) => {
+                                  if (segment.percentage === 0) return null;
+
+                                  const startAngle = (segment.start / 100) * 360 - 90;
+                                  const endAngle = (segment.end / 100) * 360 - 90;
+
+                                  const startRad = (startAngle * Math.PI) / 180;
+                                  const endRad = (endAngle * Math.PI) / 180;
+
+                                  const x1 = center + radius * Math.cos(startRad);
+                                  const y1 = center + radius * Math.sin(startRad);
+                                  const x2 = center + radius * Math.cos(endRad);
+                                  const y2 = center + radius * Math.sin(endRad);
+
+                                  const largeArc = segment.percentage > 50 ? 1 : 0;
+
+                                  const pathData = [
+                                    `M ${center} ${center}`,
+                                    `L ${x1} ${y1}`,
+                                    `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                                    'Z'
+                                  ].join(' ');
+
+                                  return (
+                                    <path
+                                      key={index}
+                                      d={pathData}
+                                      fill={segment.color}
+                                      stroke="white"
+                                      strokeWidth="1.5"
+                                    />
+                                  );
+                                })}
+
+                                <circle
+                                  cx={center}
+                                  cy={center}
+                                  r={radius * 0.4}
+                                  fill="white"
+                                />
+
+                                <text
+                                  x={center}
+                                  y={center - 4}
+                                  textAnchor="middle"
+                                  style={{ fontSize: '10px', fontWeight: '600', fill: '#374151' }}
+                                >
+                                  {totalNonRespondents}
+                                </text>
+                                <text
+                                  x={center}
+                                  y={center + 5}
+                                  textAnchor="middle"
+                                  style={{ fontSize: '8px', fill: '#6b7280' }}
+                                >
+                                  Pending
+                                </text>
+                              </svg>
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="space-y-2">
+                                {genderData
+                                  .filter(item => item.count > 0) // Only show non-zero counts
+                                  .map((item, index) => (
+                                    <div key={index} className="flex items-center justify-between text-xs">
+                                      <div className="flex items-center truncate">
+                                        <div
+                                          className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
+                                          style={{ backgroundColor: colors[item.gender as keyof typeof colors] || '#9ca3af' }}
+                                        />
+                                        <span className="font-medium truncate">{item.gender}</span>
+                                      </div>
+                                      <div className="text-right flex-shrink-0 ml-2">
+                                        <span className="font-bold">{item.percentage}%</span>
+                                        <span className="text-gray-500 ml-1">({item.count})</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                              <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                                <div className="flex justify-between">
+                                  <span>Total pending:</span>
+                                  <span className="font-medium text-gray-700">
+                                    {totalNonRespondents} employees
+                                  </span>
+                                </div>
+                                {/* <div className="mt-1 flex justify-between">
+                <span>Response rate:</span>
+                <span className="font-medium text-green-600">
+                  {totalEmployees > 0 
+                    ? `${Math.round(((totalEmployees - totalNonRespondents) / totalEmployees) * 100)}%`
+                    : '0%'}
+                </span>
+              </div>
+              <div className="mt-1 flex justify-between">
+                <span>Matched employees:</span>
+                <span className="font-medium text-blue-600">
+                  {respondentEmployees.size} of {totalEmployees}
+                </span>
+              </div> */}
+                                {globalFilters.process || globalFilters.accountManager ? (
+                                  <div className="mt-1 text-xs text-blue-600">
+                                    Filtered by: {globalFilters.process || ''} {(globalFilters.process && globalFilters.accountManager) ? '•' : ''}
+                                    {globalFilters.accountManager ? globalFilters.accountManager.split('@')[0] : ''}
+                                  </div>
+                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -2942,12 +3321,12 @@ const AdminPage = () => {
               </Card>
 
 
-<Card className="mb-8">
-  <CardHeader>
-    <CardTitle>Feedback Participation by Process</CardTitle>
-    <CardDescription>
-      Percentage of employees who have submitted all 3 required feedbacks for each process
-      <div className="flex flex-wrap gap-4 mt-2 text-sm">
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Feedback Participation by Process</CardTitle>
+                  <CardDescription>
+                    Percentage of employees who have submitted all 3 required feedbacks for each process
+                    {/* <div className="flex flex-wrap gap-4 mt-2 text-sm">
         <div className="flex items-center">
           <div className="w-3 h-3 bg-green-500 rounded mr-2"></div>
           <span>Submitted all 3 feedbacks</span>
@@ -2960,377 +3339,377 @@ const AdminPage = () => {
           <div className="w-3 h-3 bg-red-500 rounded mr-2"></div>
           <span>Not started</span>
         </div>
-      </div>
-    </CardDescription>
-  </CardHeader>
-  
-  <CardContent>
-    {(() => {
-      // Define the function inside the IIFE
-      const calculateProcessParticipationFromResponses = () => {
-        // Get filtered employee mappings
-        const filteredEmployeeMappings = getFilteredEmployeeMappings();
-        
-        // Get filtered responses
-        const filteredResponses = getFilteredResponses();
-        
-        // Step 1: Get ALL unique processes from the responses sheet
-        // This is more accurate than mapping sheet because it shows actual submissions
-        const allProcessesFromResponses = new Set<string>();
-        filteredResponses.forEach(response => {
-          const process = response['Process'] as string;
-          if (process && process.trim()) {
-            allProcessesFromResponses.add(process.trim());
-          }
-        });
-        
-        console.log('Processes found in responses:', Array.from(allProcessesFromResponses));
-        
-        // If no responses, return empty
-        if (filteredResponses.length === 0) {
-          return [];
-        }
-        
-        // Step 2: Group responses by process
-        const processResponseCounts = new Map<string, number>();
-        const processUniqueSubmitters = new Map<string, Set<string>>();
-        const processSubmitterDetails = new Map<string, Map<string, number>>(); // process -> submitter -> count
-        
-        filteredResponses.forEach(response => {
-          const process = (response['Process'] as string || 'Unknown').trim();
-          const submitterId = response['Encrypted Submitter ID'] as string;
-          
-          if (submitterId && submitterId.trim()) {
-            const cleanSubmitterId = submitterId.trim();
-            
-            // Count total responses per process
-            processResponseCounts.set(process, (processResponseCounts.get(process) || 0) + 1);
-            
-            // Track unique submitters per process
-            if (!processUniqueSubmitters.has(process)) {
-              processUniqueSubmitters.set(process, new Set());
-            }
-            processUniqueSubmitters.get(process)!.add(cleanSubmitterId);
-            
-            // Track submitter counts per process
-            if (!processSubmitterDetails.has(process)) {
-              processSubmitterDetails.set(process, new Map());
-            }
-            const submitterCounts = processSubmitterDetails.get(process)!;
-            submitterCounts.set(cleanSubmitterId, (submitterCounts.get(cleanSubmitterId) || 0) + 1);
-          }
-        });
-        
-        console.log('Process stats:', {
-          responseCounts: Object.fromEntries(processResponseCounts),
-          uniqueSubmitters: Object.fromEntries(
-            Array.from(processUniqueSubmitters.entries()).map(([k, v]) => [k, v.size])
-          )
-        });
-        
-        // Step 3: Get total employees per process from mapping sheet
-        const processEmployeeCounts = new Map<string, number>();
-        filteredEmployeeMappings.forEach(emp => {
-          const process = emp.Process as string || 'Unknown';
-          processEmployeeCounts.set(process, (processEmployeeCounts.get(process) || 0) + 1);
-        });
-        
-        // Also count employees from responses (as fallback if mapping is missing)
-        const processEmployeeCountsFromResponses = new Map<string, number>();
-        // We'll estimate based on unique submitters for now
-        
-        // Step 4: For each process, count how many submitters have 3+ feedbacks
-        const processCompletedSubmitters = new Map<string, Set<string>>();
-        const processPartialSubmitters = new Map<string, Set<string>>();
-        
-        processSubmitterDetails.forEach((submitterCounts, process) => {
-          const completed = new Set<string>();
-          const partial = new Set<string>();
-          
-          submitterCounts.forEach((count, submitterId) => {
-            if (count >= 3) {
-              completed.add(submitterId);
-            } else if (count >= 1) {
-              partial.add(submitterId);
-            }
-          });
-          
-          processCompletedSubmitters.set(process, completed);
-          processPartialSubmitters.set(process, partial);
-        });
-        
-        // Step 5: Prepare chart data
-        // First, combine all processes we know about (from responses and mapping)
-        const allProcesses = new Set([
-          ...Array.from(allProcessesFromResponses),
-          ...Array.from(processEmployeeCounts.keys())
-        ]);
-        
-        const chartData = Array.from(allProcesses).map(process => {
-          const totalEmployees = processEmployeeCounts.get(process) || 0;
-          const uniqueSubmitters = processUniqueSubmitters.get(process)?.size || 0;
-          const completedCount = processCompletedSubmitters.get(process)?.size || 0;
-          const partialCount = processPartialSubmitters.get(process)?.size || 0;
-          const responseCount = processResponseCounts.get(process) || 0;
-          
-          // Calculate not started
-          const notStarted = Math.max(0, totalEmployees - uniqueSubmitters);
-          
-          // Calculate percentage - use total employees if available, otherwise estimate
-          let percentage = 0;
-          if (totalEmployees > 0) {
-            percentage = Math.round((completedCount / totalEmployees) * 100);
-          } else if (uniqueSubmitters > 0) {
-            // If we don't know total employees, estimate based on unique submitters
-            // Assume each submitter represents one employee
-            percentage = Math.round((completedCount / uniqueSubmitters) * 100);
-          }
-          
-          return {
-            process,
-            completedCount,
-            partialCount,
-            totalEmployees,
-            percentage,
-            pendingCount: notStarted,
-            responseCount,
-            uniqueSubmitters,
-            hasMappingData: totalEmployees > 0,
-            hasResponseData: responseCount > 0
-          };
-        });
-        
-        // Sort by percentage descending, then by response count
-        return chartData.sort((a, b) => {
-          if (b.percentage !== a.percentage) return b.percentage - a.percentage;
-          return b.responseCount - a.responseCount;
-        });
-      };
-      
-      const processParticipationData = calculateProcessParticipationFromResponses();
-      
-      // Summary statistics
-      const totalEmployees = processParticipationData.reduce((sum, item) => sum + item.totalEmployees, 0);
-      const totalCompleted = processParticipationData.reduce((sum, item) => sum + item.completedCount, 0);
-      const totalUniqueSubmitters = processParticipationData.reduce((sum, item) => sum + item.uniqueSubmitters, 0);
-      const totalResponses = processParticipationData.reduce((sum, item) => sum + item.responseCount, 0);
-      const overallPercentage = totalEmployees > 0 ? Math.round((totalCompleted / totalEmployees) * 100) : 0;
-      
-      if (processParticipationData.length === 0) {
-        return (
-          <>
-            <div className="mb-4 p-3 bg-secondary/10 rounded-lg border border-secondary/30">
-              <div className="flex flex-wrap justify-between items-center">
-                <div>
-                  <div className="text-sm font-medium text-secondary">No Data Available</div>
-                  <div className="text-2xl font-bold text-secondary">0%</div>
-                </div>
-                <div className="text-sm text-secondary">
-                  <span className="font-bold">0</span> responses found
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-secondary">
-                Load response data to see participation rates
-              </div>
-            </div>
-            
-            <div className="text-center py-12">
-              <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                {responses.length === 0 
-                  ? "No feedback responses found. Load response data first."
-                  : "No process participation data available"}
-              </p>
-              <Button 
-                onClick={loadAllData} 
-                variant="outline" 
-                className="mt-4"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : null}
-                Load Response Data
-              </Button>
-            </div>
-          </>
-        );
-      }
-      
-      // Color function based on percentage
-      const getColor = (percentage: number) => {
-        if (percentage >= 80) return '#10b981'; // Green
-        if (percentage >= 50) return '#f59e0b'; // Yellow
-        return '#ef4444'; // Red
-      };
-      
-      // Filter to show only processes with data
-      const filteredData = processParticipationData.filter(item => 
-        item.responseCount > 0 || item.totalEmployees > 0
-      );
-      
-      return (
-        <div className="space-y-6">
-          {/* Summary statistics */}
-          <div className="p-3 bg-secondary/10 rounded-lg border border-secondary/30">
-            <div className="flex flex-wrap justify-between items-center">
-              <div>
-                <div className="text-sm font-medium text-secondary">Overall Participation</div>
-                <div className="text-2xl font-bold text-secondary">{overallPercentage}%</div>
-              </div>
-              <div className="text-sm text-secondary">
-                <span className="font-bold">{totalCompleted}</span> completed • <span className="font-bold">{totalUniqueSubmitters}</span> unique submitters
-              </div>
-            </div>
-            <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-              <div>
-                <span className="text-secondary font-medium">Total Employees:</span> {totalEmployees}
-              </div>
-              <div>
-                <span className="text-secondary font-medium">Total Responses:</span> {totalResponses}
-              </div>
-              <div>
-                <span className="text-secondary font-medium">Avg per Submitter:</span> {totalUniqueSubmitters > 0 ? (totalResponses / totalUniqueSubmitters).toFixed(1) : '0'}
-              </div>
-              <div>
-                <span className="text-secondary font-medium">Processes:</span> {filteredData.length}
-              </div>
-            </div>
-          </div>
-          
-          {/* Bar Chart */}
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={filteredData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="process"
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                  interval={0}
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis
-                  label={{ value: 'Participation %', angle: -90, position: 'insideLeft' }}
-                  domain={[0, 100]}
-                  tickFormatter={(value) => `${value}%`}
-                />
-                <Tooltip
-                  formatter={(value, name) => {
-                    if (name === 'percentage') return [`${value}%`, 'Completed %'];
-                    if (name === 'completedCount') return [value, 'Completed (3+ feedbacks)'];
-                    if (name === 'partialCount') return [value, 'Partial (1-2 feedbacks)'];
-                    if (name === 'responseCount') return [value, 'Total Responses'];
-                    return [value, name === 'totalEmployees' ? 'Total Employees' : 'Unique Submitters'];
-                  }}
-                  labelFormatter={(label) => `Process: ${label}`}
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      const data = filteredData.find(d => d.process === label);
+      </div> */}
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent>
+                  {(() => {
+                    // Define the function inside the IIFE
+                    const calculateProcessParticipationFromResponses = () => {
+                      // Get filtered employee mappings
+                      const filteredEmployeeMappings = getFilteredEmployeeMappings();
+
+                      // Get filtered responses
+                      const filteredResponses = getFilteredResponses();
+
+                      // Step 1: Get ALL unique processes from the responses sheet
+                      // This is more accurate than mapping sheet because it shows actual submissions
+                      const allProcessesFromResponses = new Set<string>();
+                      filteredResponses.forEach(response => {
+                        const process = response['Process'] as string;
+                        if (process && process.trim()) {
+                          allProcessesFromResponses.add(process.trim());
+                        }
+                      });
+
+                      console.log('Processes found in responses:', Array.from(allProcessesFromResponses));
+
+                      // If no responses, return empty
+                      if (filteredResponses.length === 0) {
+                        return [];
+                      }
+
+                      // Step 2: Group responses by process
+                      const processResponseCounts = new Map<string, number>();
+                      const processUniqueSubmitters = new Map<string, Set<string>>();
+                      const processSubmitterDetails = new Map<string, Map<string, number>>(); // process -> submitter -> count
+
+                      filteredResponses.forEach(response => {
+                        const process = (response['Process'] as string || 'Unknown').trim();
+                        const submitterId = response['Encrypted Submitter ID'] as string;
+
+                        if (submitterId && submitterId.trim()) {
+                          const cleanSubmitterId = submitterId.trim();
+
+                          // Count total responses per process
+                          processResponseCounts.set(process, (processResponseCounts.get(process) || 0) + 1);
+
+                          // Track unique submitters per process
+                          if (!processUniqueSubmitters.has(process)) {
+                            processUniqueSubmitters.set(process, new Set());
+                          }
+                          processUniqueSubmitters.get(process)!.add(cleanSubmitterId);
+
+                          // Track submitter counts per process
+                          if (!processSubmitterDetails.has(process)) {
+                            processSubmitterDetails.set(process, new Map());
+                          }
+                          const submitterCounts = processSubmitterDetails.get(process)!;
+                          submitterCounts.set(cleanSubmitterId, (submitterCounts.get(cleanSubmitterId) || 0) + 1);
+                        }
+                      });
+
+                      console.log('Process stats:', {
+                        responseCounts: Object.fromEntries(processResponseCounts),
+                        uniqueSubmitters: Object.fromEntries(
+                          Array.from(processUniqueSubmitters.entries()).map(([k, v]) => [k, v.size])
+                        )
+                      });
+
+                      // Step 3: Get total employees per process from mapping sheet
+                      const processEmployeeCounts = new Map<string, number>();
+                      filteredEmployeeMappings.forEach(emp => {
+                        const process = emp.Process as string || 'Unknown';
+                        processEmployeeCounts.set(process, (processEmployeeCounts.get(process) || 0) + 1);
+                      });
+
+                      // Also count employees from responses (as fallback if mapping is missing)
+                      const processEmployeeCountsFromResponses = new Map<string, number>();
+                      // We'll estimate based on unique submitters for now
+
+                      // Step 4: For each process, count how many submitters have 3+ feedbacks
+                      const processCompletedSubmitters = new Map<string, Set<string>>();
+                      const processPartialSubmitters = new Map<string, Set<string>>();
+
+                      processSubmitterDetails.forEach((submitterCounts, process) => {
+                        const completed = new Set<string>();
+                        const partial = new Set<string>();
+
+                        submitterCounts.forEach((count, submitterId) => {
+                          if (count >= 3) {
+                            completed.add(submitterId);
+                          } else if (count >= 1) {
+                            partial.add(submitterId);
+                          }
+                        });
+
+                        processCompletedSubmitters.set(process, completed);
+                        processPartialSubmitters.set(process, partial);
+                      });
+
+                      // Step 5: Prepare chart data
+                      // First, combine all processes we know about (from responses and mapping)
+                      const allProcesses = new Set([
+                        ...Array.from(allProcessesFromResponses),
+                        ...Array.from(processEmployeeCounts.keys())
+                      ]);
+
+                      const chartData = Array.from(allProcesses).map(process => {
+                        const totalEmployees = processEmployeeCounts.get(process) || 0;
+                        const uniqueSubmitters = processUniqueSubmitters.get(process)?.size || 0;
+                        const completedCount = processCompletedSubmitters.get(process)?.size || 0;
+                        const partialCount = processPartialSubmitters.get(process)?.size || 0;
+                        const responseCount = processResponseCounts.get(process) || 0;
+
+                        // Calculate not started
+                        const notStarted = Math.max(0, totalEmployees - uniqueSubmitters);
+
+                        // Calculate percentage - use total employees if available, otherwise estimate
+                        let percentage = 0;
+                        if (totalEmployees > 0) {
+                          percentage = Math.round((completedCount / totalEmployees) * 100);
+                        } else if (uniqueSubmitters > 0) {
+                          // If we don't know total employees, estimate based on unique submitters
+                          // Assume each submitter represents one employee
+                          percentage = Math.round((completedCount / uniqueSubmitters) * 100);
+                        }
+
+                        return {
+                          process,
+                          completedCount,
+                          partialCount,
+                          totalEmployees,
+                          percentage,
+                          pendingCount: notStarted,
+                          responseCount,
+                          uniqueSubmitters,
+                          hasMappingData: totalEmployees > 0,
+                          hasResponseData: responseCount > 0
+                        };
+                      });
+
+                      // Sort by percentage descending, then by response count
+                      return chartData.sort((a, b) => {
+                        if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+                        return b.responseCount - a.responseCount;
+                      });
+                    };
+
+                    const processParticipationData = calculateProcessParticipationFromResponses();
+
+                    // Summary statistics
+                    const totalEmployees = processParticipationData.reduce((sum, item) => sum + item.totalEmployees, 0);
+                    const totalCompleted = processParticipationData.reduce((sum, item) => sum + item.completedCount, 0);
+                    const totalUniqueSubmitters = processParticipationData.reduce((sum, item) => sum + item.uniqueSubmitters, 0);
+                    const totalResponses = processParticipationData.reduce((sum, item) => sum + item.responseCount, 0);
+                    const overallPercentage = totalEmployees > 0 ? Math.round((totalCompleted / totalEmployees) * 100) : 0;
+
+                    if (processParticipationData.length === 0) {
                       return (
-                        <div className="bg-white p-3 border rounded-lg shadow-lg">
-                          <p className="font-bold">{label}</p>
-                          <p className="text-sm">
-                            <span className="text-green-600">{data?.completedCount || 0} completed</span> • 
-                            <span className="text-yellow-600"> {data?.partialCount || 0} partial</span> • 
-                            <span className="text-red-600"> {data?.pendingCount || 0} not started</span>
-                          </p>
-                          <p className="text-sm">Total: {data?.totalEmployees || 0} employees</p>
-                          <p className="text-sm">{data?.responseCount || 0} total responses</p>
-                          <p className="text-sm font-bold">{data?.percentage || 0}% participation</p>
-                        </div>
+                        <>
+                          <div className="mb-4 p-3 bg-secondary/10 rounded-lg border border-secondary/30">
+                            <div className="flex flex-wrap justify-between items-center">
+                              <div>
+                                <div className="text-sm font-medium text-secondary">No Data Available</div>
+                                <div className="text-2xl font-bold text-secondary">0%</div>
+                              </div>
+                              <div className="text-sm text-secondary">
+                                <span className="font-bold">0</span> responses found
+                              </div>
+                            </div>
+                            <div className="mt-2 text-xs text-secondary">
+                              Load response data to see participation rates
+                            </div>
+                          </div>
+
+                          <div className="text-center py-12">
+                            <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                            <p className="text-muted-foreground">
+                              {responses.length === 0
+                                ? "No feedback responses found. Load response data first."
+                                : "No process participation data available"}
+                            </p>
+                            <Button
+                              onClick={loadAllData}
+                              variant="outline"
+                              className="mt-4"
+                              disabled={loading}
+                            >
+                              {loading ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : null}
+                              Load Response Data
+                            </Button>
+                          </div>
+                        </>
                       );
                     }
-                    return null;
-                  }}
-                />
-                <Legend />
-                <Bar
-                  dataKey="percentage"
-                  name="Participation %"
-                  radius={[4, 4, 0, 0]}
-                >
-                  {filteredData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getColor(entry.percentage)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          
-          {/* Process Breakdown Table */}
-          <div className="mt-8">
-            <h4 className="font-medium mb-4">Process Breakdown</h4>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b">
-                    <th className="text-left py-3 px-4 font-medium text-sm">Process</th>
-                    <th className="text-left py-3 px-4 font-medium text-sm">Completed</th>
-                    <th className="text-left py-3 px-4 font-medium text-sm">Partial</th>
-                    <th className="text-left py-3 px-4 font-medium text-sm">Not Started</th>
-                    <th className="text-left py-3 px-4 font-medium text-sm">Total</th>
-                    <th className="text-left py-3 px-4 font-medium text-sm">Participation</th>
-                    <th className="text-left py-3 px-4 font-medium text-sm">Responses</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.map((item, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium">
-                        <div className="flex items-center">
-                          {item.process}
-                          {!item.hasMappingData && (
-                            <span className="ml-2 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded">
-                              No mapping
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-bold text-green-600">{item.completedCount}</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-bold text-yellow-600">{item.partialCount}</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-bold text-red-600">{item.pendingCount}</span>
-                      </td>
-                      <td className="py-3 px-4 font-bold">{item.totalEmployees || '?'}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-32 bg-gray-200 rounded-full h-3">
-                            <div
-                              className="h-3 rounded-full"
-                              style={{
-                                width: `${item.percentage}%`,
-                                backgroundColor: getColor(item.percentage)
-                              }}
-                            ></div>
+
+                    // Color function based on percentage
+                    const getColor = (percentage: number) => {
+                      if (percentage >= 80) return '#10b981'; // Green
+                      if (percentage >= 50) return '#f59e0b'; // Yellow
+                      return '#ef4444'; // Red
+                    };
+
+                    // Filter to show only processes with data
+                    const filteredData = processParticipationData.filter(item =>
+                      item.responseCount > 0 || item.totalEmployees > 0
+                    );
+
+                    return (
+                      <div className="space-y-6">
+                        {/* Summary statistics */}
+                        <div className="p-3 bg-secondary/10 rounded-lg border border-secondary/30">
+                          <div className="flex flex-wrap justify-between items-center">
+                            <div>
+                              <div className="text-sm font-medium text-secondary">Overall Participation</div>
+                              <div className="text-2xl font-bold text-secondary">{overallPercentage}%</div>
+                            </div>
+                            <div className="text-sm text-secondary">
+                              <span className="font-bold">{totalCompleted}</span> completed • <span className="font-bold">{totalUniqueSubmitters}</span> unique submitters
+                            </div>
                           </div>
-                          <span className="font-bold min-w-12">{item.percentage}%</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm">
-                          <div className="font-medium">{item.responseCount}</div>
-                          <div className="text-xs text-gray-500">
-                            {item.uniqueSubmitters} submitters
+                          <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                            <div>
+                              <span className="text-secondary font-medium">Total Employees:</span> {totalEmployees}
+                            </div>
+                            <div>
+                              <span className="text-secondary font-medium">Total Responses:</span> {totalResponses}
+                            </div>
+                            <div>
+                              <span className="text-secondary font-medium">Avg per Submitter:</span> {totalUniqueSubmitters > 0 ? (totalResponses / totalUniqueSubmitters).toFixed(1) : '0'}
+                            </div>
+                            <div>
+                              <span className="text-secondary font-medium">Processes:</span> {filteredData.length}
+                            </div>
                           </div>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Data Source Info */}
-            {/* <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+
+                        {/* Bar Chart */}
+                        <div className="h-80">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={filteredData}
+                              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                              <XAxis
+                                dataKey="process"
+                                angle={-45}
+                                textAnchor="end"
+                                height={60}
+                                interval={0}
+                                tick={{ fontSize: 12 }}
+                              />
+                              <YAxis
+                                label={{ value: 'Participation %', angle: -90, position: 'insideLeft' }}
+                                domain={[0, 100]}
+                                tickFormatter={(value) => `${value}%`}
+                              />
+                              <Tooltip
+                                formatter={(value, name) => {
+                                  if (name === 'percentage') return [`${value}%`, 'Completed %'];
+                                  if (name === 'completedCount') return [value, 'Completed (3+ feedbacks)'];
+                                  if (name === 'partialCount') return [value, 'Partial (1-2 feedbacks)'];
+                                  if (name === 'responseCount') return [value, 'Total Responses'];
+                                  return [value, name === 'totalEmployees' ? 'Total Employees' : 'Unique Submitters'];
+                                }}
+                                labelFormatter={(label) => `Process: ${label}`}
+                                content={({ active, payload, label }) => {
+                                  if (active && payload && payload.length) {
+                                    const data = filteredData.find(d => d.process === label);
+                                    return (
+                                      <div className="bg-white p-3 border rounded-lg shadow-lg">
+                                        <p className="font-bold">{label}</p>
+                                        <p className="text-sm">
+                                          <span className="text-green-600">{data?.completedCount || 0} completed</span> •
+                                          <span className="text-yellow-600"> {data?.partialCount || 0} partial</span> •
+                                          <span className="text-red-600"> {data?.pendingCount || 0} not started</span>
+                                        </p>
+                                        <p className="text-sm">Total: {data?.totalEmployees || 0} employees</p>
+                                        <p className="text-sm">{data?.responseCount || 0} total responses</p>
+                                        <p className="text-sm font-bold">{data?.percentage || 0}% participation</p>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
+                              <Legend />
+                              <Bar
+                                dataKey="percentage"
+                                name="Participation %"
+                                radius={[4, 4, 0, 0]}
+                              >
+                                {filteredData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={getColor(entry.percentage)} />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        {/* Process Breakdown Table */}
+                        <div className="mt-8">
+                          <h4 className="font-medium mb-4">Process Breakdown</h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full border-collapse">
+                              <thead>
+                                <tr className="bg-gray-50 border-b">
+                                  <th className="text-left py-3 px-4 font-medium text-sm">Process</th>
+                                  <th className="text-left py-3 px-4 font-medium text-sm">Completed</th>
+                                  <th className="text-left py-3 px-4 font-medium text-sm">Partial</th>
+                                  <th className="text-left py-3 px-4 font-medium text-sm">Not Started</th>
+                                  <th className="text-left py-3 px-4 font-medium text-sm">Total</th>
+                                  <th className="text-left py-3 px-4 font-medium text-sm">Participation</th>
+                                  <th className="text-left py-3 px-4 font-medium text-sm">Responses</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {filteredData.map((item, index) => (
+                                  <tr key={index} className="border-b hover:bg-gray-50">
+                                    <td className="py-3 px-4 font-medium">
+                                      <div className="flex items-center">
+                                        {item.process}
+                                        {!item.hasMappingData && (
+                                          <span className="ml-2 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded">
+                                            No mapping
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      <span className="font-bold text-green-600">{item.completedCount}</span>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      <span className="font-bold text-yellow-600">{item.partialCount}</span>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      <span className="font-bold text-red-600">{item.pendingCount}</span>
+                                    </td>
+                                    <td className="py-3 px-4 font-bold">{item.totalEmployees || '?'}</td>
+                                    <td className="py-3 px-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-32 bg-gray-200 rounded-full h-3">
+                                          <div
+                                            className="h-3 rounded-full"
+                                            style={{
+                                              width: `${item.percentage}%`,
+                                              backgroundColor: getColor(item.percentage)
+                                            }}
+                                          ></div>
+                                        </div>
+                                        <span className="font-bold min-w-12">{item.percentage}%</span>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      <div className="text-sm">
+                                        <div className="font-medium">{item.responseCount}</div>
+                                        <div className="text-xs text-gray-500">
+                                          {item.uniqueSubmitters} submitters
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Data Source Info */}
+                          {/* <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-start">
                 <Info className="w-4 h-4 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
                 <div className="text-sm text-blue-700">
@@ -3344,13 +3723,13 @@ const AdminPage = () => {
                 </div>
               </div>
             </div> */}
-          </div>
-        </div>
-      );
-    })()}
-  </CardContent>
-</Card>
-        
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
             </div>
 
 
