@@ -3409,7 +3409,7 @@ if (step === 'select-target') {
           </Button>
 
           {/* User Info Display with Demographics */}
-          {userData && (
+          {/* {userData && (
             <div className="mb-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -3424,7 +3424,6 @@ if (step === 'select-target') {
                 </div>
               </div>
 
-              {/* Display demographic info if available */}
               {(userData.gender || userData.tenure || userData.designation || userData.age) && (
                 <div className="mt-3 pt-3 border-t border-primary/10">
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Demographics</h4>
@@ -3466,7 +3465,7 @@ if (step === 'select-target') {
                 </p>
               ) : null}
             </div>
-          )}
+          )} */}
 
           <h2 className="text-3xl font-bold text-foreground mb-2">Leadership Feedback</h2>
           <p className="text-muted-foreground mb-8">
