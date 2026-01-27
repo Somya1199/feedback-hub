@@ -391,67 +391,144 @@ const AdminPage = () => {
   };
 
   // First, update the loadResponsesData function to enrich responses with client data:
+  // const loadResponsesData = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const result = await fetchFeedbackResponses();
+  //     if (result.success && result.data) {
+  //       // Enrich responses with client data from mappings
+  //       const enrichedResponses = result.data.map(response => {
+  //         const responseWithClient = { ...response };
+  //         const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+  //         const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+
+  //         // Try to find matching employee
+  //         const matchingEmployee = employeeMappings.find(emp => {
+  //           const empEmail = (emp.Email as string || '').toLowerCase().trim();
+  //           const empProcess = (emp.Process as string || '').toLowerCase().trim();
+
+  //           // Try email match first
+  //           if (managementEmail && empEmail && managementEmail === empEmail) {
+  //             return true;
+  //           }
+
+  //           // Try process match as fallback
+  //           if (responseProcess && empProcess && responseProcess === empProcess) {
+  //             return true;
+  //           }
+
+  //           return false;
+  //         });
+
+  //         // Add client to response if found
+  //         if (matchingEmployee && matchingEmployee.Client) {
+  //           responseWithClient['Client'] = matchingEmployee.Client;
+  //         }
+
+  //         return responseWithClient;
+  //       });
+
+  //       setResponses(enrichedResponses);
+  //       calculateStats(enrichedResponses);
+  //       toast({
+  //         title: 'Data Loaded',
+  //         description: `Fetched ${enrichedResponses.length} responses from Google Sheets`,
+  //       });
+  //     } else {
+  //       toast({
+  //         title: 'Error',
+  //         description: result.error || 'Failed to load data',
+  //         variant: 'destructive',
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error loading responses:', error);
+  //     toast({
+  //       title: 'Error',
+  //       description: 'Failed to connect to backend',
+  //       variant: 'destructive',
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const loadResponsesData = async () => {
-    setLoading(true);
-    try {
-      const result = await fetchFeedbackResponses();
-      if (result.success && result.data) {
-        // Enrich responses with client data from mappings
-        const enrichedResponses = result.data.map(response => {
-          const responseWithClient = { ...response };
-          const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
-          const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+  setLoading(true);
+  try {
+    const result = await fetchFeedbackResponses();
+    if (result.success && result.data) {
+      // Enrich responses with client data from mappings
+      const enrichedResponses = result.data.map(response => {
+        const responseWithClient = { ...response };
+        const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+        const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
 
-          // Try to find matching employee
-          const matchingEmployee = employeeMappings.find(emp => {
+        // Try to find matching employee by multiple methods
+        let matchingEmployee = null;
+
+        if (managementEmail) {
+          // 1. Try exact email match
+          matchingEmployee = employeeMappings.find(emp => {
             const empEmail = (emp.Email as string || '').toLowerCase().trim();
-            const empProcess = (emp.Process as string || '').toLowerCase().trim();
-
-            // Try email match first
-            if (managementEmail && empEmail && managementEmail === empEmail) {
-              return true;
-            }
-
-            // Try process match as fallback
-            if (responseProcess && empProcess && responseProcess === empProcess) {
-              return true;
-            }
-
-            return false;
+            return empEmail === managementEmail;
           });
 
-          // Add client to response if found
-          if (matchingEmployee && matchingEmployee.Client) {
-            responseWithClient['Client'] = matchingEmployee.Client;
+          // 2. Try partial email match (without domain)
+          if (!matchingEmployee && managementEmail.includes('@')) {
+            const emailLocalPart = managementEmail.split('@')[0];
+            matchingEmployee = employeeMappings.find(emp => {
+              const empEmail = (emp.Email as string || '').toLowerCase().trim();
+              if (empEmail.includes('@')) {
+                const empLocalPart = empEmail.split('@')[0];
+                return empLocalPart === emailLocalPart;
+              }
+              return false;
+            });
           }
+        }
 
-          return responseWithClient;
-        });
+        // 3. Try process match as fallback
+        if (!matchingEmployee && responseProcess) {
+          matchingEmployee = employeeMappings.find(emp => {
+            const empProcess = (emp.Process as string || '').toLowerCase().trim();
+            return empProcess === responseProcess;
+          });
+        }
 
-        setResponses(enrichedResponses);
-        calculateStats(enrichedResponses);
-        toast({
-          title: 'Data Loaded',
-          description: `Fetched ${enrichedResponses.length} responses from Google Sheets`,
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: result.error || 'Failed to load data',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error loading responses:', error);
+        // Add client to response if found
+        if (matchingEmployee && matchingEmployee.Client) {
+          responseWithClient['Client'] = matchingEmployee.Client;
+        } else {
+          responseWithClient['Client'] = 'Unknown'; // Default value
+        }
+
+        return responseWithClient;
+      });
+
+      setResponses(enrichedResponses);
+      calculateStats(enrichedResponses);
+      toast({
+        title: 'Data Loaded',
+        description: `Fetched ${enrichedResponses.length} responses from Google Sheets`,
+      });
+    } else {
       toast({
         title: 'Error',
-        description: 'Failed to connect to backend',
+        description: result.error || 'Failed to load data',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Error loading responses:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to connect to backend',
+      variant: 'destructive',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const calculateStats = (data: FeedbackResponse[]) => {
     if (!data || data.length === 0) return;
@@ -909,40 +986,119 @@ const AdminPage = () => {
   //     return true;
   //   });
   // };
-  const getFilteredResponses = (): FeedbackResponse[] => {
-    if (!responses.length) return [];
+  // const getFilteredResponses = (): FeedbackResponse[] => {
+  //   if (!responses.length) return [];
 
-    // If no global filters are applied, return all responses
-    if (!globalFilters.client && !globalFilters.process && !globalFilters.accountManager) {
-      return responses;
+  //   // If no global filters are applied, return all responses
+  //   if (!globalFilters.client && !globalFilters.process && !globalFilters.accountManager) {
+  //     return responses;
+  //   }
+
+  //   return responses.filter(response => {
+  //     const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+  //     const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+  //     const responseClient = (response['Client'] as string || '').toLowerCase().trim();
+
+  //     // Check process filter
+  //     if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
+  //       return false;
+  //     }
+
+  //     // Check account manager filter - compare with management email
+  //     if (globalFilters.accountManager) {
+  //       const filterAccountManager = globalFilters.accountManager.toLowerCase();
+  //       if (managementEmail !== filterAccountManager) {
+  //         return false;
+  //       }
+  //     }
+
+  //     // Check client filter
+  //     if (globalFilters.client && responseClient !== globalFilters.client.toLowerCase()) {
+  //       return false;
+  //     }
+
+  //     return true;
+  //   });
+  // };
+  const getFilteredResponses = (): FeedbackResponse[] => {
+  if (!responses.length) return [];
+
+  // If no global filters are applied, return all responses
+  if (!globalFilters.client && !globalFilters.process && !globalFilters.accountManager) {
+    return responses;
+  }
+
+  return responses.filter(response => {
+    const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+    const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+    const responseClient = (response['Client'] as string || '').toLowerCase().trim();
+
+    // Debug logging
+    console.log('Filtering response:', {
+      responseClient,
+      filterClient: globalFilters.client,
+      process: responseProcess,
+      filterProcess: globalFilters.process,
+      email: managementEmail,
+      filterAccountManager: globalFilters.accountManager
+    });
+
+    // Check process filter
+    if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
+      return false;
     }
 
-    return responses.filter(response => {
-      const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
-      const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
-      const responseClient = (response['Client'] as string || '').toLowerCase().trim();
-
-      // Check process filter
-      if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
+    // Check account manager filter
+    if (globalFilters.accountManager) {
+      const filterAccountManager = globalFilters.accountManager.toLowerCase();
+      if (managementEmail !== filterAccountManager) {
         return false;
       }
+    }
 
-      // Check account manager filter - compare with management email
-      if (globalFilters.accountManager) {
-        const filterAccountManager = globalFilters.accountManager.toLowerCase();
-        if (managementEmail !== filterAccountManager) {
+    // Check client filter
+    if (globalFilters.client) {
+      const filterClient = globalFilters.client.toLowerCase();
+      
+      // Check if response has client data
+      if (!responseClient || responseClient === 'unknown') {
+        // Try to find client dynamically if not in response
+        const matchingEmployee = employeeMappings.find(emp => {
+          const empEmail = (emp.Email as string || '').toLowerCase().trim();
+          const empProcess = (emp.Process as string || '').toLowerCase().trim();
+          
+          // Try email match
+          if (managementEmail && empEmail && managementEmail === empEmail) {
+            return true;
+          }
+          
+          // Try process match
+          if (responseProcess && empProcess && responseProcess === empProcess) {
+            return true;
+          }
+          
+          return false;
+        });
+        
+        // Check if matching employee has the filtered client
+        if (matchingEmployee) {
+          const empClient = (matchingEmployee.Client as string || '').toLowerCase().trim();
+          if (empClient !== filterClient) {
+            return false;
+          }
+        } else {
+          // No matching employee found
           return false;
         }
-      }
-
-      // Check client filter
-      if (globalFilters.client && responseClient !== globalFilters.client.toLowerCase()) {
+      } else if (responseClient !== filterClient) {
+        // Response has client data but doesn't match filter
         return false;
       }
+    }
 
-      return true;
-    });
-  };
+    return true;
+  });
+};
   // const getFilteredEmployeeMappings = (): EmployeeMapping[] => {
   //   if (!employeeMappings.length) return [];
 
@@ -2082,7 +2238,7 @@ const AdminPage = () => {
                       variant={globalFilters.client || globalFilters.process || globalFilters.accountManager ? "default" : "outline"}
                       size="sm"
                       onClick={() => setGlobalFilters({ client: '', process: '', accountManager: '' })}
-                      className="h-10"
+                      className="whitespace-nowrap"
                       disabled={!globalFilters.client && !globalFilters.process && !globalFilters.accountManager}
                     >
                       Clear Filters
@@ -4086,9 +4242,18 @@ const AdminPage = () => {
                           </option>
                         ))}
                       </select>
-                      <Button onClick={refreshAnalytics} variant="outline" className="whitespace-nowrap">
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Refresh
+                      <Button
+                        onClick={() => {
+                          setSelectedLeader('all');
+                          toast({
+                            title: 'Filters Cleared',
+                            description: 'Returned to global overview',
+                          });
+                        }}
+                        variant="outline"
+                        className="whitespace-nowrap"
+                      >
+                        Clear Filter
                       </Button>
                     </div>
 
