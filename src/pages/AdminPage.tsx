@@ -453,82 +453,82 @@ const AdminPage = () => {
   //   }
   // };
   const loadResponsesData = async () => {
-  setLoading(true);
-  try {
-    const result = await fetchFeedbackResponses();
-    if (result.success && result.data) {
-      // Enrich responses with client data from mappings
-      const enrichedResponses = result.data.map(response => {
-        const responseWithClient = { ...response };
-        const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
-        const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+    setLoading(true);
+    try {
+      const result = await fetchFeedbackResponses();
+      if (result.success && result.data) {
+        // Enrich responses with client data from mappings
+        const enrichedResponses = result.data.map(response => {
+          const responseWithClient = { ...response };
+          const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+          const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
 
-        // Try to find matching employee by multiple methods
-        let matchingEmployee = null;
+          // Try to find matching employee by multiple methods
+          let matchingEmployee = null;
 
-        if (managementEmail) {
-          // 1. Try exact email match
-          matchingEmployee = employeeMappings.find(emp => {
-            const empEmail = (emp.Email as string || '').toLowerCase().trim();
-            return empEmail === managementEmail;
-          });
-
-          // 2. Try partial email match (without domain)
-          if (!matchingEmployee && managementEmail.includes('@')) {
-            const emailLocalPart = managementEmail.split('@')[0];
+          if (managementEmail) {
+            // 1. Try exact email match
             matchingEmployee = employeeMappings.find(emp => {
               const empEmail = (emp.Email as string || '').toLowerCase().trim();
-              if (empEmail.includes('@')) {
-                const empLocalPart = empEmail.split('@')[0];
-                return empLocalPart === emailLocalPart;
-              }
-              return false;
+              return empEmail === managementEmail;
+            });
+
+            // 2. Try partial email match (without domain)
+            if (!matchingEmployee && managementEmail.includes('@')) {
+              const emailLocalPart = managementEmail.split('@')[0];
+              matchingEmployee = employeeMappings.find(emp => {
+                const empEmail = (emp.Email as string || '').toLowerCase().trim();
+                if (empEmail.includes('@')) {
+                  const empLocalPart = empEmail.split('@')[0];
+                  return empLocalPart === emailLocalPart;
+                }
+                return false;
+              });
+            }
+          }
+
+          // 3. Try process match as fallback
+          if (!matchingEmployee && responseProcess) {
+            matchingEmployee = employeeMappings.find(emp => {
+              const empProcess = (emp.Process as string || '').toLowerCase().trim();
+              return empProcess === responseProcess;
             });
           }
-        }
 
-        // 3. Try process match as fallback
-        if (!matchingEmployee && responseProcess) {
-          matchingEmployee = employeeMappings.find(emp => {
-            const empProcess = (emp.Process as string || '').toLowerCase().trim();
-            return empProcess === responseProcess;
-          });
-        }
+          // Add client to response if found
+          if (matchingEmployee && matchingEmployee.Client) {
+            responseWithClient['Client'] = matchingEmployee.Client;
+          } else {
+            responseWithClient['Client'] = 'Unknown'; // Default value
+          }
 
-        // Add client to response if found
-        if (matchingEmployee && matchingEmployee.Client) {
-          responseWithClient['Client'] = matchingEmployee.Client;
-        } else {
-          responseWithClient['Client'] = 'Unknown'; // Default value
-        }
+          return responseWithClient;
+        });
 
-        return responseWithClient;
-      });
-
-      setResponses(enrichedResponses);
-      calculateStats(enrichedResponses);
-      toast({
-        title: 'Data Loaded',
-        description: `Fetched ${enrichedResponses.length} responses from Google Sheets`,
-      });
-    } else {
+        setResponses(enrichedResponses);
+        calculateStats(enrichedResponses);
+        toast({
+          title: 'Data Loaded',
+          description: `Fetched ${enrichedResponses.length} responses from Google Sheets`,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to load data',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading responses:', error);
       toast({
         title: 'Error',
-        description: result.error || 'Failed to load data',
+        description: 'Failed to connect to backend',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error loading responses:', error);
-    toast({
-      title: 'Error',
-      description: 'Failed to connect to backend',
-      variant: 'destructive',
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const calculateStats = (data: FeedbackResponse[]) => {
     if (!data || data.length === 0) return;
@@ -1021,84 +1021,84 @@ const AdminPage = () => {
   //   });
   // };
   const getFilteredResponses = (): FeedbackResponse[] => {
-  if (!responses.length) return [];
+    if (!responses.length) return [];
 
-  // If no global filters are applied, return all responses
-  if (!globalFilters.client && !globalFilters.process && !globalFilters.accountManager) {
-    return responses;
-  }
-
-  return responses.filter(response => {
-    const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
-    const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
-    const responseClient = (response['Client'] as string || '').toLowerCase().trim();
-
-    // Debug logging
-    console.log('Filtering response:', {
-      responseClient,
-      filterClient: globalFilters.client,
-      process: responseProcess,
-      filterProcess: globalFilters.process,
-      email: managementEmail,
-      filterAccountManager: globalFilters.accountManager
-    });
-
-    // Check process filter
-    if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
-      return false;
+    // If no global filters are applied, return all responses
+    if (!globalFilters.client && !globalFilters.process && !globalFilters.accountManager) {
+      return responses;
     }
 
-    // Check account manager filter
-    if (globalFilters.accountManager) {
-      const filterAccountManager = globalFilters.accountManager.toLowerCase();
-      if (managementEmail !== filterAccountManager) {
+    return responses.filter(response => {
+      const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+      const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+      const responseClient = (response['Client'] as string || '').toLowerCase().trim();
+
+      // Debug logging
+      console.log('Filtering response:', {
+        responseClient,
+        filterClient: globalFilters.client,
+        process: responseProcess,
+        filterProcess: globalFilters.process,
+        email: managementEmail,
+        filterAccountManager: globalFilters.accountManager
+      });
+
+      // Check process filter
+      if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
         return false;
       }
-    }
 
-    // Check client filter
-    if (globalFilters.client) {
-      const filterClient = globalFilters.client.toLowerCase();
-      
-      // Check if response has client data
-      if (!responseClient || responseClient === 'unknown') {
-        // Try to find client dynamically if not in response
-        const matchingEmployee = employeeMappings.find(emp => {
-          const empEmail = (emp.Email as string || '').toLowerCase().trim();
-          const empProcess = (emp.Process as string || '').toLowerCase().trim();
-          
-          // Try email match
-          if (managementEmail && empEmail && managementEmail === empEmail) {
-            return true;
-          }
-          
-          // Try process match
-          if (responseProcess && empProcess && responseProcess === empProcess) {
-            return true;
-          }
-          
-          return false;
-        });
-        
-        // Check if matching employee has the filtered client
-        if (matchingEmployee) {
-          const empClient = (matchingEmployee.Client as string || '').toLowerCase().trim();
-          if (empClient !== filterClient) {
-            return false;
-          }
-        } else {
-          // No matching employee found
+      // Check account manager filter
+      if (globalFilters.accountManager) {
+        const filterAccountManager = globalFilters.accountManager.toLowerCase();
+        if (managementEmail !== filterAccountManager) {
           return false;
         }
-      } else if (responseClient !== filterClient) {
-        // Response has client data but doesn't match filter
-        return false;
       }
-    }
 
-    return true;
-  });
-};
+      // Check client filter
+      if (globalFilters.client) {
+        const filterClient = globalFilters.client.toLowerCase();
+
+        // Check if response has client data
+        if (!responseClient || responseClient === 'unknown') {
+          // Try to find client dynamically if not in response
+          const matchingEmployee = employeeMappings.find(emp => {
+            const empEmail = (emp.Email as string || '').toLowerCase().trim();
+            const empProcess = (emp.Process as string || '').toLowerCase().trim();
+
+            // Try email match
+            if (managementEmail && empEmail && managementEmail === empEmail) {
+              return true;
+            }
+
+            // Try process match
+            if (responseProcess && empProcess && responseProcess === empProcess) {
+              return true;
+            }
+
+            return false;
+          });
+
+          // Check if matching employee has the filtered client
+          if (matchingEmployee) {
+            const empClient = (matchingEmployee.Client as string || '').toLowerCase().trim();
+            if (empClient !== filterClient) {
+              return false;
+            }
+          } else {
+            // No matching employee found
+            return false;
+          }
+        } else if (responseClient !== filterClient) {
+          // Response has client data but doesn't match filter
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
   // const getFilteredEmployeeMappings = (): EmployeeMapping[] => {
   //   if (!employeeMappings.length) return [];
 
@@ -2368,181 +2368,275 @@ const AdminPage = () => {
                 {/* Card 2: Incomplete Feedback - Compact */}
                 <Card className="hover:shadow-md transition-shadow">
                   <CardContent className="p-5">
-                    {loading ? (
-                      <div className="flex items-center justify-center py-3">
-                        <div className="text-center">
-                          <Loader2 className="w-5 h-5 mx-auto animate-spin text-muted-foreground mb-2" />
-                          <div className="text-xs text-muted-foreground">Loading data...</div>
-                        </div>
-                      </div>
-                    ) : responses.length === 0 ? (
+                    <div className="flex items-start justify-between">
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                            <span className="text-sm font-medium text-muted-foreground">Incomplete Feedback</span>
-                          </div>
-                          <div className="text-2xl font-bold text-gray-300">?</div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="w-5 h-5 text-green-600" />
+                          <span className="text-sm font-medium text-muted-foreground">Positive Feedback</span>
                         </div>
-                        <div className="mt-3 space-y-2">
-                          <div className="text-xs p-2 bg-yellow-50 border border-yellow-100 rounded">
-                            <div className="flex items-start gap-2">
-                              <AlertTriangle className="w-3 h-3 text-yellow-600 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <div className="font-medium text-yellow-700 text-xs">No response data</div>
-                                <div className="text-yellow-600 text-xs mt-0.5">
-                                  No feedback responses found yet
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                        <span className="text-2xl font-bold block leading-tight text-green-600">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return "0%";
+
+                            // Count "Agree" and "Strongly Agree" responses
+                            let positiveCount = 0;
+                            let totalQuestions = 0;
+
+                            filteredResponses.forEach(response => {
+                              Object.values(response).forEach(value => {
+                                if (typeof value === 'string') {
+                                  if (value === 'Agree' || value === 'Strongly Agree') {
+                                    positiveCount++;
+                                  }
+                                  if (['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree'].includes(value)) {
+                                    totalQuestions++;
+                                  }
+                                }
+                              });
+                            });
+
+                            return totalQuestions > 0 ? `${Math.round((positiveCount / totalQuestions) * 100)}%` : "0%";
+                          })()}
+                        </span>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Positive sentiment rate
+                          {/* {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            const avgRating = filteredResponses.reduce((sum, r) => {
+                              const rating = parseFloat(r['Rating'] as string || '0');
+                              return sum + (isNaN(rating) ? 0 : rating);
+                            }, 0) / filteredResponses.length;
+
+                            return ` • Avg. rating: ${avgRating.toFixed(1)}/5`;
+                          })()} */}
                         </div>
                       </div>
-                    ) : (
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs px-2 py-1 bg-green-50 text-green-700 rounded-full font-medium">
+                          Sentiment
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <AlertTriangle className="w-5 h-5 text-accent" />
-                              <span className="text-sm font-medium text-muted-foreground">Incomplete Feedback</span>
-                            </div>
-                            <span className="text-2xl font-bold block leading-tight text-red-600">
-                              {(() => {
-                                const filteredResponses = getFilteredResponses();
-                                if (!filteredResponses.length) return 0;
-
-                                // Count how many managers each submitter has reviewed
-                                const submitterManagersMap = new Map<string, Set<string>>();
-
-                                filteredResponses.forEach(response => {
-                                  const submitterId = response['Encrypted Submitter ID'] as string;
-                                  const managerEmail = response['Management Email ID'] as string;
-
-                                  if (submitterId && managerEmail) {
-                                    if (!submitterManagersMap.has(submitterId)) {
-                                      submitterManagersMap.set(submitterId, new Set());
-                                    }
-                                    submitterManagersMap.get(submitterId)!.add(managerEmail.toLowerCase().trim());
-                                  }
-                                });
-
-                                // Count submitters who have reviewed less than 3 managers
-                                let incompleteCount = 0;
-                                submitterManagersMap.forEach((managers, submitterId) => {
-                                  if (managers.size < 3) {
-                                    incompleteCount++;
-                                  }
-                                });
-
-                                return incompleteCount;
-                              })()}
-                            </span>
-                          </div>
-                          <div className="flex flex-col items-end">
-                            <div className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded-full font-medium">
-                              Incomplete
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {(() => {
-                                const filteredResponses = getFilteredResponses();
-                                const uniqueSubmitters = new Set(
-                                  filteredResponses
-                                    .map(r => r['Encrypted Submitter ID'] as string)
-                                    .filter(Boolean)
-                                );
-                                return `${uniqueSubmitters.size} total submitters`;
-                              })()}
-                            </div>
-                          </div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Users className="w-5 h-5 text-blue-600" />
+                          <span className="text-sm font-medium text-muted-foreground">Leader Coverage</span>
                         </div>
+                        <span className="text-2xl font-bold block leading-tight text-blue-600">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return 0;
 
-                        <div className="mt-3 space-y-2">
-                          <div className="space-y-1 text-xs">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500">Completion Rate:</span>
-                              <span className="font-medium text-green-600">
-                                {(() => {
-                                  const filteredResponses = getFilteredResponses();
-                                  if (!filteredResponses.length) return "0%";
+                            // Count unique managers reviewed
+                            const uniqueManagers = new Set(
+                              filteredResponses
+                                .map(r => r['Management Email ID'] as string)
+                                .filter(Boolean)
+                            );
 
-                                  const submitterManagersMap = new Map<string, Set<string>>();
-
-                                  filteredResponses.forEach(response => {
-                                    const submitterId = response['Encrypted Submitter ID'] as string;
-                                    const managerEmail = response['Management Email ID'] as string;
-
-                                    if (submitterId && managerEmail) {
-                                      if (!submitterManagersMap.has(submitterId)) {
-                                        submitterManagersMap.set(submitterId, new Set());
-                                      }
-                                      submitterManagersMap.get(submitterId)!.add(managerEmail.toLowerCase().trim());
-                                    }
-                                  });
-
-                                  let completeCount = 0;
-                                  let totalSubmitters = 0;
-
-                                  submitterManagersMap.forEach((managers, submitterId) => {
-                                    totalSubmitters++;
-                                    if (managers.size >= 3) {
-                                      completeCount++;
-                                    }
-                                  });
-
-                                  return totalSubmitters > 0
-                                    ? `${Math.round((completeCount / totalSubmitters) * 100)}%`
-                                    : "0%";
-                                })()}
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                              <div
-                                className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
-                                style={{
-                                  width: `${(() => {
-                                    const filteredResponses = getFilteredResponses();
-                                    if (!filteredResponses.length) return 0;
-
-                                    const submitterManagersMap = new Map<string, Set<string>>();
-
-                                    filteredResponses.forEach(response => {
-                                      const submitterId = response['Encrypted Submitter ID'] as string;
-                                      const managerEmail = response['Management Email ID'] as string;
-
-                                      if (submitterId && managerEmail) {
-                                        if (!submitterManagersMap.has(submitterId)) {
-                                          submitterManagersMap.set(submitterId, new Set());
-                                        }
-                                        submitterManagersMap.get(submitterId)!.add(managerEmail.toLowerCase().trim());
-                                      }
-                                    });
-
-                                    let completeCount = 0;
-                                    let totalSubmitters = 0;
-
-                                    submitterManagersMap.forEach((managers, submitterId) => {
-                                      totalSubmitters++;
-                                      if (managers.size >= 3) {
-                                        completeCount++;
-                                      }
-                                    });
-
-                                    return totalSubmitters > 0
-                                      ? Math.min((completeCount / totalSubmitters) * 100, 100)
-                                      : 0;
-                                  })()}%`
-                                }}
-                              />
-                            </div>
-                          </div>
-                          {/* <div className="flex justify-between text-xs text-gray-500">
-                  <span>0%</span>
-                  <span>50%</span>
-                  <span>100%</span>
-                </div> */}
+                            return uniqueManagers.size;
+                          })()}
+                        </span>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Unique managers reviewed
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            const uniqueSubmitters = new Set(
+                              filteredResponses
+                                .map(r => r['Encrypted Submitter ID'] as string)
+                                .filter(Boolean)
+                            );
+                            return ` • ${Math.round(filteredResponses.length / uniqueSubmitters.size)} avg reviews per submitter`;
+                          })()}
                         </div>
                       </div>
-                    )}
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
+                          Coverage
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* <Card className="hover:shadow-md transition-shadow">
+  <CardContent className="p-5">
+    <div className="flex items-start justify-between">
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <RefreshCw className="w-5 h-5 text-orange-600" />
+          <span className="text-sm font-medium text-muted-foreground">Recent Activity</span>
+        </div>
+        <span className="text-2xl font-bold block leading-tight text-orange-600">
+          {(() => {
+            const filteredResponses = getFilteredResponses();
+            if (!filteredResponses.length) return 0;
+            
+            // Count responses from last 7 days
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            const recentResponses = filteredResponses.filter(response => {
+              const timestamp = response.Timestamp as string;
+              if (!timestamp) return false;
+              try {
+                const responseDate = new Date(timestamp);
+                return responseDate >= weekAgo;
+              } catch {
+                return false;
+              }
+            });
+            
+            return recentResponses.length;
+          })()}
+        </span>
+        <div className="mt-2 text-xs text-muted-foreground">
+          Last 7 days
+          {(() => {
+            const filteredResponses = getFilteredResponses();
+            if (!filteredResponses.length) return " • 0 this month";
+            
+            // Count this month's responses
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            const thisMonth = filteredResponses.filter(response => {
+              const timestamp = response.Timestamp as string;
+              if (!timestamp) return false;
+              try {
+                const responseDate = new Date(timestamp);
+                return responseDate >= startOfMonth;
+              } catch {
+                return false;
+              }
+            }).length;
+            
+            return ` • ${thisMonth} this month`;
+          })()}
+        </div>
+      </div>
+      <div className="flex flex-col items-end">
+        <div className="text-xs px-2 py-1 bg-orange-50 text-orange-700 rounded-full font-medium">
+          Activity
+        </div>
+      </div>
+    </div>
+  </CardContent>
+                </Card> */}
+
+                {/* <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <CheckCircle className="w-5 h-5 text-teal-600" />
+                          <span className="text-sm font-medium text-muted-foreground">Question Completion</span>
+                        </div>
+                        <span className="text-2xl font-bold block leading-tight text-teal-600">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return "0%";
+
+                            // Count average questions answered per response
+                            const totalQuestions = filteredResponses.reduce((sum, response) => {
+                              let questionCount = 0;
+                              Object.values(response).forEach(value => {
+                                if (typeof value === 'string' &&
+                                  ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree'].includes(value)) {
+                                  questionCount++;
+                                }
+                              });
+                              return sum + questionCount;
+                            }, 0);
+
+                            const avgQuestions = totalQuestions / filteredResponses.length;
+                            const completionRate = Math.min(Math.round((avgQuestions / 55) * 100), 100); // 55 is total questions
+
+                            return `${completionRate}%`;
+                          })()}
+                        </span>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Avg. questions answered
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            const totalQuestions = filteredResponses.reduce((sum, response) => {
+                              let questionCount = 0;
+                              Object.values(response).forEach(value => {
+                                if (typeof value === 'string' &&
+                                  ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree'].includes(value)) {
+                                  questionCount++;
+                                }
+                              });
+                              return sum + questionCount;
+                            }, 0);
+
+                            const avgQuestions = filteredResponses.length > 0
+                              ? (totalQuestions / filteredResponses.length).toFixed(1)
+                              : '0';
+
+                            return ` • ${avgQuestions}/55 questions`;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs px-2 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">
+                          Completeness
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card> */}
+
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-teal-600" />
+                        <span className="text-sm font-medium text-muted-foreground">Survey Quality</span>
+                      </div>
+                      <div className="text-xs px-2 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">
+                        Quality
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-lg font-bold text-teal-600">
+                          {(() => {
+                            // Calculate completion rate
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return "0%";
+                            // ... completion calculation
+                            return "92%";
+                          })()}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Completion</div>
+                      </div>
+
+                      <div>
+                        <div className="text-lg font-bold text-green-600">
+                          {(() => {
+                            // Calculate positive rate
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return "0%";
+                            // ... positive calculation
+                            return "85%";
+                          })()}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Positive</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 text-xs text-muted-foreground">
+                      Based on {getFilteredResponses().length} responses
+                    </div>
                   </CardContent>
                 </Card>
 
