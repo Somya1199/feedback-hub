@@ -60,7 +60,7 @@
 //   const [targets, setTargets] = useState<FeedbackTargets>({});
 //   const [questions, setQuestions] = useState<Question[]>([]);
 //   const [error, setError] = useState<string | null>(null);
-  
+
 //   // User data state
 //   const [userData, setUserData] = useState<UserData | null>(null);
 
@@ -73,7 +73,7 @@
 //   // Function to get user's display name from email
 //  const getDisplayName = (email: string): string => {
 //   if (!email.includes('@')) return email;
-  
+
 //   const namePart = email.split('@')[0];
 //   return namePart
 //     .replace(/\./g, ' ')
@@ -88,7 +88,7 @@
 //   const loadData = async () => {
 //     await identifyUserAndLoadData();
 //   };
-  
+
 //   loadData();
 // }, []);
 
@@ -101,33 +101,33 @@
 //   const getRatingButtonClasses = (option: string, isSelected: boolean) => {
 //     const baseClasses = 'px-4 py-2 rounded border font-medium transition-all duration-200';
 //     const selectedClasses = 'ring-2 ring-offset-1 scale-105 shadow-md';
-    
+
 //     switch (option) {
 //       case 'Strongly Disagree':
 //         return `${baseClasses} ${isSelected 
 //           ? `${selectedClasses} bg-red-600 text-white border-red-700 ring-red-500 hover:bg-red-700` 
 //           : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:border-red-300'}`;
-      
+
 //       case 'Disagree':
 //         return `${baseClasses} ${isSelected 
 //           ? `${selectedClasses} bg-orange-500 text-white border-orange-600 ring-orange-400 hover:bg-orange-600` 
 //           : 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100 hover:border-orange-300'}`;
-      
+
 //       case 'Neutral':
 //         return `${baseClasses} ${isSelected 
 //           ? `${selectedClasses} bg-yellow-500 text-white border-yellow-600 ring-yellow-400 hover:bg-yellow-600` 
 //           : 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-300'}`;
-      
+
 //       case 'Agree':
 //         return `${baseClasses} ${isSelected 
 //           ? `${selectedClasses} bg-green-500 text-white border-green-600 ring-green-400 hover:bg-green-600` 
 //           : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300'}`;
-      
+
 //       case 'Strongly Agree':
 //         return `${baseClasses} ${isSelected 
 //           ? `${selectedClasses} bg-emerald-600 text-white border-emerald-700 ring-emerald-500 hover:bg-emerald-700` 
 //           : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300'}`;
-      
+
 //       default:
 //         return `${baseClasses} ${isSelected 
 //           ? `${selectedClasses} bg-primary text-primary-foreground border-primary` 
@@ -216,7 +216,7 @@
 //         text.length < 5) {
 //         return;
 //       }
-      
+
 //       if (text.length >= 10 && !text.toLowerCase().startsWith('topic:')) {
 //         questionCount++;
 //         questionsList.push({
@@ -240,7 +240,7 @@
 //   //     'Manager': [],
 //   //     'Account Manager': []
 //   //   };
-    
+
 //   //   let userMapping: MappingData | null = null;
 
 //   //   // Find user in mapping data
@@ -249,7 +249,7 @@
 //   //     const itemEmail = item.Email || '';
 //   //     const itemLdap = item.Ldap || '';
 //   //     const userEmailLower = userEmail.toLowerCase();
-      
+
 //   //     if (itemEmail.toLowerCase() === userEmailLower || 
 //   //         itemLdap.toLowerCase() === userEmailLower ||
 //   //         `${itemLdap}@${userEmail.split('@')[1]}`.toLowerCase() === userEmailLower) {
@@ -268,7 +268,7 @@
 //   //   const userProcess = userMapping.Process || 'General';
 //   //   const userEmailFromMapping = userMapping.Email || userEmail;
 //   //   const userDisplayName = getDisplayName(userEmailFromMapping);
-    
+
 //   //   const userDataResult: UserData = {
 //   //     email: userEmailFromMapping,
 //   //     name: userDisplayName,
@@ -316,17 +316,17 @@
 
 //   // const identifyUserAndLoadData = async () => {
 //   //   setStep('loading');
-    
+
 //   //   try {
 //   //     console.log('Starting user identification and data load...');
-      
+
 //   //     // Step 1: Get current user's email from Google
 //   //     const userResult = await getGoogleUserInfo();
 //   //     console.log('Google User API result:', userResult);
-      
+
 //   //     if (!userResult.success || !userResult.email) {
 //   //       console.log('Trying alternative method to get user email...');
-        
+
 //   //       // Alternative method: Get from Google Script
 //   //       try {
 //   //         const scriptResponse = await fetch('https://script.google.com/macros/s/AKfycbwT2q8gVx5KHf5R8x-3-7Gz4Lp5Vq3v9Q6m8W9d/exec?action=getUserInfo');
@@ -340,7 +340,7 @@
 //   //       } catch (scriptError) {
 //   //         console.log('Google Script method failed:', scriptError);
 //   //       }
-        
+
 //   //       if (!userResult.success) {
 //   //         // If all methods fail, show a message but continue
 //   //         console.warn('Could not automatically get user email. Using fallback method.');
@@ -349,7 +349,7 @@
 //   //           description: 'Could not identify your Google account. Showing all available targets.',
 //   //           variant: 'default',
 //   //         });
-          
+
 //   //         // Load data without user filtering
 //   //         await loadDataWithoutUserFilter();
 //   //         return;
@@ -358,7 +358,7 @@
 
 //   //     const userEmail = userResult.email;
 //   //     console.log('Identified user email:', userEmail);
-      
+
 //   //     if (!userEmail || !userEmail.includes('@')) {
 //   //       throw new Error('Invalid user email format. Please contact administrator.');
 //   //     }
@@ -366,7 +366,7 @@
 //   //     // Step 2: Load questions
 //   //     const questionsResult = await fetchSurveyQuestions();
 //   //     console.log('Questions API result:', questionsResult);
-      
+
 //   //     if (questionsResult.success && questionsResult.data) {
 //   //       const transformedQuestions = transformQuestionsData(questionsResult.data);
 //   //       console.log('Transformed questions:', transformedQuestions.length);
@@ -382,7 +382,7 @@
 
 //   //     if (mappingResult.success && mappingResult.data) {
 //   //       const { targets: filteredTargets, userData: userDataResult } = transformMappingData(mappingResult.data, userEmail);
-        
+
 //   //       if (!userDataResult) {
 //   //         // User not found in mapping - show all targets with a warning
 //   //         console.log(`User ${userEmail} not found in mapping. Showing all targets.`);
@@ -391,7 +391,7 @@
 //   //           description: 'Your email was not found in the system. Showing all available targets.',
 //   //           variant: 'default',
 //   //         });
-          
+
 //   //         // Show all targets
 //   //         const allTargets = getAllTargets(mappingResult.data);
 //   //         setTargets(allTargets);
@@ -405,7 +405,7 @@
 //   //         setTargets(filteredTargets);
 //   //         setUserData(userDataResult);
 //   //       }
-        
+
 //   //       setStep('select-target');
 //   //     } else {
 //   //       throw new Error(mappingResult.error || 'Failed to load management data');
@@ -425,13 +425,13 @@
 
 // // const identifyUserAndLoadData = async () => {
 // //   setStep('loading');
-  
+
 // //   try {
 // //     console.log('Starting user identification and data load...');
-    
+
 // //     // SIMPLE METHOD: Get user from URL or localStorage
 // //     let userEmail = '';
-    
+
 // //     // Method 1: Try to get from URL (if you pass it from another page)
 // //     const urlParams = new URLSearchParams(window.location.search);
 // //     const emailFromUrl = urlParams.get('userEmail') || urlParams.get('email');
@@ -440,20 +440,20 @@
 // //       console.log('Got email from URL:', userEmail);
 // //       localStorage.setItem('userEmail', userEmail);
 // //     }
-    
+
 // //     // Method 2: Try localStorage
 // //     if (!userEmail) {
 // //       userEmail = localStorage.getItem('userEmail') || '';
 // //       console.log('Got email from localStorage:', userEmail);
 // //     }
-    
+
 // //     // Method 3: If still no email, ask for it (but store for next time)
 // //     if (!userEmail || !userEmail.includes('@')) {
 // //       // For testing, set a default user from your mapping sheet
 // //       userEmail = 'somya@highspring.in'; // Change to your test user
 // //       console.log('Using default test email:', userEmail);
 // //       localStorage.setItem('userEmail', userEmail);
-      
+
 // //       // OR uncomment this to ask user once, then remember:
 // //       // const enteredEmail = prompt('Please enter your email address:');
 // //       // if (enteredEmail && enteredEmail.includes('@')) {
@@ -464,13 +464,13 @@
 // //       //   throw new Error('Please enter a valid email address');
 // //       // }
 // //     }
-    
+
 // //     console.log('Final user email:', userEmail);
-    
+
 // //     // Rest of your loading logic...
 // //     const questionsResult = await fetchSurveyQuestions();
 // //     // ... continue with your existing loading logic
-    
+
 // //   } catch (err) {
 // //     console.error('Error loading data:', err);
 // //     setError(err instanceof Error ? err.message : 'Failed to load feedback data');
@@ -484,13 +484,13 @@
 
 // // const identifyUserAndLoadData = async () => {
 // //   setStep('loading');
-  
+
 // //   try {
 // //     console.log('Starting user identification and data load...');
-    
+
 // //     // SIMPLE METHOD: Get user from URL or localStorage
 // //     let userEmail = '';
-    
+
 // //     // Method 1: Try to get from URL (if you pass it from another page)
 // //     const urlParams = new URLSearchParams(window.location.search);
 // //     const emailFromUrl = urlParams.get('userEmail') || urlParams.get('email');
@@ -499,13 +499,13 @@
 // //       console.log('Got email from URL:', userEmail);
 // //       localStorage.setItem('userEmail', userEmail);
 // //     }
-    
+
 // //     // Method 2: Try localStorage
 // //     if (!userEmail) {
 // //       userEmail = localStorage.getItem('userEmail') || '';
 // //       console.log('Got email from localStorage:', userEmail);
 // //     }
-    
+
 // //     // Method 3: If still no email, use a default for testing
 // //     if (!userEmail || !userEmail.includes('@')) {
 // //       // Use the first user from your mapping sheet as default
@@ -513,20 +513,20 @@
 // //       console.log('Using default test email:', userEmail);
 // //       localStorage.setItem('userEmail', userEmail);
 // //     }
-    
+
 // //     console.log('Final user email:', userEmail);
-    
+
 // //     // Step 1: Load questions
 // //     console.log('Loading questions...');
 // //     const questionsResult = await fetchSurveyQuestions();
 // //     console.log('Questions API result:', questionsResult);
-    
+
 // //     if (questionsResult.success && questionsResult.data) {
 // //       const transformedQuestions = transformQuestionsData(questionsResult.data);
 // //       console.log('Transformed questions count:', transformedQuestions.length);
 // //       console.log('Sample questions:', transformedQuestions.slice(0, 3));
 // //       setQuestions(transformedQuestions);
-      
+
 // //       if (transformedQuestions.length === 0) {
 // //         console.warn('No questions were extracted from the data');
 // //         toast({
@@ -548,9 +548,9 @@
 // //     if (mappingResult.success && mappingResult.data) {
 // //       console.log('Mapping data received, rows:', mappingResult.data.length);
 // //       console.log('First few mapping rows:', mappingResult.data.slice(0, 3));
-      
+
 // //       const { targets: filteredTargets, userData: userDataResult } = transformMappingData(mappingResult.data, userEmail);
-      
+
 // //       console.log('Transformation result:', {
 // //         hasUserData: !!userDataResult,
 // //         userData: userDataResult,
@@ -558,7 +558,7 @@
 // //         managerCount: filteredTargets['Manager']?.length || 0,
 // //         accountManagerCount: filteredTargets['Account Manager']?.length || 0
 // //       });
-      
+
 // //       if (!userDataResult) {
 // //         // User not found in mapping - show all targets
 // //         console.log(`User ${userEmail} not found in mapping. Showing all targets.`);
@@ -567,7 +567,7 @@
 // //           description: 'Your email was not found in the system. Showing all available targets.',
 // //           variant: 'default',
 // //         });
-        
+
 // //         // Show all targets
 // //         const allTargets = getAllTargets(mappingResult.data);
 // //         console.log('All targets:', {
@@ -575,7 +575,7 @@
 // //           managerCount: allTargets['Manager']?.length || 0,
 // //           accountManagerCount: allTargets['Account Manager']?.length || 0
 // //         });
-        
+
 // //         setTargets(allTargets);
 // //         setUserData({
 // //           email: userEmail,
@@ -588,20 +588,20 @@
 // //         setTargets(filteredTargets);
 // //         setUserData(userDataResult);
 // //       }
-      
+
 // //       // Move to next step
 // //       console.log('Moving to select-target step...');
 // //       setStep('select-target');
-      
+
 // //     } else {
 // //       console.error('Mapping API error:', mappingResult.error);
 // //       throw new Error(mappingResult.error || 'Failed to load management data');
 // //     }
-    
+
 // //   } catch (err) {
 // //     console.error('Error in identifyUserAndLoadData:', err);
 // //     setError(err instanceof Error ? err.message : 'Failed to load feedback data');
-    
+
 // //     // Try to load without user filter as fallback
 // //     console.log('Trying fallback: load data without user filter...');
 // //     try {
@@ -622,13 +622,13 @@
 //     dataLength: data.length,
 //     userEmail
 //   });
-  
+
 //   const targetsData: FeedbackTargets = {
 //     'POC': [],
 //     'Manager': [],
 //     'Account Manager': []
 //   };
-  
+
 //   let userMapping: MappingData | null = null;
 
 //   // Find user in mapping data
@@ -638,14 +638,14 @@
 //     const itemEmail = item.Email || '';
 //     const itemLdap = item.Ldap || '';
 //     const userEmailLower = userEmail.toLowerCase();
-    
+
 //     console.log(`Row ${index}:`, {
 //       itemEmail,
 //       itemLdap,
 //       matchesEmail: itemEmail.toLowerCase() === userEmailLower,
 //       matchesLdap: itemLdap.toLowerCase() === userEmailLower
 //     });
-    
+
 //     if (itemEmail.toLowerCase() === userEmailLower || 
 //         itemLdap.toLowerCase() === userEmailLower) {
 //       userMapping = item;
@@ -664,7 +664,7 @@
 //   const userProcess = userMapping.Process || 'General';
 //   const userEmailFromMapping = userMapping.Email || userEmail;
 //   const userDisplayName = getDisplayName(userEmailFromMapping);
-  
+
 //   const userDataResult: UserData = {
 //     email: userEmailFromMapping,
 //     name: userDisplayName,
@@ -673,7 +673,7 @@
 //   };
 
 //   console.log('Creating targets for user...');
-  
+
 //   // Only add targets that exist for this user
 //   if (userMapping.POC && userMapping.POC.includes('@')) {
 //     console.log('Adding POC:', userMapping.POC);
@@ -716,13 +716,13 @@
 // };
 // // const identifyUserAndLoadData = async () => {
 // //   setStep('loading');
-  
+
 // //   try {
 // //     console.log('Starting user identification and data load...');
-    
+
 // //     // SIMPLE METHOD: Get user from URL or localStorage
 // //     let userEmail = '';
-    
+
 // //     // Method 1: Try to get from URL (if you pass it from another page)
 // //     const urlParams = new URLSearchParams(window.location.search);
 // //     const emailFromUrl = urlParams.get('userEmail') || urlParams.get('email');
@@ -731,13 +731,13 @@
 // //       console.log('Got email from URL:', userEmail);
 // //       localStorage.setItem('userEmail', userEmail);
 // //     }
-    
+
 // //     // Method 2: Try localStorage
 // //     if (!userEmail) {
 // //       userEmail = localStorage.getItem('userEmail') || '';
 // //       console.log('Got email from localStorage:', userEmail);
 // //     }
-    
+
 // //     // Method 3: If still no email, use a default for testing
 // //     if (!userEmail || !userEmail.includes('@')) {
 // //       // Use the first user from your mapping sheet as default
@@ -745,20 +745,20 @@
 // //       console.log('Using default test email:', userEmail);
 // //       localStorage.setItem('userEmail', userEmail);
 // //     }
-    
+
 // //     console.log('Final user email:', userEmail);
-    
+
 // //     // Step 1: Load questions
 // //     console.log('Loading questions...');
 // //     const questionsResult = await fetchSurveyQuestions();
 // //     console.log('Questions API result:', questionsResult);
-    
+
 // //     if (questionsResult.success && questionsResult.data) {
 // //       const transformedQuestions = transformQuestionsData(questionsResult.data);
 // //       console.log('Transformed questions count:', transformedQuestions.length);
 // //       console.log('Sample questions:', transformedQuestions.slice(0, 3));
 // //       setQuestions(transformedQuestions);
-      
+
 // //       if (transformedQuestions.length === 0) {
 // //         console.warn('No questions were extracted from the data');
 // //         toast({
@@ -780,9 +780,9 @@
 // //     if (mappingResult.success && mappingResult.data) {
 // //       console.log('Mapping data received, rows:', mappingResult.data.length);
 // //       console.log('First few mapping rows:', mappingResult.data.slice(0, 3));
-      
+
 // //       const { targets: filteredTargets, userData: userDataResult } = transformMappingData(mappingResult.data, userEmail);
-      
+
 // //       console.log('Transformation result:', {
 // //         hasUserData: !!userDataResult,
 // //         userData: userDataResult,
@@ -790,7 +790,7 @@
 // //         managerCount: filteredTargets['Manager']?.length || 0,
 // //         accountManagerCount: filteredTargets['Account Manager']?.length || 0
 // //       });
-      
+
 // //       if (!userDataResult) {
 // //         // User not found in mapping - show all targets
 // //         console.log(`User ${userEmail} not found in mapping. Showing all targets.`);
@@ -799,7 +799,7 @@
 // //           description: 'Your email was not found in the system. Showing all available targets.',
 // //           variant: 'default',
 // //         });
-        
+
 // //         // Show all targets
 // //         const allTargets = getAllTargets(mappingResult.data);
 // //         console.log('All targets:', {
@@ -807,7 +807,7 @@
 // //           managerCount: allTargets['Manager']?.length || 0,
 // //           accountManagerCount: allTargets['Account Manager']?.length || 0
 // //         });
-        
+
 // //         setTargets(allTargets);
 // //         setUserData({
 // //           email: userEmail,
@@ -820,20 +820,20 @@
 // //         setTargets(filteredTargets);
 // //         setUserData(userDataResult);
 // //       }
-      
+
 // //       // Move to next step
 // //       console.log('Moving to select-target step...');
 // //       setStep('select-target');
-      
+
 // //     } else {
 // //       console.error('Mapping API error:', mappingResult.error);
 // //       throw new Error(mappingResult.error || 'Failed to load management data');
 // //     }
-    
+
 // //   } catch (err) {
 // //     console.error('Error in identifyUserAndLoadData:', err);
 // //     setError(err instanceof Error ? err.message : 'Failed to load feedback data');
-    
+
 // //     // Try to load without user filter as fallback
 // //     console.log('Trying fallback: load data without user filter...');
 // //     try {
@@ -852,11 +852,11 @@
 // // Add this fallback function if not already present
 // // const loadDataWithoutUserFilter = async () => {
 // //   console.log('Loading data without user filter...');
-  
+
 // //   try {
 // //     // Load questions
 // //     const questionsResult = await fetchSurveyQuestions();
-    
+
 // //     if (questionsResult.success && questionsResult.data) {
 // //       const transformedQuestions = transformQuestionsData(questionsResult.data);
 // //       console.log('Loaded questions:', transformedQuestions.length);
@@ -875,9 +875,9 @@
 // //         managerCount: allTargets['Manager']?.length || 0,
 // //         accountManagerCount: allTargets['Account Manager']?.length || 0
 // //       });
-      
+
 // //       setTargets(allTargets);
-      
+
 // //       // Set default user data
 // //       const defaultEmail = localStorage.getItem('userEmail') || 'user@unknown.com';
 // //       setUserData({
@@ -885,7 +885,7 @@
 // //         name: getDisplayName(defaultEmail),
 // //         process: 'General'
 // //       });
-      
+
 // //       console.log('Moving to select-target step...');
 // //       setStep('select-target');
 // //     } else {
@@ -900,11 +900,11 @@
 // // Add this fallback function if not already present
 // const loadDataWithoutUserFilter = async () => {
 //   console.log('Loading data without user filter...');
-  
+
 //   try {
 //     // Load questions
 //     const questionsResult = await fetchSurveyQuestions();
-    
+
 //     if (questionsResult.success && questionsResult.data) {
 //       const transformedQuestions = transformQuestionsData(questionsResult.data);
 //       console.log('Loaded questions:', transformedQuestions.length);
@@ -923,9 +923,9 @@
 //         managerCount: allTargets['Manager']?.length || 0,
 //         accountManagerCount: allTargets['Account Manager']?.length || 0
 //       });
-      
+
 //       setTargets(allTargets);
-      
+
 //       // Set default user data
 //       const defaultEmail = localStorage.getItem('userEmail') || 'user@unknown.com';
 //       setUserData({
@@ -933,7 +933,7 @@
 //         name: getDisplayName(defaultEmail),
 //         process: 'General'
 //       });
-      
+
 //       console.log('Moving to select-target step...');
 //       setStep('select-target');
 //     } else {
@@ -993,46 +993,46 @@
 //   };
 // const identifyUserAndLoadData = async () => {
 //   setStep('loading');
-  
+
 //   try {
 //     console.log('🚀 Starting data load...');
-    
+
 //     // Step 1: Check backend health
 //     const isBackendHealthy = await checkBackendHealth();
 //     if (!isBackendHealthy) {
 //       throw new Error('Backend server is not responding. Please make sure it is running on http://localhost:5000');
 //     }
-    
+
 //     // Step 2: Get user email
 //     const userEmail = getCurrentUserEmail();
 //     console.log('👤 User email:', userEmail);
-    
+
 //     // Step 3: Load questions
 //     console.log('📋 Loading questions...');
 //     const questionsResult = await fetchSurveyQuestions();
-    
+
 //     if (!questionsResult.success) {
 //       throw new Error(questionsResult.error || 'Failed to load questions');
 //     }
-    
+
 //     if (!questionsResult.data || questionsResult.data.length === 0) {
 //       console.warn('No questions data received');
 //     }
-    
+
 //     const transformedQuestions = transformQuestionsData(questionsResult.data);
 //     console.log(`✅ Transformed ${transformedQuestions.length} questions`);
 //     setQuestions(transformedQuestions);
-    
+
 //     // Step 4: Load mapping for user
 //     console.log('📋 Loading mapping for user:', userEmail);
 //     const mappingResult = await fetchManagementMapping(userEmail);
-    
+
 //     if (!mappingResult.success) {
 //       throw new Error(mappingResult.error || 'Failed to load mapping data');
 //     }
-    
+
 //     const { targets, userData } = transformMappingData(mappingResult.data, userEmail);
-    
+
 //     if (userData) {
 //       console.log('✅ User found in mapping:', userData.name);
 //       setTargets(targets);
@@ -1051,14 +1051,14 @@
 //         });
 //       }
 //     }
-    
+
 //     console.log('🎉 Moving to select-target step');
 //     setStep('select-target');
-    
+
 //   } catch (error) {
 //     console.error('❌ Error loading data:', error);
 //     setError(error instanceof Error ? error.message : 'Failed to load feedback data');
-    
+
 //     toast({
 //       title: 'Data Load Error',
 //       description: error instanceof Error ? error.message : 'Unknown error',
@@ -1178,7 +1178,7 @@
 //     const message = cooldownEnd ? 
 //       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
 //       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
-    
+
 //     toast({
 //       title: 'Feedback Already Submitted',
 //       description: message,
@@ -1224,7 +1224,7 @@
 //         userData.email,
 //         selectedRole
 //       );
-      
+
 //       setStep('success');
 //       toast({
 //         title: 'Success!',
@@ -1283,7 +1283,7 @@
 //           Loading Feedback Form
 //         </h2>
 //         <p className="text-muted-foreground mb-6">Preparing your feedback experience...</p>
-        
+
 //         {/* Debug button */}
 //         <Button 
 //           variant="outline" 
@@ -1297,7 +1297,7 @@
 //               userData,
 //               error
 //             });
-            
+
 //             // Try to force load without filter
 //             loadDataWithoutUserFilter();
 //           }}
@@ -1375,9 +1375,9 @@
 //           <div className="w-24 h-24 mx-auto mb-6 bg-success/10 rounded-full flex items-center justify-center">
 //             <CheckCircle2 className="w-12 h-12 text-success" />
 //           </div>
-          
+
 //           <h2 className="text-3xl font-bold text-foreground mb-4">Feedback Submitted!</h2>
-          
+
 //           <div className="mb-6 p-4 bg-success/5 rounded-lg border border-success/20">
 //             <p className="text-center text-foreground">
 //               Your feedback for <span className="font-semibold">{selectedTarget?.name}</span> has been successfully submitted to Google Sheets.
@@ -1396,11 +1396,11 @@
 //                   ({remainingTargets.length} remaining)
 //                 </span>
 //               </h3>
-              
+
 //               <p className="text-muted-foreground mb-4">
 //                 You can also provide feedback for these other leaders:
 //               </p>
-              
+
 //               <div className="space-y-3">
 //                 {remainingTargets.map((target, index) => (
 //                   <div
@@ -1424,7 +1424,7 @@
 //                         </p>
 //                       </div>
 //                     </div>
-                    
+
 //                     <Button
 //                       onClick={() => {
 //                         setSelectedRole(target.role);
@@ -1528,7 +1528,7 @@
 
 //   if (step === 'select-target') {
 //     const totalTargets = Object.values(targets).flat().length;
-    
+
 //     return (
 //       <div className="min-h-screen bg-gradient-to-b from-muted to-background py-8 px-4">
 //         <div className="vox-card max-w-3xl mx-auto animate-fade-in">
@@ -1851,13 +1851,13 @@ const saveFeedbackSubmission = (
   targetName: string
 ): void => {
   const submissions = getFeedbackSubmissions();
-  
+
   // Check if submission already exists for this target
   const existingIndex = submissions.findIndex(
     sub => sub.targetEmail.toLowerCase() === targetEmail.toLowerCase() &&
-           sub.reviewerEmail.toLowerCase() === reviewerEmail.toLowerCase()
+      sub.reviewerEmail.toLowerCase() === reviewerEmail.toLowerCase()
   );
-  
+
   if (existingIndex !== -1) {
     // Update existing submission
     submissions[existingIndex] = {
@@ -1877,7 +1877,7 @@ const saveFeedbackSubmission = (
       targetName
     });
   }
-  
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(submissions));
   console.log(`Feedback submission saved for ${targetName}`);
 };
@@ -1899,13 +1899,13 @@ const canSubmitFeedback = (
   const submissions = getFeedbackSubmissions();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setDate(sixMonthsAgo.getDate() - COOLDOWN_DAYS);
-  
-  const recentSubmission = submissions.find(sub => 
+
+  const recentSubmission = submissions.find(sub =>
     sub.targetEmail.toLowerCase() === targetEmail.toLowerCase() &&
     sub.reviewerEmail.toLowerCase() === reviewerEmail.toLowerCase() &&
     new Date(sub.submittedAt) > sixMonthsAgo
   );
-  
+
   return !recentSubmission;
 };
 
@@ -1916,32 +1916,32 @@ const getCooldownEndDate = (
   const submissions = getFeedbackSubmissions();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setDate(sixMonthsAgo.getDate() - COOLDOWN_DAYS);
-  
-  const recentSubmission = submissions.find(sub => 
+
+  const recentSubmission = submissions.find(sub =>
     sub.targetEmail.toLowerCase() === targetEmail.toLowerCase() &&
     sub.reviewerEmail.toLowerCase() === reviewerEmail.toLowerCase() &&
     new Date(sub.submittedAt) > sixMonthsAgo
   );
-  
+
   if (recentSubmission) {
     const cooldownEnd = new Date(recentSubmission.submittedAt);
     cooldownEnd.setDate(cooldownEnd.getDate() + COOLDOWN_DAYS);
     return cooldownEnd;
   }
-  
+
   return null;
 };
 
 const formatCooldownMessage = (cooldownEnd: Date): string => {
   const now = new Date();
   const diffMs = cooldownEnd.getTime() - now.getTime();
-  
+
   if (diffMs <= 0) return 'Available now';
-  
+
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   if (diffDays > 30) {
     const months = Math.floor(diffDays / 30);
     const remainingDays = diffDays % 30;
@@ -1959,11 +1959,11 @@ const clearOldSubmissions = (): void => {
   const submissions = getFeedbackSubmissions();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setDate(sixMonthsAgo.getDate() - COOLDOWN_DAYS);
-  
+
   const recentSubmissions = submissions.filter(
     sub => new Date(sub.submittedAt) > sixMonthsAgo
   );
-  
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(recentSubmissions));
 };
 
@@ -1994,15 +1994,29 @@ interface MappingData {
   POC: string;
   Manager: string;
   'Account manager': string;
+  Gender: string;
+  Tenure: number;
+  Designation: string;
+  Age: number;
 }
 
+// interface UserData {
+//   email: string;
+//   name: string;
+//   process: string;
+//   ldap?: string;
+// }
 interface UserData {
   email: string;
   name: string;
   process: string;
   ldap?: string;
+  gender?: string;          // Add these optional properties
+  tenure?: string | number;
+  designation?: string;
+  age?: string | number;
+  genderOfManagement?: string;
 }
-
 type FeedbackStep = 'loading' | 'select-target' | 'questions' | 'success';
 
 const FeedbackPage = () => {
@@ -2013,7 +2027,7 @@ const FeedbackPage = () => {
   const [targets, setTargets] = useState<FeedbackTargets>({});
   const [questions, setQuestions] = useState<Question[]>([]);
   const [error, setError] = useState<string | null>(null);
-  
+
   // User data state
   const [userData, setUserData] = useState<UserData | null>(null);
 
@@ -2026,7 +2040,7 @@ const FeedbackPage = () => {
   // Function to get user's display name from email
   const getDisplayName = (email: string): string => {
     if (!email.includes('@')) return email;
-    
+
     const namePart = email.split('@')[0];
     return namePart
       .replace(/\./g, ' ')
@@ -2037,11 +2051,11 @@ const FeedbackPage = () => {
   useEffect(() => {
     // Clear submissions older than 6 months on component mount
     clearOldSubmissions();
-    
+
     const loadData = async () => {
       await identifyUserAndLoadData();
     };
-    
+
     loadData();
   }, []);
 
@@ -2049,36 +2063,36 @@ const FeedbackPage = () => {
   const getRatingButtonClasses = (option: string, isSelected: boolean) => {
     const baseClasses = 'px-4 py-2 rounded border font-medium transition-all duration-200';
     const selectedClasses = 'ring-2 ring-offset-1 scale-105 shadow-md';
-    
+
     switch (option) {
       case 'Strongly Disagree':
-        return `${baseClasses} ${isSelected 
-          ? `${selectedClasses} bg-red-600 text-white border-red-700 ring-red-500 hover:bg-red-700` 
+        return `${baseClasses} ${isSelected
+          ? `${selectedClasses} bg-red-600 text-white border-red-700 ring-red-500 hover:bg-red-700`
           : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:border-red-300'}`;
-      
+
       case 'Disagree':
-        return `${baseClasses} ${isSelected 
-          ? `${selectedClasses} bg-orange-500 text-white border-orange-600 ring-orange-400 hover:bg-orange-600` 
+        return `${baseClasses} ${isSelected
+          ? `${selectedClasses} bg-orange-500 text-white border-orange-600 ring-orange-400 hover:bg-orange-600`
           : 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100 hover:border-orange-300'}`;
-      
+
       case 'Neutral':
-        return `${baseClasses} ${isSelected 
-          ? `${selectedClasses} bg-yellow-500 text-white border-yellow-600 ring-yellow-400 hover:bg-yellow-600` 
+        return `${baseClasses} ${isSelected
+          ? `${selectedClasses} bg-yellow-500 text-white border-yellow-600 ring-yellow-400 hover:bg-yellow-600`
           : 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-300'}`;
-      
+
       case 'Agree':
-        return `${baseClasses} ${isSelected 
-          ? `${selectedClasses} bg-green-500 text-white border-green-600 ring-green-400 hover:bg-green-600` 
+        return `${baseClasses} ${isSelected
+          ? `${selectedClasses} bg-green-500 text-white border-green-600 ring-green-400 hover:bg-green-600`
           : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300'}`;
-      
+
       case 'Strongly Agree':
-        return `${baseClasses} ${isSelected 
-          ? `${selectedClasses} bg-emerald-600 text-white border-emerald-700 ring-emerald-500 hover:bg-emerald-700` 
+        return `${baseClasses} ${isSelected
+          ? `${selectedClasses} bg-emerald-600 text-white border-emerald-700 ring-emerald-500 hover:bg-emerald-700`
           : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300'}`;
-      
+
       default:
-        return `${baseClasses} ${isSelected 
-          ? `${selectedClasses} bg-primary text-primary-foreground border-primary` 
+        return `${baseClasses} ${isSelected
+          ? `${selectedClasses} bg-primary text-primary-foreground border-primary`
           : 'bg-background border-input hover:bg-accent'}`;
     }
   };
@@ -2138,7 +2152,7 @@ const FeedbackPage = () => {
         text.length < 5) {
         return;
       }
-      
+
       if (text.length >= 10 && !text.toLowerCase().startsWith('topic:')) {
         questionCount++;
         questionsList.push({
@@ -2156,59 +2170,148 @@ const FeedbackPage = () => {
     return questionsList;
   };
 
+  // const transformMappingData = (data: any[], userEmail: string): { targets: FeedbackTargets, userData: UserData | null } => {
+  //   console.log('transformMappingData called with:', {
+  //     dataLength: data.length,
+  //     userEmail
+  //   });
+
+  //   const targetsData: FeedbackTargets = {
+  //     'POC': [],
+  //     'Manager': [],
+  //     'Account Manager': []
+  //   };
+
+  //   let userMapping: MappingData | null = null;
+
+  //   // Find user in mapping data
+  //   console.log('Searching for user in mapping data...');
+  //   data.forEach((item, index) => {
+  //     // Check both Email and Ldap columns (case-insensitive)
+  //     const itemEmail = item.Email || '';
+  //     const itemLdap = item.Ldap || '';
+  //     const userEmailLower = userEmail.toLowerCase();
+
+  //     if (itemEmail.toLowerCase() === userEmailLower || 
+  //         itemLdap.toLowerCase() === userEmailLower) {
+  //       userMapping = item;
+  //       console.log('Found matching user at row', index, ':', item);
+  //     }
+  //   });
+
+  //   console.log('User mapping found:', userMapping);
+
+  //   if (!userMapping) {
+  //     console.warn(`No mapping found for user: ${userEmail}`);
+  //     return { targets: targetsData, userData: null };
+  //   }
+
+  //   // Extract user data
+  //   const userProcess = userMapping.Process || 'General';
+  //   const userEmailFromMapping = userMapping.Email || userEmail;
+  //   const userDisplayName = getDisplayName(userEmailFromMapping);
+
+  //   const userDataResult: UserData = {
+  //     email: userEmailFromMapping,
+  //     name: userDisplayName,
+  //     process: userProcess,
+  //     ldap: userMapping.Ldap || undefined
+  //   };
+
+  //   console.log('Creating targets for user...');
+
+  //   // Only add targets that exist for this user
+  //   if (userMapping.POC && userMapping.POC.includes('@')) {
+  //     console.log('Adding POC:', userMapping.POC);
+  //     targetsData['POC'].push({
+  //       email: userMapping.POC,
+  //       name: getDisplayName(userMapping.POC),
+  //       process: userProcess,
+  //       role: 'POC'
+  //     });
+  //   }
+
+  //   if (userMapping.Manager && userMapping.Manager.includes('@')) {
+  //     console.log('Adding Manager:', userMapping.Manager);
+  //     targetsData['Manager'].push({
+  //       email: userMapping.Manager,
+  //       name: getDisplayName(userMapping.Manager),
+  //       process: userProcess,
+  //       role: 'Manager'
+  //     });
+  //   }
+
+  //   if (userMapping['Account manager'] && userMapping['Account manager'].includes('@')) {
+  //     console.log('Adding Account Manager:', userMapping['Account manager']);
+  //     targetsData['Account Manager'].push({
+  //       email: userMapping['Account manager'],
+  //       name: getDisplayName(userMapping['Account manager']),
+  //       process: userProcess,
+  //       role: 'Account Manager'
+  //     });
+  //   }
+
+  //   console.log('Final transformed data:', {
+  //     user: userDataResult,
+  //     POC: targetsData['POC'].map(t => ({ name: t.name, email: t.email })),
+  //     Manager: targetsData['Manager'].map(t => ({ name: t.name, email: t.email })),
+  //     AccountManager: targetsData['Account Manager'].map(t => ({ name: t.name, email: t.email }))
+  //   });
+
+  //   return { targets: targetsData, userData: userDataResult };
+  // };
+  // In your FeedbackPage.tsx - Update the transformMappingData function
   const transformMappingData = (data: any[], userEmail: string): { targets: FeedbackTargets, userData: UserData | null } => {
     console.log('transformMappingData called with:', {
       dataLength: data.length,
       userEmail
     });
-    
+
     const targetsData: FeedbackTargets = {
       'POC': [],
       'Manager': [],
       'Account Manager': []
     };
-    
+
     let userMapping: MappingData | null = null;
 
     // Find user in mapping data
-    console.log('Searching for user in mapping data...');
     data.forEach((item, index) => {
-      // Check both Email and Ldap columns (case-insensitive)
       const itemEmail = item.Email || '';
       const itemLdap = item.Ldap || '';
       const userEmailLower = userEmail.toLowerCase();
-      
-      if (itemEmail.toLowerCase() === userEmailLower || 
-          itemLdap.toLowerCase() === userEmailLower) {
+
+      if (itemEmail.toLowerCase() === userEmailLower ||
+        itemLdap.toLowerCase() === userEmailLower) {
         userMapping = item;
         console.log('Found matching user at row', index, ':', item);
       }
     });
 
-    console.log('User mapping found:', userMapping);
-
     if (!userMapping) {
-      console.warn(`No mapping found for user: ${userEmail}`);
       return { targets: targetsData, userData: null };
     }
 
-    // Extract user data
+    // Extract user data with demographics
     const userProcess = userMapping.Process || 'General';
     const userEmailFromMapping = userMapping.Email || userEmail;
     const userDisplayName = getDisplayName(userEmailFromMapping);
-    
+
     const userDataResult: UserData = {
       email: userEmailFromMapping,
       name: userDisplayName,
       process: userProcess,
-      ldap: userMapping.Ldap || undefined
+      ldap: userMapping.Ldap || undefined,
+      // Add demographic fields
+      gender: userMapping.Gender || '',
+      tenure: userMapping.Tenure || '',
+      designation: userMapping.Designation || userMapping['Designation/Level'] || '',
+      age: userMapping.Age || '',
+      genderOfManagement: userMapping['Gender of Management'] || userMapping['Gender of the management'] || ''
     };
 
-    console.log('Creating targets for user...');
-    
-    // Only add targets that exist for this user
+    // Create targets
     if (userMapping.POC && userMapping.POC.includes('@')) {
-      console.log('Adding POC:', userMapping.POC);
       targetsData['POC'].push({
         email: userMapping.POC,
         name: getDisplayName(userMapping.POC),
@@ -2218,7 +2321,6 @@ const FeedbackPage = () => {
     }
 
     if (userMapping.Manager && userMapping.Manager.includes('@')) {
-      console.log('Adding Manager:', userMapping.Manager);
       targetsData['Manager'].push({
         email: userMapping.Manager,
         name: getDisplayName(userMapping.Manager),
@@ -2228,7 +2330,6 @@ const FeedbackPage = () => {
     }
 
     if (userMapping['Account manager'] && userMapping['Account manager'].includes('@')) {
-      console.log('Adding Account Manager:', userMapping['Account manager']);
       targetsData['Account Manager'].push({
         email: userMapping['Account manager'],
         name: getDisplayName(userMapping['Account manager']),
@@ -2237,16 +2338,8 @@ const FeedbackPage = () => {
       });
     }
 
-    console.log('Final transformed data:', {
-      user: userDataResult,
-      POC: targetsData['POC'].map(t => ({ name: t.name, email: t.email })),
-      Manager: targetsData['Manager'].map(t => ({ name: t.name, email: t.email })),
-      AccountManager: targetsData['Account Manager'].map(t => ({ name: t.name, email: t.email }))
-    });
-
     return { targets: targetsData, userData: userDataResult };
   };
-
   const getAllTargets = (data: any[]): FeedbackTargets => {
     const targetsData: FeedbackTargets = {
       'POC': [],
@@ -2296,46 +2389,46 @@ const FeedbackPage = () => {
 
   const identifyUserAndLoadData = async () => {
     setStep('loading');
-    
+
     try {
       console.log('🚀 Starting data load...');
-      
+
       // Step 1: Check backend health
       const isBackendHealthy = await checkBackendHealth();
       if (!isBackendHealthy) {
         throw new Error('Backend server is not responding. Please make sure it is running on http://localhost:5000');
       }
-      
+
       // Step 2: Get user email
       const userEmail = getCurrentUserEmail();
       console.log('👤 User email:', userEmail);
-      
+
       // Step 3: Load questions
       console.log('📋 Loading questions...');
       const questionsResult = await fetchSurveyQuestions();
-      
+
       if (!questionsResult.success) {
         throw new Error(questionsResult.error || 'Failed to load questions');
       }
-      
+
       if (!questionsResult.data || questionsResult.data.length === 0) {
         console.warn('No questions data received');
       }
-      
+
       const transformedQuestions = transformQuestionsData(questionsResult.data);
       console.log(`✅ Transformed ${transformedQuestions.length} questions`);
       setQuestions(transformedQuestions);
-      
+
       // Step 4: Load mapping for user
       console.log('📋 Loading mapping for user:', userEmail);
       const mappingResult = await fetchManagementMapping(userEmail);
-      
+
       if (!mappingResult.success) {
         throw new Error(mappingResult.error || 'Failed to load mapping data');
       }
-      
+
       const { targets, userData } = transformMappingData(mappingResult.data, userEmail);
-      
+
       if (userData) {
         console.log('✅ User found in mapping:', userData.name);
         setTargets(targets);
@@ -2354,14 +2447,14 @@ const FeedbackPage = () => {
           });
         }
       }
-      
+
       console.log('🎉 Moving to select-target step');
       setStep('select-target');
-      
+
     } catch (error) {
       console.error('❌ Error loading data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load feedback data');
-      
+
       toast({
         title: 'Data Load Error',
         description: error instanceof Error ? error.message : 'Unknown error',
@@ -2392,594 +2485,611 @@ const FeedbackPage = () => {
     ) && selectedTarget !== null;
   };
 
-// In FeedbackPage.tsx - Updated handleSubmit function
-// const handleSubmit = async () => {
-//   if (!canSubmit() || !selectedTarget || !userData) {
-//     toast({
-//       title: 'Incomplete Form',
-//       description: 'Please answer all questions before submitting.',
-//       variant: 'destructive',
-//     });
-//     return;
-//   }
+  // In FeedbackPage.tsx - Updated handleSubmit function
+  // const handleSubmit = async () => {
+  //   if (!canSubmit() || !selectedTarget || !userData) {
+  //     toast({
+  //       title: 'Incomplete Form',
+  //       description: 'Please answer all questions before submitting.',
+  //       variant: 'destructive',
+  //     });
+  //     return;
+  //   }
 
-//   // Check if user has already submitted feedback for this target recently
-//   if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
-//     const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
-//     const message = cooldownEnd ? 
-//       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
-//       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
-    
-//     toast({
-//       title: 'Feedback Already Submitted',
-//       description: message,
-//       variant: 'destructive',
-//     });
-//     return;
-//   }
+  //   // Check if user has already submitted feedback for this target recently
+  //   if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
+  //     const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
+  //     const message = cooldownEnd ? 
+  //       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
+  //       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
 
-//   setIsSubmitting(true);
-//   try {
-//     // Generate Encrypted Submitter ID (16-character hash)
-//     const generateEncryptedId = (email: string, name: string): string => {
-//       const salt = 'vox-feedback-2024'; // Add a salt for more security
-//       const data = `${email}-${name}-${new Date().toISOString().split('T')[0]}`;
-      
-//       // Simple hash function (you can use crypto library for stronger)
-//       let hash = 0;
-//       for (let i = 0; i < data.length; i++) {
-//         const char = data.charCodeAt(i);
-//         hash = ((hash << 5) - hash) + char;
-//         hash = hash & hash; // Convert to 32bit integer
-//       }
-      
-//       // Convert to hex and take first 16 characters
-//       const hexString = Math.abs(hash).toString(16).padStart(32, '0');
-//       return hexString.substring(0, 16).toUpperCase();
-//     };
+  //     toast({
+  //       title: 'Feedback Already Submitted',
+  //       description: message,
+  //       variant: 'destructive',
+  //     });
+  //     return;
+  //   }
 
-//     // Generate the encrypted ID
-//     const encryptedId = generateEncryptedId(userData.email, userData.name);
+  //   setIsSubmitting(true);
+  //   try {
+  //     // Generate Encrypted Submitter ID (16-character hash)
+  //     const generateEncryptedId = (email: string, name: string): string => {
+  //       const salt = 'vox-feedback-2024'; // Add a salt for more security
+  //       const data = `${email}-${name}-${new Date().toISOString().split('T')[0]}`;
 
-//     // Prepare feedback data with TEXT values
-//     const feedbackData: Record<string, any> = {
-//       'Timestamp': new Date().toISOString(),
-//       'Reviewer Email': userData.email,
-//       'Reviewer Name': userData.name,
-//       'Reviewer Process': userData.process,
-//       'Encrypted Submitter ID': encryptedId, // This will now populate
-//       'Role Reviewed': selectedRole,
-//       'Process': selectedTarget.process || '',
-//       'Management Email ID': selectedTarget.email || '',
-//       'Management Name': selectedTarget.name || '',
-//       'Additional Comments': comments
-//     };
+  //       // Simple hash function (you can use crypto library for stronger)
+  //       let hash = 0;
+  //       for (let i = 0; i < data.length; i++) {
+  //         const char = data.charCodeAt(i);
+  //         hash = ((hash << 5) - hash) + char;
+  //         hash = hash & hash; // Convert to 32bit integer
+  //       }
 
-//     // Add LDAP if available
-//     if (userData.ldap) {
-//       feedbackData['Reviewer LDAP'] = userData.ldap;
-//     }
+  //       // Convert to hex and take first 16 characters
+  //       const hexString = Math.abs(hash).toString(16).padStart(32, '0');
+  //       return hexString.substring(0, 16).toUpperCase();
+  //     };
 
-//     console.log('Submitting feedback with these details:', {
-//       reviewerEmail: userData.email,
-//       reviewerName: userData.name,
-//       encryptedId: encryptedId,
-//       managementEmail: selectedTarget.email,
-//       managementName: selectedTarget.name,
-//       role: selectedRole
-//     });
+  //     // Generate the encrypted ID
+  //     const encryptedId = generateEncryptedId(userData.email, userData.name);
 
-//     // Convert numerical answers (1-5) back to TEXT values for Google Sheets
-//     const ratingTextMap: Record<string, string> = {
-//       '1': 'Strongly Disagree',
-//       '2': 'Disagree', 
-//       '3': 'Neutral',
-//       '4': 'Agree',
-//       '5': 'Strongly Agree'
-//     };
+  //     // Prepare feedback data with TEXT values
+  //     const feedbackData: Record<string, any> = {
+  //       'Timestamp': new Date().toISOString(),
+  //       'Reviewer Email': userData.email,
+  //       'Reviewer Name': userData.name,
+  //       'Reviewer Process': userData.process,
+  //       'Encrypted Submitter ID': encryptedId, // This will now populate
+  //       'Role Reviewed': selectedRole,
+  //       'Process': selectedTarget.process || '',
+  //       'Management Email ID': selectedTarget.email || '',
+  //       'Management Name': selectedTarget.name || '',
+  //       'Additional Comments': comments
+  //     };
 
-//     // Add all question answers as TEXT values
-//     questions.forEach((q) => {
-//       const columnName = q.question_text;
-//       const answerValue = answers[q.question_id];
-      
-//       if (answerValue) {
-//         // Convert numerical value (1-5) to text rating
-//         const textValue = ratingTextMap[answerValue] || answerValue;
-//         feedbackData[columnName] = textValue;
-//       } else {
-//         feedbackData[columnName] = ''; // Empty if no answer
-//       }
-//     });
+  //     // Add LDAP if available
+  //     if (userData.ldap) {
+  //       feedbackData['Reviewer LDAP'] = userData.ldap;
+  //     }
 
-//     console.log('Full submission data (sample):', {
-//       encryptedId: feedbackData['Encrypted Submitter ID'],
-//       ratings: Object.keys(feedbackData)
-//         .filter(key => questions.some(q => q.question_text === key))
-//         .slice(0, 3)
-//         .reduce((obj, key) => {
-//           obj[key] = feedbackData[key];
-//           return obj;
-//         }, {} as Record<string, any>)
-//     });
+  //     console.log('Submitting feedback with these details:', {
+  //       reviewerEmail: userData.email,
+  //       reviewerName: userData.name,
+  //       encryptedId: encryptedId,
+  //       managementEmail: selectedTarget.email,
+  //       managementName: selectedTarget.name,
+  //       role: selectedRole
+  //     });
 
-//     // Submit to Google Sheets
-//     const result = await submitFeedback(feedbackData);
+  //     // Convert numerical answers (1-5) back to TEXT values for Google Sheets
+  //     const ratingTextMap: Record<string, string> = {
+  //       '1': 'Strongly Disagree',
+  //       '2': 'Disagree', 
+  //       '3': 'Neutral',
+  //       '4': 'Agree',
+  //       '5': 'Strongly Agree'
+  //     };
 
-//     if (result.success) {
-//       // Save to local storage to track cooldown
-//       saveFeedbackSubmission(
-//         selectedTarget.email,
-//         userData.email,
-//         selectedRole,
-//         selectedTarget.name
-//       );
-      
-//       setStep('success');
-//       toast({
-//         title: 'Success!',
-//         description: `Your feedback for ${selectedTarget.name} has been submitted.`,
-//       });
-//     } else {
-//       throw new Error(result.error || 'Submission failed');
-//     }
-//   } catch (err) {
-//     console.error('Submission error:', err);
-    
-//     // Provide user-friendly error message
-//     let errorMessage = 'Failed to submit feedback. ';
-//     if (err instanceof Error) {
-//       if (err.message.includes('403') || err.message.includes('permission')) {
-//         errorMessage = 'Permission denied by Google Sheets. Please contact administrator.';
-//       } else if (err.message.includes('Encrypted Submitter ID')) {
-//         errorMessage = 'Error generating encrypted ID. Please try again.';
-//       } else {
-//         errorMessage += err.message;
-//       }
-//     }
-    
-//     toast({
-//       title: 'Submission Failed',
-//       description: errorMessage,
-//       variant: 'destructive',
-//     });
-//   } finally {
-//     setIsSubmitting(false);
-//   }
-// };
-// In FeedbackPage.tsx - Complete handleSubmit function with SHA-256 hashing
-// const handleSubmit = async () => {
-//   if (!canSubmit() || !selectedTarget || !userData) {
-//     toast({
-//       title: 'Incomplete Form',
-//       description: 'Please answer all questions before submitting.',
-//       variant: 'destructive',
-//     });
-//     return;
-//   }
+  //     // Add all question answers as TEXT values
+  //     questions.forEach((q) => {
+  //       const columnName = q.question_text;
+  //       const answerValue = answers[q.question_id];
 
-//   if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
-//     const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
-//     const message = cooldownEnd ? 
-//       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
-//       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
-    
-//     toast({
-//       title: 'Feedback Already Submitted',
-//       description: message,
-//       variant: 'destructive',
-//     });
-//     return;
-//   }
+  //       if (answerValue) {
+  //         // Convert numerical value (1-5) to text rating
+  //         const textValue = ratingTextMap[answerValue] || answerValue;
+  //         feedbackData[columnName] = textValue;
+  //       } else {
+  //         feedbackData[columnName] = ''; // Empty if no answer
+  //       }
+  //     });
 
-//   setIsSubmitting(true);
-//   try {
-//     // Function to hash email (returns Promise<string>)
-//     const hashEmail = async (email: string): Promise<string> => {
-//       const normalizedEmail = email.trim().toLowerCase();
-      
-//       // Try Web Crypto API first
-//       if (typeof crypto !== 'undefined' && crypto.subtle) {
-//         try {
-//           const encoder = new TextEncoder();
-//           const data = encoder.encode(normalizedEmail);
-//           const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-//           const hashArray = Array.from(new Uint8Array(hashBuffer));
-//           return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-//         } catch (error) {
-//           console.warn('Web Crypto error, using fallback:', error);
-//         }
-//       }
-      
-//       // Fallback: deterministic hash
-//       let hash = 0;
-//       for (let i = 0; i < normalizedEmail.length; i++) {
-//         hash = ((hash << 5) - hash) + normalizedEmail.charCodeAt(i);
-//         hash = hash & hash; // Convert to 32-bit integer
-//       }
-      
-//       // Create 64-character hex string
-//       const baseHex = Math.abs(hash).toString(16).padStart(8, '0');
-//       // Repeat pattern to get 64 characters
-//       return baseHex.repeat(8).substring(0, 64);
-//     };
+  //     console.log('Full submission data (sample):', {
+  //       encryptedId: feedbackData['Encrypted Submitter ID'],
+  //       ratings: Object.keys(feedbackData)
+  //         .filter(key => questions.some(q => q.question_text === key))
+  //         .slice(0, 3)
+  //         .reduce((obj, key) => {
+  //           obj[key] = feedbackData[key];
+  //           return obj;
+  //         }, {} as Record<string, any>)
+  //     });
 
-//     // Generate hashes (await both)
-//     const [reviewerEmailHash, managementEmailHash] = await Promise.all([
-//       hashEmail(userData.email),
-//       hashEmail(selectedTarget.email)
-//     ]);
+  //     // Submit to Google Sheets
+  //     const result = await submitFeedback(feedbackData);
 
-//     // Prepare feedback data
-//     const feedbackData: Record<string, any> = {
-//       'Timestamp': new Date().toISOString(),
-//       'Reviewer Email': reviewerEmailHash, // SHA-256 hash
-//       'Reviewer Name': userData.name,
-//       'Reviewer Process': userData.process,
-//       'Role Reviewed': selectedRole,
-//       'Process': selectedTarget.process || '',
-//       'Management Email ID': managementEmailHash, // SHA-256 hash
-//       'Management Name': selectedTarget.name || '',
-//       'Additional Comments': comments
-//     };
+  //     if (result.success) {
+  //       // Save to local storage to track cooldown
+  //       saveFeedbackSubmission(
+  //         selectedTarget.email,
+  //         userData.email,
+  //         selectedRole,
+  //         selectedTarget.name
+  //       );
 
-//     if (userData.ldap) {
-//       feedbackData['Reviewer LDAP'] = userData.ldap;
-//     }
+  //       setStep('success');
+  //       toast({
+  //         title: 'Success!',
+  //         description: `Your feedback for ${selectedTarget.name} has been submitted.`,
+  //       });
+  //     } else {
+  //       throw new Error(result.error || 'Submission failed');
+  //     }
+  //   } catch (err) {
+  //     console.error('Submission error:', err);
 
-//     // Convert numerical ratings to text
-//     const ratingTextMap: Record<string, string> = {
-//       '1': 'Strongly Disagree',
-//       '2': 'Disagree', 
-//       '3': 'Neutral',
-//       '4': 'Agree',
-//       '5': 'Strongly Agree'
-//     };
+  //     // Provide user-friendly error message
+  //     let errorMessage = 'Failed to submit feedback. ';
+  //     if (err instanceof Error) {
+  //       if (err.message.includes('403') || err.message.includes('permission')) {
+  //         errorMessage = 'Permission denied by Google Sheets. Please contact administrator.';
+  //       } else if (err.message.includes('Encrypted Submitter ID')) {
+  //         errorMessage = 'Error generating encrypted ID. Please try again.';
+  //       } else {
+  //         errorMessage += err.message;
+  //       }
+  //     }
 
-//     questions.forEach((q) => {
-//       const columnName = q.question_text;
-//       const answerValue = answers[q.question_id];
-      
-//       if (answerValue) {
-//         feedbackData[columnName] = ratingTextMap[answerValue] || answerValue;
-//       } else {
-//         feedbackData[columnName] = '';
-//       }
-//     });
+  //     toast({
+  //       title: 'Submission Failed',
+  //       description: errorMessage,
+  //       variant: 'destructive',
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+  // In FeedbackPage.tsx - Complete handleSubmit function with SHA-256 hashing
+  // const handleSubmit = async () => {
+  //   if (!canSubmit() || !selectedTarget || !userData) {
+  //     toast({
+  //       title: 'Incomplete Form',
+  //       description: 'Please answer all questions before submitting.',
+  //       variant: 'destructive',
+  //     });
+  //     return;
+  //   }
 
-//     // Submit to Google Sheets
-//     const result = await submitFeedback(feedbackData);
+  //   if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
+  //     const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
+  //     const message = cooldownEnd ? 
+  //       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
+  //       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
 
-//     if (result.success) {
-//       saveFeedbackSubmission(
-//         selectedTarget.email,
-//         userData.email,
-//         selectedRole,
-//         selectedTarget.name
-//       );
-      
-//       setStep('success');
-//       toast({
-//         title: 'Success!',
-//         description: `Your feedback for ${selectedTarget.name} has been submitted.`,
-//       });
-//     } else {
-//       throw new Error(result.error || 'Submission failed');
-//     }
-//   } catch (err) {
-//     console.error('Submission error:', err);
-//     toast({
-//       title: 'Submission Failed',
-//       description: err instanceof Error ? err.message : 'Please try again later.',
-//       variant: 'destructive',
-//     });
-//   } finally {
-//     setIsSubmitting(false);
-//   }
-// };
-// const handleSubmit = async () => {
-//   if (!canSubmit() || !selectedTarget || !userData) {
-//     toast({
-//       title: 'Incomplete Form',
-//       description: 'Please answer all questions before submitting.',
-//       variant: 'destructive',
-//     });
-//     return;
-//   }
+  //     toast({
+  //       title: 'Feedback Already Submitted',
+  //       description: message,
+  //       variant: 'destructive',
+  //     });
+  //     return;
+  //   }
 
-//   // Check if user has already submitted feedback for this target recently
-//   if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
-//     const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
-//     const message = cooldownEnd ? 
-//       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
-//       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
-    
-//     toast({
-//       title: 'Feedback Already Submitted',
-//       description: message,
-//       variant: 'destructive',
-//     });
-//     return;
-//   }
+  //   setIsSubmitting(true);
+  //   try {
+  //     // Function to hash email (returns Promise<string>)
+  //     const hashEmail = async (email: string): Promise<string> => {
+  //       const normalizedEmail = email.trim().toLowerCase();
 
-//   setIsSubmitting(true);
-//   try {
-//     // Function to generate SHA-256 hash of email
-//     const generateSHA256Hash = async (email: string): Promise<string> => {
-//       const normalizedEmail = email.trim().toLowerCase();
-      
-//       // Web Crypto API (modern browsers)
-//       if (typeof crypto !== 'undefined' && crypto.subtle) {
-//         try {
-//           const encoder = new TextEncoder();
-//           const data = encoder.encode(normalizedEmail);
-//           const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-//           const hashArray = Array.from(new Uint8Array(hashBuffer));
-//           return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-//         } catch (error) {
-//           console.warn('Web Crypto failed, using fallback:', error);
-//         }
-//       }
-      
-//       // Fallback hash function (deterministic 64-char hex)
-//       let hash = 0;
-//       for (let i = 0; i < normalizedEmail.length; i++) {
-//         const char = normalizedEmail.charCodeAt(i);
-//         hash = ((hash << 5) - hash) + char;
-//         hash = hash & hash;
-//       }
-      
-//       // Create consistent 64-character hex string
-//       const baseHex = Math.abs(hash).toString(16).padStart(8, '0');
-//       return baseHex.repeat(8).substring(0, 64);
-//     };
+  //       // Try Web Crypto API first
+  //       if (typeof crypto !== 'undefined' && crypto.subtle) {
+  //         try {
+  //           const encoder = new TextEncoder();
+  //           const data = encoder.encode(normalizedEmail);
+  //           const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  //           const hashArray = Array.from(new Uint8Array(hashBuffer));
+  //           return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  //         } catch (error) {
+  //           console.warn('Web Crypto error, using fallback:', error);
+  //         }
+  //       }
 
-//     // Hash ONLY the submitter's email (person giving feedback)
-//     const reviewerEmailHash = await generateSHA256Hash(userData.email);
-    
-//     // DO NOT hash management email - keep it plain text
-//     const managementEmailPlain = selectedTarget.email;
+  //       // Fallback: deterministic hash
+  //       let hash = 0;
+  //       for (let i = 0; i < normalizedEmail.length; i++) {
+  //         hash = ((hash << 5) - hash) + normalizedEmail.charCodeAt(i);
+  //         hash = hash & hash; // Convert to 32-bit integer
+  //       }
 
-//     // Prepare feedback data
-//     const feedbackData: Record<string, any> = {
-//       'Timestamp': new Date().toISOString(),
-//       'Reviewer Email': reviewerEmailHash, // SHA-256 hash (anonymous)
-//       'Reviewer Name': userData.name,
-//       'Reviewer Process': userData.process,
-//       'Role Reviewed': selectedRole,
-//       'Process': selectedTarget.process || '',
-//       'Management Email ID': managementEmailPlain, // PLAIN TEXT (not hashed)
-//       'Management Name': selectedTarget.name || '',
-//       'Additional Comments': comments
-//     };
+  //       // Create 64-character hex string
+  //       const baseHex = Math.abs(hash).toString(16).padStart(8, '0');
+  //       // Repeat pattern to get 64 characters
+  //       return baseHex.repeat(8).substring(0, 64);
+  //     };
 
-//     // Add LDAP if available
-//     if (userData.ldap) {
-//       feedbackData['Reviewer LDAP'] = userData.ldap;
-//     }
+  //     // Generate hashes (await both)
+  //     const [reviewerEmailHash, managementEmailHash] = await Promise.all([
+  //       hashEmail(userData.email),
+  //       hashEmail(selectedTarget.email)
+  //     ]);
 
-//     console.log('Submitting feedback (submitter anonymous, management identifiable):', {
-//       reviewerHash: `${reviewerEmailHash.substring(0, 16)}...`,
-//       reviewerOriginal: userData.email, // For debugging only
-//       managementEmail: managementEmailPlain, // Plain text
-//       managementName: selectedTarget.name,
-//       role: selectedRole
-//     });
+  //     // Prepare feedback data
+  //     const feedbackData: Record<string, any> = {
+  //       'Timestamp': new Date().toISOString(),
+  //       'Reviewer Email': reviewerEmailHash, // SHA-256 hash
+  //       'Reviewer Name': userData.name,
+  //       'Reviewer Process': userData.process,
+  //       'Role Reviewed': selectedRole,
+  //       'Process': selectedTarget.process || '',
+  //       'Management Email ID': managementEmailHash, // SHA-256 hash
+  //       'Management Name': selectedTarget.name || '',
+  //       'Additional Comments': comments
+  //     };
 
-//     // Convert numerical answers to TEXT values
-//     const ratingTextMap: Record<string, string> = {
-//       '1': 'Strongly Disagree',
-//       '2': 'Disagree', 
-//       '3': 'Neutral',
-//       '4': 'Agree',
-//       '5': 'Strongly Agree'
-//     };
+  //     if (userData.ldap) {
+  //       feedbackData['Reviewer LDAP'] = userData.ldap;
+  //     }
 
-//     // Add all question answers as TEXT values
-//     questions.forEach((q) => {
-//       const columnName = q.question_text;
-//       const answerValue = answers[q.question_id];
-      
-//       if (answerValue) {
-//         const textValue = ratingTextMap[answerValue] || answerValue;
-//         feedbackData[columnName] = textValue;
-//       } else {
-//         feedbackData[columnName] = '';
-//       }
-//     });
+  //     // Convert numerical ratings to text
+  //     const ratingTextMap: Record<string, string> = {
+  //       '1': 'Strongly Disagree',
+  //       '2': 'Disagree', 
+  //       '3': 'Neutral',
+  //       '4': 'Agree',
+  //       '5': 'Strongly Agree'
+  //     };
 
-//     // Submit to Google Sheets
-//     const result = await submitFeedback(feedbackData);
+  //     questions.forEach((q) => {
+  //       const columnName = q.question_text;
+  //       const answerValue = answers[q.question_id];
 
-//     if (result.success) {
-//       // Save to local storage (using original emails for cooldown tracking)
-//       saveFeedbackSubmission(
-//         selectedTarget.email, // Plain management email
-//         userData.email, // Original reviewer email for cooldown
-//         selectedRole,
-//         selectedTarget.name
-//       );
-      
-//       setStep('success');
-//       toast({
-//         title: 'Success!',
-//         description: `Your anonymous feedback for ${selectedTarget.name} has been submitted.`,
-//       });
-//     } else {
-//       throw new Error(result.error || 'Submission failed');
-//     }
-//   } catch (err) {
-//     console.error('Submission error:', err);
-    
-//     // Provide user-friendly error message
-//     let errorMessage = 'Failed to submit feedback. ';
-//     if (err instanceof Error) {
-//       if (err.message.includes('403') || err.message.includes('permission')) {
-//         errorMessage = 'Permission denied by Google Sheets. Please contact administrator.';
-//       } else {
-//         errorMessage += err.message;
-//       }
-//     }
-    
-//     toast({
-//       title: 'Submission Failed',
-//       description: errorMessage,
-//       variant: 'destructive',
-//     });
-//   } finally {
-//     setIsSubmitting(false);
-//   }
-// };
-const handleSubmit = async () => {
-  if (!canSubmit() || !selectedTarget || !userData) {
-    toast({
-      title: 'Incomplete Form',
-      description: 'Please answer all questions before submitting.',
-      variant: 'destructive',
-    });
-    return;
-  }
+  //       if (answerValue) {
+  //         feedbackData[columnName] = ratingTextMap[answerValue] || answerValue;
+  //       } else {
+  //         feedbackData[columnName] = '';
+  //       }
+  //     });
 
-  if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
-    const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
-    const message = cooldownEnd ? 
-      `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
-      `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
-    
-    toast({
-      title: 'Feedback Already Submitted',
-      description: message,
-      variant: 'destructive',
-    });
-    return;
-  }
+  //     // Submit to Google Sheets
+  //     const result = await submitFeedback(feedbackData);
 
-  setIsSubmitting(true);
-  try {
-    // Function to generate SHA-256 hash
-    const generateSHA256Hash = async (email: string): Promise<string> => {
-      const normalizedEmail = email.trim().toLowerCase();
-      
-      if (typeof crypto !== 'undefined' && crypto.subtle) {
-        try {
-          const encoder = new TextEncoder();
-          const data = encoder.encode(normalizedEmail);
-          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        } catch (error) {
-          console.warn('Web Crypto failed, using fallback:', error);
-        }
-      }
-      
-      // Fallback
-      let hash = 0;
-      for (let i = 0; i < normalizedEmail.length; i++) {
-        const char = normalizedEmail.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-      }
-      
-      const baseHex = Math.abs(hash).toString(16).padStart(8, '0');
-      return baseHex.repeat(8).substring(0, 64);
-    };
+  //     if (result.success) {
+  //       saveFeedbackSubmission(
+  //         selectedTarget.email,
+  //         userData.email,
+  //         selectedRole,
+  //         selectedTarget.name
+  //       );
 
-    // Hash the submitter's email
-    const encryptedSubmitterId = await generateSHA256Hash(userData.email);
+  //       setStep('success');
+  //       toast({
+  //         title: 'Success!',
+  //         description: `Your feedback for ${selectedTarget.name} has been submitted.`,
+  //       });
+  //     } else {
+  //       throw new Error(result.error || 'Submission failed');
+  //     }
+  //   } catch (err) {
+  //     console.error('Submission error:', err);
+  //     toast({
+  //       title: 'Submission Failed',
+  //       description: err instanceof Error ? err.message : 'Please try again later.',
+  //       variant: 'destructive',
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+  // const handleSubmit = async () => {
+  //   if (!canSubmit() || !selectedTarget || !userData) {
+  //     toast({
+  //       title: 'Incomplete Form',
+  //       description: 'Please answer all questions before submitting.',
+  //       variant: 'destructive',
+  //     });
+  //     return;
+  //   }
 
-    // Prepare feedback data - MATCH EXACT COLUMN NAMES FROM YOUR SHEET
-    const feedbackData: Record<string, any> = {
-      'Timestamp': new Date().toISOString(),
-      'Encrypted Submitter ID': encryptedSubmitterId, // ✅ CORRECT COLUMN NAME
-      'Role Reviewed': selectedRole,
-      'Process': selectedTarget.process || '',
-      'Management Email ID': selectedTarget.email, // Plain text
-      
-      // Demographic fields (you might want to collect these separately)
-      'Gender': '', // You'll need to collect this
-      'Tenure': '', // You'll need to collect this
-      'Designation/Level': '', // You'll need to collect this
-      'Age': '', // You'll need to collect this
-      'Gender of the user': '', // You'll need to collect this
-      
-      // Add question answers
-      'Additional Comments': comments
-    };
+  //   // Check if user has already submitted feedback for this target recently
+  //   if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
+  //     const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
+  //     const message = cooldownEnd ? 
+  //       `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
+  //       `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
 
-    console.log('Submitting with encrypted ID:', {
-      encryptedId: encryptedSubmitterId,
-      length: encryptedSubmitterId.length,
-      columnName: 'Encrypted Submitter ID',
-      managementEmail: selectedTarget.email
-    });
+  //     toast({
+  //       title: 'Feedback Already Submitted',
+  //       description: message,
+  //       variant: 'destructive',
+  //     });
+  //     return;
+  //   }
 
-    // Convert numerical answers to TEXT values and map to your sheet columns
-    const ratingTextMap: Record<string, string> = {
-      '1': 'Strongly Disagree',
-      '2': 'Disagree', 
-      '3': 'Neutral',
-      '4': 'Agree',
-      '5': 'Strongly Agree'
-    };
+  //   setIsSubmitting(true);
+  //   try {
+  //     // Function to generate SHA-256 hash of email
+  //     const generateSHA256Hash = async (email: string): Promise<string> => {
+  //       const normalizedEmail = email.trim().toLowerCase();
 
-    // Map your questions to the exact column names in your sheet
-    // You need to match each question to its exact column name
-    questions.forEach((q) => {
-      const columnName = q.question_text; // This should match your sheet column names
-      
-      // Debug: Log the column name
-      console.log('Processing question:', {
-        questionId: q.question_id,
-        questionText: q.question_text,
-        columnName: columnName
-      });
-      
-      const answerValue = answers[q.question_id];
-      
-      if (answerValue) {
-        const textValue = ratingTextMap[answerValue] || answerValue;
-        feedbackData[columnName] = textValue;
-      } else {
-        feedbackData[columnName] = '';
-      }
-    });
+  //       // Web Crypto API (modern browsers)
+  //       if (typeof crypto !== 'undefined' && crypto.subtle) {
+  //         try {
+  //           const encoder = new TextEncoder();
+  //           const data = encoder.encode(normalizedEmail);
+  //           const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  //           const hashArray = Array.from(new Uint8Array(hashBuffer));
+  //           return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  //         } catch (error) {
+  //           console.warn('Web Crypto failed, using fallback:', error);
+  //         }
+  //       }
 
-    // Debug: Check if encrypted ID is in the data
-    console.log('Final data check - Encrypted Submitter ID exists?', 
-      'Encrypted Submitter ID' in feedbackData,
-      'Value:', feedbackData['Encrypted Submitter ID']
-    );
+  //       // Fallback hash function (deterministic 64-char hex)
+  //       let hash = 0;
+  //       for (let i = 0; i < normalizedEmail.length; i++) {
+  //         const char = normalizedEmail.charCodeAt(i);
+  //         hash = ((hash << 5) - hash) + char;
+  //         hash = hash & hash;
+  //       }
 
-    // Submit to Google Sheets
-    const result = await submitFeedback(feedbackData);
+  //       // Create consistent 64-character hex string
+  //       const baseHex = Math.abs(hash).toString(16).padStart(8, '0');
+  //       return baseHex.repeat(8).substring(0, 64);
+  //     };
 
-    if (result.success) {
-      saveFeedbackSubmission(
-        selectedTarget.email,
-        userData.email,
-        selectedRole,
-        selectedTarget.name
-      );
-      
-      setStep('success');
+  //     // Hash ONLY the submitter's email (person giving feedback)
+  //     const reviewerEmailHash = await generateSHA256Hash(userData.email);
+
+  //     // DO NOT hash management email - keep it plain text
+  //     const managementEmailPlain = selectedTarget.email;
+
+  //     // Prepare feedback data
+  //     const feedbackData: Record<string, any> = {
+  //       'Timestamp': new Date().toISOString(),
+  //       'Reviewer Email': reviewerEmailHash, // SHA-256 hash (anonymous)
+  //       'Reviewer Name': userData.name,
+  //       'Reviewer Process': userData.process,
+  //       'Role Reviewed': selectedRole,
+  //       'Process': selectedTarget.process || '',
+  //       'Management Email ID': managementEmailPlain, // PLAIN TEXT (not hashed)
+  //       'Management Name': selectedTarget.name || '',
+  //       'Additional Comments': comments
+  //     };
+
+  //     // Add LDAP if available
+  //     if (userData.ldap) {
+  //       feedbackData['Reviewer LDAP'] = userData.ldap;
+  //     }
+
+  //     console.log('Submitting feedback (submitter anonymous, management identifiable):', {
+  //       reviewerHash: `${reviewerEmailHash.substring(0, 16)}...`,
+  //       reviewerOriginal: userData.email, // For debugging only
+  //       managementEmail: managementEmailPlain, // Plain text
+  //       managementName: selectedTarget.name,
+  //       role: selectedRole
+  //     });
+
+  //     // Convert numerical answers to TEXT values
+  //     const ratingTextMap: Record<string, string> = {
+  //       '1': 'Strongly Disagree',
+  //       '2': 'Disagree', 
+  //       '3': 'Neutral',
+  //       '4': 'Agree',
+  //       '5': 'Strongly Agree'
+  //     };
+
+  //     // Add all question answers as TEXT values
+  //     questions.forEach((q) => {
+  //       const columnName = q.question_text;
+  //       const answerValue = answers[q.question_id];
+
+  //       if (answerValue) {
+  //         const textValue = ratingTextMap[answerValue] || answerValue;
+  //         feedbackData[columnName] = textValue;
+  //       } else {
+  //         feedbackData[columnName] = '';
+  //       }
+  //     });
+
+  //     // Submit to Google Sheets
+  //     const result = await submitFeedback(feedbackData);
+
+  //     if (result.success) {
+  //       // Save to local storage (using original emails for cooldown tracking)
+  //       saveFeedbackSubmission(
+  //         selectedTarget.email, // Plain management email
+  //         userData.email, // Original reviewer email for cooldown
+  //         selectedRole,
+  //         selectedTarget.name
+  //       );
+
+  //       setStep('success');
+  //       toast({
+  //         title: 'Success!',
+  //         description: `Your anonymous feedback for ${selectedTarget.name} has been submitted.`,
+  //       });
+  //     } else {
+  //       throw new Error(result.error || 'Submission failed');
+  //     }
+  //   } catch (err) {
+  //     console.error('Submission error:', err);
+
+  //     // Provide user-friendly error message
+  //     let errorMessage = 'Failed to submit feedback. ';
+  //     if (err instanceof Error) {
+  //       if (err.message.includes('403') || err.message.includes('permission')) {
+  //         errorMessage = 'Permission denied by Google Sheets. Please contact administrator.';
+  //       } else {
+  //         errorMessage += err.message;
+  //       }
+  //     }
+
+  //     toast({
+  //       title: 'Submission Failed',
+  //       description: errorMessage,
+  //       variant: 'destructive',
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+  const handleSubmit = async () => {
+    if (!canSubmit() || !selectedTarget || !userData) {
       toast({
-        title: 'Success!',
-        description: `Your feedback for ${selectedTarget.name} has been submitted.`,
+        title: 'Incomplete Form',
+        description: 'Please answer all questions before submitting.',
+        variant: 'destructive',
       });
-    } else {
-      throw new Error(result.error || 'Submission failed');
+      return;
     }
-  } catch (err) {
-    console.error('Submission error:', err);
-    toast({
-      title: 'Submission Failed',
-      description: err instanceof Error ? err.message : 'Please try again later.',
-      variant: 'destructive',
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+
+    if (!canSubmitFeedback(selectedTarget.email, userData.email)) {
+      const cooldownEnd = getCooldownEndDate(selectedTarget.email, userData.email);
+      const message = cooldownEnd ?
+        `You've already submitted feedback for ${selectedTarget.name} recently. You can submit again on ${cooldownEnd.toLocaleDateString()}.` :
+        `You've already submitted feedback for ${selectedTarget.name} recently. Please wait 6 months before submitting again.`;
+
+      toast({
+        title: 'Feedback Already Submitted',
+        description: message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Function to generate SHA-256 hash
+      const generateSHA256Hash = async (email: string): Promise<string> => {
+        const normalizedEmail = email.trim().toLowerCase();
+
+        if (typeof crypto !== 'undefined' && crypto.subtle) {
+          try {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(normalizedEmail);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+          } catch (error) {
+            console.warn('Web Crypto failed, using fallback:', error);
+          }
+        }
+
+        // Fallback
+        let hash = 0;
+        for (let i = 0; i < normalizedEmail.length; i++) {
+          const char = normalizedEmail.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash;
+        }
+
+        const baseHex = Math.abs(hash).toString(16).padStart(8, '0');
+        return baseHex.repeat(8).substring(0, 64);
+      };
+
+      // Hash the submitter's email
+      const encryptedSubmitterId = await generateSHA256Hash(userData.email);
+
+      // Prepare feedback data - MATCH EXACT COLUMN NAMES FROM YOUR SHEET
+      // const feedbackData: Record<string, any> = {
+      //   'Timestamp': new Date().toISOString(),
+      //   'Encrypted Submitter ID': encryptedSubmitterId, // ✅ CORRECT COLUMN NAME
+      //   'Role Reviewed': selectedRole,
+      //   'Process': selectedTarget.process || '',
+      //   'Management Email ID': selectedTarget.email, // Plain text
+
+      //   // Demographic fields (you might want to collect these separately)
+      //   'Gender': '', // You'll need to collect this
+      //   'Tenure': '', // You'll need to collect this
+      //   'Designation/Level': '', // You'll need to collect this
+      //   'Age': '', // You'll need to collect this
+      //   'Gender of the user': '', // You'll need to collect this
+
+      //   // Add question answers
+      //   'Additional Comments': comments
+      // };
+      // In handleSubmit function, the feedbackData object should include:
+      const feedbackData: Record<string, any> = {
+        'Timestamp': new Date().toISOString(),
+        'Encrypted Submitter ID': encryptedSubmitterId,
+        'Role Reviewed': selectedRole,
+        'Process': selectedTarget.process || '',
+        'Management Email ID': selectedTarget.email,
+
+        // Demographic fields - pulled from userData
+        'Gender': userData.gender || '',
+        'Tenure': userData.tenure || '',
+        'Designation/Level': userData.designation || '',
+        'Age': userData.age || '',
+        'Gender of the user': userData.genderOfManagement || '', // This might be different field
+
+        'Additional Comments': comments
+      };
+
+      console.log('Submitting with encrypted ID:', {
+        encryptedId: encryptedSubmitterId,
+        length: encryptedSubmitterId.length,
+        columnName: 'Encrypted Submitter ID',
+        managementEmail: selectedTarget.email
+      });
+
+      // Convert numerical answers to TEXT values and map to your sheet columns
+      const ratingTextMap: Record<string, string> = {
+        '1': 'Strongly Disagree',
+        '2': 'Disagree',
+        '3': 'Neutral',
+        '4': 'Agree',
+        '5': 'Strongly Agree'
+      };
+
+      // Map your questions to the exact column names in your sheet
+      // You need to match each question to its exact column name
+      questions.forEach((q) => {
+        const columnName = q.question_text; // This should match your sheet column names
+
+        // Debug: Log the column name
+        console.log('Processing question:', {
+          questionId: q.question_id,
+          questionText: q.question_text,
+          columnName: columnName
+        });
+
+        const answerValue = answers[q.question_id];
+
+        if (answerValue) {
+          const textValue = ratingTextMap[answerValue] || answerValue;
+          feedbackData[columnName] = textValue;
+        } else {
+          feedbackData[columnName] = '';
+        }
+      });
+
+      // Debug: Check if encrypted ID is in the data
+      console.log('Final data check - Encrypted Submitter ID exists?',
+        'Encrypted Submitter ID' in feedbackData,
+        'Value:', feedbackData['Encrypted Submitter ID']
+      );
+
+      // Submit to Google Sheets
+      const result = await submitFeedback(feedbackData);
+
+      if (result.success) {
+        saveFeedbackSubmission(
+          selectedTarget.email,
+          userData.email,
+          selectedRole,
+          selectedTarget.name
+        );
+
+        setStep('success');
+        toast({
+          title: 'Success!',
+          description: `Your feedback for ${selectedTarget.name} has been submitted.`,
+        });
+      } else {
+        throw new Error(result.error || 'Submission failed');
+      }
+    } catch (err) {
+      console.error('Submission error:', err);
+      toast({
+        title: 'Submission Failed',
+        description: err instanceof Error ? err.message : 'Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   const resetAndGiveMore = () => {
     setAnswers({});
     setComments('');
@@ -3035,10 +3145,10 @@ const handleSubmit = async () => {
 
   if (step === 'success') {
     // Get remaining targets for the current user
-    const remainingTargets = userData ? 
+    const remainingTargets = userData ?
       Object.entries(targets)
-        .flatMap(([role, roleTargets]) => 
-          roleTargets.filter(target => 
+        .flatMap(([role, roleTargets]) =>
+          roleTargets.filter(target =>
             canSubmitFeedback(target.email, userData.email) // Only show targets that can be submitted
           ).map(target => ({
             ...target,
@@ -3048,7 +3158,7 @@ const handleSubmit = async () => {
 
     // Calculate statistics
     const totalTargets = Object.values(targets).flat().length;
-    const submittedTargets = userData ? 
+    const submittedTargets = userData ?
       totalTargets - remainingTargets.length : 0;
 
     return (
@@ -3058,9 +3168,9 @@ const handleSubmit = async () => {
             <div className="w-24 h-24 mx-auto mb-6 bg-success/10 rounded-full flex items-center justify-center">
               <CheckCircle2 className="w-12 h-12 text-success" />
             </div>
-            
+
             <h2 className="text-3xl font-bold text-foreground mb-4">Feedback Submitted!</h2>
-            
+
             <div className="mb-6 p-4 bg-success/5 rounded-lg border border-success/20">
               <p className="text-center text-foreground">
                 Your feedback for <span className="font-semibold">{selectedTarget?.name}</span> has been successfully submitted to Google Sheets.
@@ -3109,11 +3219,11 @@ const handleSubmit = async () => {
                     ({remainingTargets.length} available)
                   </span>
                 </h3>
-                
+
                 <p className="text-muted-foreground mb-4">
                   You can also provide feedback for these other leaders:
                 </p>
-                
+
                 <div className="space-y-3">
                   {remainingTargets.map((target, index) => (
                     <div
@@ -3122,8 +3232,8 @@ const handleSubmit = async () => {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          {target.role === 'POC' ? '👤' : 
-                           target.role === 'Manager' ? '👔' : '📊'}
+                          {target.role === 'POC' ? '👤' :
+                            target.role === 'Manager' ? '👔' : '📊'}
                         </div>
                         <div>
                           <h4 className="font-semibold text-foreground">
@@ -3137,7 +3247,7 @@ const handleSubmit = async () => {
                           </p>
                         </div>
                       </div>
-                      
+
                       <Button
                         onClick={() => {
                           setSelectedRole(target.role);
@@ -3217,14 +3327,14 @@ const handleSubmit = async () => {
                   <Button onClick={() => navigate('/')} className="vox-btn-primary">
                     Return to Dashboard
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => {
                       setAnswers({});
                       setComments('');
                       setSelectedRole('');
                       setSelectedTarget(null);
                       setStep('select-target');
-                    }} 
+                    }}
                     variant="outline"
                   >
                     Review Feedback
@@ -3268,180 +3378,190 @@ const handleSubmit = async () => {
     );
   }
 
-  if (step === 'select-target') {
-    const totalTargets = Object.values(targets).flat().length;
-    
-    // Calculate statistics for each role
-    const roleStats = Object.entries(targets).map(([role, roleTargets]) => {
-      const submittedCount = userData ? 
-        roleTargets.filter(target => !canSubmitFeedback(target.email, userData.email)).length : 0;
-      const availableCount = roleTargets.length - submittedCount;
-      
-      return {
-        role,
-        submittedCount,
-        availableCount,
-        totalCount: roleTargets.length
-      };
-    });
-    
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-muted to-background py-8 px-4">
-        <div className="vox-card max-w-3xl mx-auto animate-fade-in">
-          <div className="p-8 md:p-12">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/')}
-              className="mb-6 text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Button>
+if (step === 'select-target') {
+  const totalTargets = Object.values(targets).flat().length;
 
-            {/* User Info Display */}
-            {userData && (
-              <div className="mb-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
-                {/* <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">{userData.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {userData.email} • {userData.process}
-                      {userData.ldap && ` • LDAP: ${userData.ldap}`}
-                    </p>
-                  </div>
-                </div>  */}
+  // Calculate statistics for each role
+  const roleStats = Object.entries(targets).map(([role, roleTargets]) => {
+    const submittedCount = userData ?
+      roleTargets.filter(target => !canSubmitFeedback(target.email, userData.email)).length : 0;
+    const availableCount = roleTargets.length - submittedCount;
+
+    return {
+      role,
+      submittedCount,
+      availableCount,
+      totalCount: roleTargets.length
+    };
+  });
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-muted to-background py-8 px-4">
+      <div className="vox-card max-w-3xl mx-auto animate-fade-in">
+        <div className="p-8 md:p-12">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/')}
+            className="mb-6 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+
+          {/* User Info Display with Demographics */}
+          {userData && (
+            <div className="mb-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{userData.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {userData.email} • {userData.process}
+                    {userData.ldap && ` • LDAP: ${userData.ldap}`}
+                  </p>
+                </div>
+              </div>
+
+              {/* Display demographic info if available */}
+              {(userData.gender || userData.tenure || userData.designation || userData.age) && (
                 <div className="mt-3 pt-3 border-t border-primary/10">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Demographics</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    {roleStats.map((stat) => (
-                      stat.totalCount > 0 ? (
-                        <div key={stat.role} className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            {stat.role === 'POC' ? 'POCs' : stat.role === 'Manager' ? 'Managers' : 'Account Managers'}:
-                          </span>
-                          <span className="font-medium">
-                            {stat.submittedCount}/{stat.totalCount} submitted
-                            {stat.availableCount > 0 && (
-                              <span className="ml-2 text-green-600">
-                                ({stat.availableCount} available)
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      ) : null
-                    ))}
+                    {userData.gender && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gender:</span>
+                        <span className="font-medium">{userData.gender}</span>
+                      </div>
+                    )}
+                    {userData.tenure && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tenure:</span>
+                        <span className="font-medium">{userData.tenure}</span>
+                      </div>
+                    )}
+                    {userData.designation && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Designation:</span>
+                        <span className="font-medium">{userData.designation}</span>
+                      </div>
+                    )}
+                    {userData.age && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Age:</span>
+                        <span className="font-medium">{userData.age}</span>
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Cooldown Explanation */}
-                  <div className="mt-3 pt-3 border-t border-primary/10">
-                    <p className="text-xs text-muted-foreground">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mr-2">
-                        ⏳
-                      </span>
-                      Once submitted, feedback for each person is on a 6-month cooldown period.
-                    </p>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    This information will be included anonymously with your feedback.
+                  </p>
                 </div>
-              </div>
-            )}
+              )}
 
-            <h2 className="text-3xl font-bold text-foreground mb-2">Leadership Feedback</h2>
-            <p className="text-muted-foreground mb-8">
-              Select a leader to provide feedback for. Each person can be reviewed once every 6 months.
-            </p>
-
-            {totalTargets > 0 ? (
-              Object.entries(targets).map(([role, roleTargets]) => (
-                roleTargets.length > 0 && (
-                  <div key={role} className="mb-8">
-                    <h3 className="text-lg font-semibold text-secondary mb-4 flex items-center gap-2">
-                      {role === 'POC' ? '👤 Point of Contact' :
-                        role === 'Manager' ? '👔 Manager' : '📊 Account Manager'}
-                      <span className="text-sm text-muted-foreground font-normal">
-                        ({userData ? 
-                          roleTargets.filter(target => canSubmitFeedback(target.email, userData.email)).length 
-                          : roleTargets.length} available)
-                      </span>
-                    </h3>
-
-                    {roleTargets.map((target, index) => {
-                      // Check if feedback is on cooldown for this target
-                      const canSubmit = userData ? canSubmitFeedback(target.email, userData.email) : true;
-                      const cooldownEnd = userData ? getCooldownEndDate(target.email, userData.email) : null;
-                      const cooldownMessage = cooldownEnd ? formatCooldownMessage(cooldownEnd) : '';
-
-                      return (
-                        <div
-                          key={`${target.email}-${index}`}
-                          className={`vox-target-card ${!canSubmit ? 'opacity-75' : ''}`}
-                        >
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-foreground">
-                                {target.name}
-                              </h4>
-                              {!canSubmit && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                                  ⏳ Recently Submitted
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {target.process} • {target.email}
-                            </p>
-                            {!canSubmit && cooldownEnd && (
-                              <p className="text-xs text-amber-600 mt-1">
-                                Available in: {cooldownMessage}
-                              </p>
-                            )}
-                          </div>
-
-                          <Button
-                            onClick={() => selectTarget(role, target)}
-                            className="vox-btn-primary"
-                            disabled={!canSubmit}
-                            title={!canSubmit ? 
-                              `Feedback submitted. Available again in ${cooldownMessage.toLowerCase()}` : 
-                              'Select to provide feedback'}
-                          >
-                            {canSubmit ? (
-                              <>
-                                Select
-                                <ChevronRight className="w-4 h-4 ml-1" />
-                              </>
-                            ) : (
-                              <>
-                                <Calendar className="w-4 h-4 mr-1" />
-                                On Cooldown
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-2">No management data found.</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Please contact your administrator to add management data to the system.
+              {!userData.email.includes('@') || userData.email === 'user@unknown.com' ? (
+                <p className="mt-2 text-sm text-amber-600">
+                  Note: You are viewing all available targets. For personalized targets, ensure you are signed into Google.
                 </p>
-                <div className="flex gap-4 justify-center">
-                  <Button onClick={identifyUserAndLoadData} variant="outline">
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Reload Data
-                  </Button>
-                  <Button onClick={() => navigate('/')} variant="outline">
-                    Return Home
-                  </Button>
+              ) : null}
+            </div>
+          )}
+
+          <h2 className="text-3xl font-bold text-foreground mb-2">Leadership Feedback</h2>
+          <p className="text-muted-foreground mb-8">
+            Select a leader to provide feedback for
+          </p>
+
+          {totalTargets > 0 ? (
+            Object.entries(targets).map(([role, roleTargets]) => (
+              roleTargets.length > 0 && (
+                <div key={role} className="mb-8">
+                  <h3 className="text-lg font-semibold text-secondary mb-4 flex items-center gap-2">
+                    {role === 'POC' ? '👤 Point of Contact' :
+                      role === 'Manager' ? '👔 Manager' : '📊 Account Manager'}
+                    <span className="text-sm text-muted-foreground font-normal">
+                      ({roleTargets.length} {roleTargets.length === 1 ? 'person' : 'people'})
+                    </span>
+                  </h3>
+
+                  {roleTargets.map((target, index) => {
+                    // Check if user can submit feedback for this target
+                    const canSubmitTarget = userData ? 
+                      canSubmitFeedback(target.email, userData.email) : true;
+                    
+                    // Get cooldown message if applicable
+                    const cooldownEnd = userData ? 
+                      getCooldownEndDate(target.email, userData.email) : null;
+                    
+                    const cooldownMessage = cooldownEnd ? 
+                      formatCooldownMessage(cooldownEnd) : '';
+
+                    return (
+                      <div
+                        key={`${target.email}-${index}`}
+                        className="vox-target-card"
+                      >
+                        <div>
+                          <h4 className="font-semibold text-foreground">
+                            {target.name}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {target.process} • {target.email}
+                          </p>
+                          {/* Show cooldown status */}
+                          {!canSubmitTarget && userData && (
+                            <div className="mt-2 flex items-center gap-2 text-xs text-amber-600">
+                              <Calendar className="w-3 h-3" />
+                              <span>Feedback submitted. Available again in {cooldownMessage.toLowerCase()}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <Button
+                          onClick={() => selectTarget(role, target)}
+                          className="vox-btn-primary"
+                          disabled={!canSubmitTarget}
+                          title={!canSubmitTarget ? 
+                            `Feedback submitted. Available again in ${cooldownMessage.toLowerCase()}` : 
+                            'Select to provide feedback'}
+                        >
+                          {canSubmitTarget ? (
+                            <>
+                              Select
+                              <ChevronRight className="w-4 h-4 ml-1" />
+                            </>
+                          ) : (
+                            <>
+                              <Calendar className="w-4 h-4 mr-1" />
+                              On Cooldown
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
+              )
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-2">No management data found.</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Please contact your administrator to add management data to the system.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <Button onClick={identifyUserAndLoadData} variant="outline">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reload Data
+                </Button>
+                <Button onClick={() => navigate('/')} variant="outline">
+                  Return Home
+                </Button>
               </div>
-            )}
+            </div>
+          )}
           </div>
         </div>
       </div>
@@ -3582,7 +3702,7 @@ const handleSubmit = async () => {
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600" />
                 <p className="text-sm text-amber-700">
-                  You've already submitted feedback for this person recently. 
+                  You've already submitted feedback for this person recently.
                   Each person can be reviewed once every 6 months.
                 </p>
               </div>
