@@ -738,6 +738,7 @@ export interface FeedbackResponse {
   'Management Email ID'?: string;
   'Management Name'?: string;
   'Additional Comments'?: string;
+  'Client'?: string;
   [key: string]: any;
 }
 

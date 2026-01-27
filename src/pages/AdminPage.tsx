@@ -294,35 +294,35 @@ const AdminPage = () => {
     }
   };
 
-  const loadResponsesData = async () => {
-    setLoading(true);
-    try {
-      const result = await fetchFeedbackResponses();
-      if (result.success && result.data) {
-        setResponses(result.data);
-        calculateStats(result.data);
-        toast({
-          title: 'Data Loaded',
-          description: `Fetched ${result.data.length} responses from Google Sheets`,
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: result.error || 'Failed to load data',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error loading responses:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to connect to backend',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const loadResponsesData = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const result = await fetchFeedbackResponses();
+  //     if (result.success && result.data) {
+  //       setResponses(result.data);
+  //       calculateStats(result.data);
+  //       toast({
+  //         title: 'Data Loaded',
+  //         description: `Fetched ${result.data.length} responses from Google Sheets`,
+  //       });
+  //     } else {
+  //       toast({
+  //         title: 'Error',
+  //         description: result.error || 'Failed to load data',
+  //         variant: 'destructive',
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error loading responses:', error);
+  //     toast({
+  //       title: 'Error',
+  //       description: 'Failed to connect to backend',
+  //       variant: 'destructive',
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   // Add this function inside your component
   const getRespondingEmployees = (): Set<string> => {
     const respondingEmployees = new Set<string>();
@@ -388,6 +388,69 @@ const AdminPage = () => {
       .split(/[._]/)
       .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(' ');
+  };
+
+  // First, update the loadResponsesData function to enrich responses with client data:
+  const loadResponsesData = async () => {
+    setLoading(true);
+    try {
+      const result = await fetchFeedbackResponses();
+      if (result.success && result.data) {
+        // Enrich responses with client data from mappings
+        const enrichedResponses = result.data.map(response => {
+          const responseWithClient = { ...response };
+          const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+          const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+
+          // Try to find matching employee
+          const matchingEmployee = employeeMappings.find(emp => {
+            const empEmail = (emp.Email as string || '').toLowerCase().trim();
+            const empProcess = (emp.Process as string || '').toLowerCase().trim();
+
+            // Try email match first
+            if (managementEmail && empEmail && managementEmail === empEmail) {
+              return true;
+            }
+
+            // Try process match as fallback
+            if (responseProcess && empProcess && responseProcess === empProcess) {
+              return true;
+            }
+
+            return false;
+          });
+
+          // Add client to response if found
+          if (matchingEmployee && matchingEmployee.Client) {
+            responseWithClient['Client'] = matchingEmployee.Client;
+          }
+
+          return responseWithClient;
+        });
+
+        setResponses(enrichedResponses);
+        calculateStats(enrichedResponses);
+        toast({
+          title: 'Data Loaded',
+          description: `Fetched ${enrichedResponses.length} responses from Google Sheets`,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to load data',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading responses:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to connect to backend',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calculateStats = (data: FeedbackResponse[]) => {
@@ -690,17 +753,174 @@ const AdminPage = () => {
   //   });
   // };
 
+  // const getFilteredResponses = (): FeedbackResponse[] => {
+  //   if (!responses.length) return [];
+
+  //   // If no global filters are applied, return all responses
+  //   if (!globalFilters.process && !globalFilters.accountManager) {
+  //     return responses;
+  //   }
+
+  //   return responses.filter(response => {
+  //     const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+  //     const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+
+  //     // Check process filter
+  //     if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
+  //       return false;
+  //     }
+
+  //     // Check account manager filter - compare with management email
+  //     if (globalFilters.accountManager) {
+  //       const filterAccountManager = globalFilters.accountManager.toLowerCase();
+  //       if (managementEmail !== filterAccountManager) {
+  //         return false;
+  //       }
+  //     }
+
+  //     return true;
+  //   });
+  // };
+
+  // const getFilteredResponses = (): FeedbackResponse[] => {
+  //   if (!responses.length) return [];
+
+  //   // Get filtered employee mappings first
+  //   const filteredEmployeeMappings = getFilteredEmployeeMappings();
+
+  //   // If no filters are applied, return all responses
+  //   if (!globalFilters.client && !globalFilters.process && !globalFilters.accountManager) {
+  //     return responses;
+  //   }
+
+  //   return responses.filter(response => {
+  //     const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+  //     const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+
+  //     // Check process filter
+  //     if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
+  //       return false;
+  //     }
+
+  //     // Check account manager filter - compare with management email
+  //     if (globalFilters.accountManager) {
+  //       const filterAccountManager = globalFilters.accountManager.toLowerCase();
+  //       if (managementEmail !== filterAccountManager) {
+  //         return false;
+  //       }
+  //     }
+
+  //     // Check client filter - this requires matching the submitter to an employee in the filtered mappings
+  //     if (globalFilters.client && filteredEmployeeMappings.length > 0) {
+  //       const submitterId = (response['Encrypted Submitter ID'] as string || '').toLowerCase().trim();
+
+  //       // Try to match the submitter with employees in the filtered mappings
+  //       const submitterMatchesClient = filteredEmployeeMappings.some(emp => {
+  //         const empEmail = (emp.Email as string || '').toLowerCase().trim();
+  //         const empLdap = (emp.Ldap as string || '').toLowerCase().trim();
+
+  //         // Check various matching patterns
+  //         if (empEmail && submitterId.includes(empEmail)) return true;
+  //         if (empLdap && submitterId.includes(empLdap)) return true;
+
+  //         // Check email local part
+  //         if (empEmail.includes('@')) {
+  //           const emailLocalPart = empEmail.split('@')[0];
+  //           if (submitterId.includes(emailLocalPart)) return true;
+  //         }
+
+  //         return false;
+  //       });
+
+  //       if (!submitterMatchesClient) return false;
+  //     }
+
+  //     return true;
+  //   });
+  // };
+  // const getFilteredResponses = (): FeedbackResponse[] => {
+  //   if (!responses.length) return [];
+
+  //   // If no global filters are applied, return all responses
+  //   if (!globalFilters.client && !globalFilters.process && !globalFilters.accountManager) {
+  //     return responses;
+  //   }
+
+  //   return responses.filter(response => {
+  //     const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
+  //     const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+
+  //     // Check process filter
+  //     if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
+  //       return false;
+  //     }
+
+  //     // Check account manager filter - compare with management email
+  //     if (globalFilters.accountManager) {
+  //       const filterAccountManager = globalFilters.accountManager.toLowerCase();
+  //       if (managementEmail !== filterAccountManager) {
+  //         return false;
+  //       }
+  //     }
+
+  //     // Check client filter - this is tricky because we can't directly match encrypted IDs
+  //     // We'll need to use a different approach
+  //     if (globalFilters.client) {
+  //       // Get filtered employee mappings for this client
+  //       const clientFilteredEmployees = employeeMappings.filter(emp => 
+  //         emp.Client === globalFilters.client
+  //       );
+
+  //       // If no employees for this client, return no responses
+  //       if (clientFilteredEmployees.length === 0) {
+  //         return false;
+  //       }
+
+  //       // Try to match the response with any employee from this client
+  //       // We can try matching by process or other available fields
+  //       const responseMatchesClient = clientFilteredEmployees.some(emp => {
+  //         // Try matching by process if available in both
+  //         const empProcess = (emp.Process as string || '').toLowerCase().trim();
+  //         if (responseProcess && empProcess && responseProcess === empProcess) {
+  //           return true;
+  //         }
+
+  //         // Try matching by management email if available
+  //         const empEmail = (emp.Email as string || '').toLowerCase().trim();
+  //         if (managementEmail && empEmail && managementEmail === empEmail) {
+  //           return true;
+  //         }
+
+  //         // If there's a POC or Manager field that might match
+  //         const empPOC = (emp.POC as string || '').toLowerCase().trim();
+  //         const empManager = (emp.Manager as string || '').toLowerCase().trim();
+
+  //         // Check if management email matches POC or Manager
+  //         if (managementEmail && (managementEmail === empPOC || managementEmail === empManager)) {
+  //           return true;
+  //         }
+
+  //         return false;
+  //       });
+
+  //       if (!responseMatchesClient) return false;
+  //     }
+
+  //     return true;
+  //   });
+  // };
   const getFilteredResponses = (): FeedbackResponse[] => {
     if (!responses.length) return [];
 
     // If no global filters are applied, return all responses
-    if (!globalFilters.process && !globalFilters.accountManager) {
+    if (!globalFilters.client && !globalFilters.process && !globalFilters.accountManager) {
       return responses;
     }
 
     return responses.filter(response => {
       const responseProcess = (response['Process'] as string || '').toLowerCase().trim();
       const managementEmail = (response['Management Email ID'] as string || '').toLowerCase().trim();
+      const responseClient = (response['Client'] as string || '').toLowerCase().trim();
 
       // Check process filter
       if (globalFilters.process && responseProcess !== globalFilters.process.toLowerCase()) {
@@ -715,10 +935,41 @@ const AdminPage = () => {
         }
       }
 
+      // Check client filter
+      if (globalFilters.client && responseClient !== globalFilters.client.toLowerCase()) {
+        return false;
+      }
+
       return true;
     });
   };
+  // const getFilteredEmployeeMappings = (): EmployeeMapping[] => {
+  //   if (!employeeMappings.length) return [];
 
+  //   return employeeMappings.filter(emp => {
+  //     // Client filter
+  //     if (globalFilters.client && emp.Client !== globalFilters.client) return false;
+
+  //     // Process filter
+  //     if (globalFilters.process && emp.Process !== globalFilters.process) return false;
+
+  //     return true;
+  //   });
+  // };
+  // const getFilteredEmployeeMappings = (): EmployeeMapping[] => {
+  //   if (!employeeMappings.length) return [];
+
+  //   return employeeMappings.filter(emp => {
+  //     // Client filter
+  //     if (globalFilters.client && emp.Client !== globalFilters.client) return false;
+
+  //     // Process filter
+  //     if (globalFilters.process && emp.Process !== globalFilters.process) return false;
+
+  //     // Note: Account Manager filter is handled differently in getFilteredResponses
+  //     return true;
+  //   });
+  // };
   const getFilteredEmployeeMappings = (): EmployeeMapping[] => {
     if (!employeeMappings.length) return [];
 
@@ -732,7 +983,6 @@ const AdminPage = () => {
       return true;
     });
   };
-
   const filterResponses = (responses: FeedbackResponse[]) => {
     return responses.filter(response => {
       // Role filter
@@ -1709,6 +1959,25 @@ const AdminPage = () => {
 
                 {/* Global Filters */}
                 <div className="flex flex-wrap gap-4">
+                  <div className="min-w-[180px]">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Filter by Client
+                    </label>
+                    <select
+                      value={globalFilters.client}
+                      onChange={(e) => setGlobalFilters(prev => ({ ...prev, client: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+                    >
+                      <option value="">All Clients</option>
+                      {Array.from(new Set(employeeMappings.map(emp => emp.Client as string).filter(Boolean)))
+                        .sort()
+                        .map(client => (
+                          <option key={client} value={client}>
+                            {client}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
                   {/* Process Filter */}
                   <div className="min-w-[180px]">
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">
@@ -1751,8 +2020,9 @@ const AdminPage = () => {
                     </select>
                   </div>
 
+
                   {/* Clear Filters Button */}
-                  {(globalFilters.process || globalFilters.accountManager) && (
+                  {/* {(globalFilters.process || globalFilters.accountManager) && (
                     <div className="flex items-end">
                       <Button
                         variant="ghost"
@@ -1763,8 +2033,63 @@ const AdminPage = () => {
                         Clear Filters
                       </Button>
                     </div>
-                  )}
+                  )} */}
+                  {/* {(globalFilters.client || globalFilters.process || globalFilters.accountManager) && (
+                    <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-blue-700">Active Dashboard Filters:</span>
+                        {globalFilters.client && (
+                          <div className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                            <span className="font-medium">Client:</span>
+                            <span>{globalFilters.client}</span>
+                            <button
+                              onClick={() => setGlobalFilters(prev => ({ ...prev, client: '' }))}
+                              className="ml-1 text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                        {globalFilters.process && (
+                          <div className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                            <span className="font-medium">Process:</span>
+                            <span>{globalFilters.process}</span>
+                            <button
+                              onClick={() => setGlobalFilters(prev => ({ ...prev, process: '' }))}
+                              className="ml-1 text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                        {globalFilters.accountManager && (
+                          <div className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                            <span className="font-medium">Account Manager:</span>
+                            <span>{globalFilters.accountManager.split('@')[0]}</span>
+                            <button
+                              onClick={() => setGlobalFilters(prev => ({ ...prev, accountManager: '' }))}
+                              className="ml-1 text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )} */}
+                    <div className="flex items-end">
+                  <Button
+                    variant={globalFilters.client || globalFilters.process || globalFilters.accountManager ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setGlobalFilters({ client: '', process: '', accountManager: '' })}
+                    className="h-10"
+                    disabled={!globalFilters.client && !globalFilters.process && !globalFilters.accountManager}
+                  >
+                    Clear Filters
+                  </Button>
                 </div>
+                </div>
+              
               </div>
 
               {/* Filter Summary */}
@@ -1795,7 +2120,7 @@ const AdminPage = () => {
               )} */}
 
               {/* Active Filters Display */}
-              {(globalFilters.process || globalFilters.accountManager) && (
+              {/* {(globalFilters.process || globalFilters.accountManager) && (
                 <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-blue-700">Active Dashboard Filters:</span>
@@ -1825,7 +2150,7 @@ const AdminPage = () => {
                     )}
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* 3-card grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
