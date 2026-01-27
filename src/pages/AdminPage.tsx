@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, BarChart3, FileText, Mail, LogOut, Users, TrendingUp, AlertTriangle, RefreshCw, Loader2, Filter, CheckCircle, Info } from 'lucide-react';
+import { Home, BarChart3, FileText, Mail, LogOut, Users, TrendingUp, AlertTriangle, RefreshCw, Loader2, Filter, CheckCircle, Info, Zap, AlertCircle, Target, Globe, Lightbulb, Award, Database, CheckSquare, MessageSquare, Search, Smile, Repeat, Heart, Compass, Bell, Calendar, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -2639,6 +2639,261 @@ const AdminPage = () => {
                     </div>
                   </CardContent>
                 </Card>
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Zap className="w-5 h-5 text-amber-600" />
+                          <span className="text-sm font-medium text-muted-foreground">Response Velocity</span>
+                        </div>
+                        <span className="text-2xl font-bold block leading-tight text-amber-600">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return 0;
+
+                            // Calculate responses per day
+                            const timestamps = filteredResponses
+                              .map(r => new Date(r.Timestamp as string))
+                              .filter(d => !isNaN(d.getTime()))
+                              .sort((a, b) => a.getTime() - b.getTime());
+
+                            if (timestamps.length < 2) return filteredResponses.length;
+
+                            const first = timestamps[0];
+                            const last = timestamps[timestamps.length - 1];
+                            const daysDiff = Math.max(1, (last.getTime() - first.getTime()) / (1000 * 3600 * 24));
+
+                            return (filteredResponses.length / daysDiff).toFixed(1);
+                          })()}
+                        </span>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Responses per day
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return '';
+
+                            const today = new Date();
+                            const yesterday = new Date(today);
+                            yesterday.setDate(yesterday.getDate() - 1);
+
+                            const recent = filteredResponses.filter(r => {
+                              const date = new Date(r.Timestamp as string);
+                              return date >= yesterday;
+                            }).length;
+
+                            return ` • ${recent} in last 24h`;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs px-2 py-1 bg-amber-50 text-amber-700 rounded-full font-medium">
+                          Speed
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <MessageSquare className="w-5 h-5 text-teal-600" />
+                          <span className="text-sm font-medium text-muted-foreground">Constructive Feedback</span>
+                        </div>
+                        <span className="text-2xl font-bold block leading-tight text-teal-600">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return "0%";
+
+                            // Count comments with constructive elements
+                            const constructiveComments = filteredResponses.filter(r => {
+                              const comment = (r['Additional Comments'] as string || '').toLowerCase();
+                              if (comment.length < 30) return false;
+
+                              const hasConstructive = [
+                                'suggest', 'recommend', 'improve', 'better', 'could',
+                                'would', 'might', 'maybe', 'consider', 'perhaps'
+                              ].some(word => comment.includes(word));
+
+                              const hasSpecific = [
+                                'communication', 'meeting', 'time', 'project', 'team',
+                                'process', 'feedback', 'support', 'help', 'guidance'
+                              ].some(word => comment.includes(word));
+
+                              return hasConstructive && hasSpecific;
+                            }).length;
+
+                            return `${Math.round((constructiveComments / filteredResponses.length) * 100)}%`;
+                          })()}
+                        </span>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Actionable suggestions provided
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            const comments = filteredResponses.filter(r =>
+                              r['Additional Comments'] && (r['Additional Comments'] as string).length > 30
+                            ).length;
+                            return ` • ${comments} detailed comments`;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs px-2 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">
+                          Constructive
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+
+
+
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <AlertCircle className="w-5 h-5 text-rose-600" />
+                          <span className="text-sm font-medium text-muted-foreground">Critical Feedback</span>
+                        </div>
+                        <span className="text-2xl font-bold block leading-tight text-rose-600">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return "0%";
+
+                            // Count "Strongly Disagree" and negative comments
+                            let criticalCount = 0;
+                            filteredResponses.forEach(r => {
+                              // Check for SD responses
+                              Object.values(r).forEach(v => {
+                                if (v === 'Strongly Disagree') criticalCount++;
+                              });
+
+                              // Check for negative comments
+                              const comment = r['Additional Comments'] as string;
+                              if (comment) {
+                                const negativeWords = ['bad', 'poor', 'issue', 'problem', 'negative', 'difficult', 'concern', 'worry', 'stress', 'disappointed', 'frustrated', 'angry'];
+                                const hasNegative = negativeWords.some(word => comment.toLowerCase().includes(word));
+                                if (hasNegative) criticalCount++;
+                              }
+                            });
+
+                            const totalPossible = filteredResponses.length * 2; // SD responses + negative comments
+                            return `${Math.round((criticalCount / Math.max(totalPossible, 1)) * 100)}%`;
+                          })()}
+                        </span>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Critical issues flagged
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            const sdCount = filteredResponses.reduce((count, r) => {
+                              return count + Object.values(r).filter(v => v === 'Strongly Disagree').length;
+                            }, 0);
+                            return ` • ${sdCount} SD responses`;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs px-2 py-1 bg-rose-50 text-rose-700 rounded-full font-medium">
+                          Critical
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <AlertCircle className="w-5 h-5 text-orange-600" />
+                          <span className="text-sm font-medium text-muted-foreground">Tenure Issue Patterns</span>
+                        </div>
+                        <span className="text-2xl font-bold block leading-tight text-orange-600">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return "None";
+
+                            // Identify common issues by tenure
+                            const tenureIssues: Record<string, Set<string>> = {
+                              '0-1': new Set(),
+                              '1-3': new Set(),
+                              '3-5': new Set(),
+                              '5+': new Set()
+                            };
+
+                            filteredResponses.forEach(r => {
+                              const tenureValue = r['Tenure'];
+                              const sdResponses = Object.entries(r)
+                                .filter(([key, value]) => value === 'Strongly Disagree')
+                                .map(([key]) => key);
+
+                              if (sdResponses.length > 0) {
+                                let tenureGroup = '0-1';
+
+                                if (tenureValue) {
+                                  const tenureNum = typeof tenureValue === 'string'
+                                    ? parseFloat(tenureValue.replace(/[^0-9.]/g, ''))
+                                    : Number(tenureValue);
+
+                                  if (!isNaN(tenureNum)) {
+                                    if (tenureNum < 1) tenureGroup = '0-1';
+                                    else if (tenureNum < 3) tenureGroup = '1-3';
+                                    else if (tenureNum < 5) tenureGroup = '3-5';
+                                    else tenureGroup = '5+';
+                                  }
+                                }
+
+                                sdResponses.forEach(issue => {
+                                  if (issue.includes('communication')) tenureIssues[tenureGroup].add('Communication');
+                                  if (issue.includes('support')) tenureIssues[tenureGroup].add('Support');
+                                  if (issue.includes('feedback')) tenureIssues[tenureGroup].add('Feedback');
+                                  if (issue.includes('growth')) tenureIssues[tenureGroup].add('Growth');
+                                });
+                              }
+                            });
+
+                            // Find tenure with most distinct issues
+                            let mostIssuesTenure = 'None';
+                            let maxIssues = 0;
+
+                            Object.entries(tenureIssues).forEach(([tenure, issues]) => {
+                              if (issues.size > maxIssues) {
+                                maxIssues = issues.size;
+                                mostIssuesTenure = tenure;
+                              }
+                            });
+
+                            return mostIssuesTenure !== 'None' ? mostIssuesTenure : 'None';
+                          })()}
+                        </span>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Tenure with most distinct issues
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            const totalIssues = filteredResponses.reduce((sum, r) => {
+                              return sum + Object.values(r).filter(v => v === 'Strongly Disagree').length;
+                            }, 0);
+                            return ` • ${totalIssues} SD responses total`;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs px-2 py-1 bg-orange-50 text-orange-700 rounded-full font-medium">
+                          Patterns
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+
+
 
                 {/* Card 3: Gender Distribution - Compact */}
                 <Card className="hover:shadow-md transition-shadow">
@@ -2836,6 +3091,156 @@ const AdminPage = () => {
                         </div>
                       );
                     })()}
+                  </CardContent>
+                </Card>
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Users className="w-5 h-5 text-blue-600" />
+                          <span className="text-sm font-medium text-muted-foreground">Age Group Distribution</span>
+                        </div>
+                        <span className="text-2xl font-bold block leading-tight text-blue-600">
+                          {(() => {
+                            const filteredResponses = getFilteredResponses();
+                            if (!filteredResponses.length) return "0";
+
+                            // Count responses by age group
+                            const ageGroups = {
+                              'Under 25': 0,
+                              '25-34': 0,
+                              '35-44': 0,
+                              '45-54': 0,
+                              '55+': 0
+                            };
+
+                            filteredResponses.forEach(r => {
+                              const ageValue = r['Age'];
+                              if (ageValue) {
+                                const age = typeof ageValue === 'string'
+                                  ? parseInt(ageValue.replace(/[^0-9]/g, ''), 10)
+                                  : Number(ageValue);
+
+                                if (!isNaN(age)) {
+                                  if (age < 25) ageGroups['Under 25']++;
+                                  else if (age < 35) ageGroups['25-34']++;
+                                  else if (age < 45) ageGroups['35-44']++;
+                                  else if (age < 55) ageGroups['45-54']++;
+                                  else ageGroups['55+']++;
+                                }
+                              }
+                            });
+
+                            // Find most common age group
+                            let maxGroup = 'All';
+                            let maxCount = 0;
+                            Object.entries(ageGroups).forEach(([group, count]) => {
+                              if (count > maxCount) {
+                                maxCount = count;
+                                maxGroup = group;
+                              }
+                            });
+
+                            return maxGroup;
+                          })()}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
+                          Age
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini Bar Chart */}
+                    <div className="space-y-2">
+                      {(() => {
+                        const filteredResponses = getFilteredResponses();
+                        if (!filteredResponses.length) {
+                          return <div className="text-center py-4 text-sm text-muted-foreground">No age data</div>;
+                        }
+
+                        // Count responses by age group
+                        const ageGroups = [
+                          { label: 'Under 25', color: 'bg-blue-400', key: 'Under 25' },
+                          { label: '25-34', color: 'bg-blue-500', key: '25-34' },
+                          { label: '35-44', color: 'bg-blue-600', key: '35-44' },
+                          { label: '45-54', color: 'bg-blue-700', key: '45-54' },
+                          { label: '55+', color: 'bg-blue-800', key: '55+' }
+                        ];
+
+                        const counts: Record<string, number> = {};
+                        ageGroups.forEach(g => counts[g.key] = 0);
+
+                        filteredResponses.forEach(r => {
+                          const ageValue = r['Age'];
+                          if (ageValue) {
+                            const age = typeof ageValue === 'string'
+                              ? parseInt(ageValue.replace(/[^0-9]/g, ''), 10)
+                              : Number(ageValue);
+
+                            if (!isNaN(age)) {
+                              if (age < 25) counts['Under 25']++;
+                              else if (age < 35) counts['25-34']++;
+                              else if (age < 45) counts['35-44']++;
+                              else if (age < 55) counts['45-54']++;
+                              else counts['55+']++;
+                            }
+                          }
+                        });
+
+                        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+                        const maxCount = Math.max(...Object.values(counts), 1);
+
+                        return (
+                          <>
+                            {ageGroups.map(group => {
+                              const count = counts[group.key];
+                              const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                              const barWidth = maxCount > 0 ? Math.max((count / maxCount) * 100, 5) : 0;
+
+                              return (
+                                <div key={group.key} className="flex items-center gap-2">
+                                  <div className="w-12 text-xs font-medium truncate">{group.label}</div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                        <div
+                                          className={`h-2 rounded-full ${group.color}`}
+                                          style={{ width: `${barWidth}%` }}
+                                        />
+                                      </div>
+                                      <div className="text-xs w-8 text-right font-medium">{percentage}%</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            <div className="pt-2 text-xs text-muted-foreground border-t">
+                              Total responses: {total} • Average age: {
+                                (() => {
+                                  const ages = filteredResponses
+                                    .map(r => {
+                                      const ageValue = r['Age'];
+                                      if (!ageValue) return null;
+                                      const age = typeof ageValue === 'string'
+                                        ? parseInt(ageValue.replace(/[^0-9]/g, ''), 10)
+                                        : Number(ageValue);
+                                      return isNaN(age) ? null : age;
+                                    })
+                                    .filter(age => age !== null) as number[];
+
+                                  return ages.length > 0
+                                    ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length)
+                                    : 'N/A';
+                                })()
+                              }
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
