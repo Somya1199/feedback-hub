@@ -1973,7 +1973,7 @@ const AdminPage = () => {
                         .sort()
                         .map(client => (
                           <option key={client} value={client}>
-                            {client}
+                            {client} ({employeeMappings.filter(emp => emp.Client === client).length} employees)
                           </option>
                         ))}
                     </select>
@@ -2077,19 +2077,19 @@ const AdminPage = () => {
                       </div>
                     </div>
                   )} */}
-                    <div className="flex items-end">
-                  <Button
-                    variant={globalFilters.client || globalFilters.process || globalFilters.accountManager ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setGlobalFilters({ client: '', process: '', accountManager: '' })}
-                    className="h-10"
-                    disabled={!globalFilters.client && !globalFilters.process && !globalFilters.accountManager}
-                  >
-                    Clear Filters
-                  </Button>
+                  <div className="flex items-end">
+                    <Button
+                      variant={globalFilters.client || globalFilters.process || globalFilters.accountManager ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setGlobalFilters({ client: '', process: '', accountManager: '' })}
+                      className="h-10"
+                      disabled={!globalFilters.client && !globalFilters.process && !globalFilters.accountManager}
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
                 </div>
-                </div>
-              
+
               </div>
 
               {/* Filter Summary */}
